@@ -882,12 +882,20 @@
 				"dweb:/ipfs/QmfBrGtQP7rZEqEg6Wz6jh2N2Kukpj1z5v3CGWmAqrzm96"
 			]
 		},
-		"localhost/contracts/xStarterToken.sol": {
-			"keccak256": "0xfb9ba53a5d7254c7199bae63f5fa50824bba457060be468bbc96a5741de3da7d",
+		"localhost/contracts/ERC777ReceiveSend.sol": {
+			"keccak256": "0x520fe3f1e1ec755f44c59b5e5d029ecaa2c62c2f69842d66f5f56ef482652cac",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://b7cdf262ceacfa92bfa3bbf1a2e0d4d348af37384126a1bfa25aacda234241af",
-				"dweb:/ipfs/QmPqnj5do1m2QKHfFB9uoRduhXdCGU8D2Y7bE7i9DoWFbz"
+				"bzz-raw://32e1c9c2daa8d53ee50fbea7beb7b8608f5cbf62be846084f458575315798c2c",
+				"dweb:/ipfs/QmYn9ctgKJTcAAiVzoXPMP23FFuAzp4S6zCift3yRz5BiK"
+			]
+		},
+		"localhost/contracts/xStarterToken.sol": {
+			"keccak256": "0x5c4300df0f32056de4a552f15c9441962db14387ebdcc416ac6cb86fda4ff808",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://dd033f2ad8c359868465c2d99b89a9b5dcbee8cfce386a9a0a519aacc67c9b8b",
+				"dweb:/ipfs/Qmaht1Tf8pe5PSe88cPmac45XMm3zdxLinUsC4szRD5EqY"
 			]
 		}
 	},

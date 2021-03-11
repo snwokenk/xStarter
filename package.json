@@ -1,5 +1,8 @@
 {
   "dependencies": {
     "@openzeppelin/contracts": "^3.4.1"
+  },
+  "devDependencies": {
+    "@openzeppelin/test-helpers": "^0.5.10"
   }
 }
