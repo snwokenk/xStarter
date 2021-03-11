@@ -1,0 +1,77 @@
+{
+	"compiler": {
+		"version": "0.5.17+commit.d19bba13"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"constant": true,
+				"inputs": [
+					{
+						"internalType": "bytes32",
+						"name": "interfaceHash",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "address",
+						"name": "addr",
+						"type": "address"
+					}
+				],
+				"name": "canImplementInterfaceForAddress",
+				"outputs": [
+					{
+						"internalType": "bytes32",
+						"name": "",
+						"type": "bytes32"
+					}
+				],
+				"payable": false,
+				"stateMutability": "view",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"details": "The interface a contract MUST implement if it is the implementer of some (other) interface for any address other than itself.",
+			"methods": {
+				"canImplementInterfaceForAddress(bytes32,address)": {
+					"params": {
+						"addr": "Address for which the contract will implement the interface",
+						"interfaceHash": "keccak256 hash of the name of the interface"
+					},
+					"return": "ERC1820_ACCEPT_MAGIC only if the contract implements 'interfaceHash' for the address 'addr'."
+				}
+			}
+		},
+		"userdoc": {
+			"methods": {
+				"canImplementInterfaceForAddress(bytes32,address)": {
+					"notice": "Indicates whether the contract implements the interface 'interfaceHash' for the address 'addr' or not."
+				}
+			}
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"localhost/test/TestERC1820.sol": "ERC1820ImplementerInterface"
+		},
+		"evmVersion": "istanbul",
+		"libraries": {},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"localhost/test/TestERC1820.sol": {
+			"keccak256": "0x367fa44bf21f2e262487ce9868506cea6c7c4bd45bf27a6db3f102d6583636be",
+			"urls": [
+				"bzz-raw://a2924d5320c410862137ccc74c283ab2c066c6589da57e4fdbf2da884dd2e275",
+				"dweb:/ipfs/QmSmDSzcLrS8ZYiFK3NmsPPTXbreXpML4K7e2uwE8YrzZu"
+			]
+		}
+	},
+	"version": 1
+}
