@@ -6,6 +6,66 @@
 	"output": {
 		"abi": [
 			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "admin",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "addressOfProjectToken",
+						"type": "address"
+					},
+					{
+						"internalType": "string",
+						"name": "tokenName_",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "tokenSymbol_",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "totalTokenSupply_",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint48",
+						"name": "startTimeTimestamp",
+						"type": "uint48"
+					},
+					{
+						"internalType": "uint48",
+						"name": "endTimeTimestamp",
+						"type": "uint48"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "constructor"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "previousAdmin",
+						"type": "address"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "newAdmin",
+						"type": "address"
+					}
+				],
+				"name": "AdministrationTransferred",
+				"type": "event"
+			},
+			{
 				"anonymous": false,
 				"inputs": [
 					{
@@ -25,6 +85,25 @@
 				"type": "event"
 			},
 			{
+				"anonymous": false,
+				"inputs": [],
+				"name": "TokenCreatedByStarterPool",
+				"type": "event"
+			},
+			{
+				"inputs": [],
+				"name": "admin",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
 				"inputs": [],
 				"name": "owner",
 				"outputs": [
@@ -39,7 +118,103 @@
 			},
 			{
 				"inputs": [],
+				"name": "renounceAdministration",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
 				"name": "renounceOwnership",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "operator",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "from",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "to",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bytes",
+						"name": "userData",
+						"type": "bytes"
+					},
+					{
+						"internalType": "bytes",
+						"name": "operatorData",
+						"type": "bytes"
+					}
+				],
+				"name": "tokensReceived",
+				"outputs": [],
+				"stateMutability": "pure",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "operator",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "from",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "to",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bytes",
+						"name": "userData",
+						"type": "bytes"
+					},
+					{
+						"internalType": "bytes",
+						"name": "operatorData",
+						"type": "bytes"
+					}
+				],
+				"name": "tokensToSend",
+				"outputs": [],
+				"stateMutability": "pure",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "newAdmin",
+						"type": "address"
+					}
+				],
+				"name": "transferAdministration",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -66,6 +241,12 @@
 				},
 				"renounceOwnership()": {
 					"details": "Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore. Can only be called by the current owner. NOTE: Renouncing ownership will leave the contract without an owner, thereby removing any functionality that is only available to the owner."
+				},
+				"tokensReceived(address,address,address,uint256,bytes,bytes)": {
+					"details": "Called by an {IERC777} token contract whenever tokens are being moved or created into a registered account (`to`). The type of operation is conveyed by `from` being the zero address or not. This call occurs _after_ the token contract's state is updated, so {IERC777-balanceOf}, etc., can be used to query the post-operation state. This function may revert to prevent the operation from being executed."
+				},
+				"tokensToSend(address,address,address,uint256,bytes,bytes)": {
+					"details": "Called by an {IERC777} token contract whenever a registered holder's (`from`) tokens are about to be moved or destroyed. The type of operation is conveyed by `to` being the zero address or not. This call occurs _before_ the token contract's state is updated, so {IERC777-balanceOf}, etc., can be used to query the pre-operation state. This function may revert to prevent the operation from being executed."
 				},
 				"transferOwnership(address)": {
 					"details": "Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner."
@@ -103,6 +284,46 @@
 				"dweb:/ipfs/QmRGM4F2PcGVF85aTfaA9YBhCHHDqrMhRjyp6fGeBTtirb"
 			]
 		},
+		"@openzeppelin/contracts/introspection/IERC1820Registry.sol": {
+			"keccak256": "0x02e3523816b92b805f99dcecf8cbada55c34ca9983a79e2a114a232f466f2f3d",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://95b7dc70f51585c651ee8f02a398ec1ad6711624ae134b7f99c58b43c69edc6f",
+				"dweb:/ipfs/QmekDcesqgZmfmEg2UKSHrGhGZKpvV4w4s4MEHy3KCPZKc"
+			]
+		},
+		"@openzeppelin/contracts/math/SafeMath.sol": {
+			"keccak256": "0xcc78a17dd88fa5a2edc60c8489e2f405c0913b377216a5b26b35656b2d0dab52",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://526dc85e1f9b9b45830e202568d267d93dde7a4fcccf4ad7798dadcd92304d3c",
+				"dweb:/ipfs/QmaoXMB972J3cSDLtBq3xBo4jLwqD2uzXTwujtSPqkYVhR"
+			]
+		},
+		"@openzeppelin/contracts/token/ERC20/IERC20.sol": {
+			"keccak256": "0x5f02220344881ce43204ae4a6281145a67bc52c2bb1290a791857df3d19d78f5",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://24427744bd3e6cb73c17010119af12a318289c0253a4d9acb8576c9fb3797b08",
+				"dweb:/ipfs/QmTLDqpKRBuxGxRAmjgXt9AkXyACW3MtKzi7PYjm5iMfGC"
+			]
+		},
+		"@openzeppelin/contracts/token/ERC777/ERC777.sol": {
+			"keccak256": "0x3f3359a2ca8cdb6cb6af9c3fce08abebb270368a73046bc6f256c70c44578544",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://98c5b3540351db5ab360094fdaa3635c46b3b04c6afae7ba15349ae38baa1c73",
+				"dweb:/ipfs/QmNjWaXu6SK1gZSjAgpuU4cm5QtauH3Q3TQhdv6m1V2waG"
+			]
+		},
+		"@openzeppelin/contracts/token/ERC777/IERC777.sol": {
+			"keccak256": "0xe81b5fca616ec6f57bb9d1ab0750202b9e514760462274ac04495e8c249697ab",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://1e23a53ea7f3787f90ff8f6e25ea47896ed4b56e336e72ae543e3ef74eaa9e23",
+				"dweb:/ipfs/QmSDNkjN5k2VRbrfWdTMJ39dzcSvFz4YMQqHZ5z61qLNVA"
+			]
+		},
 		"@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol": {
 			"keccak256": "0x1e884229423b544c0b07106f59311ea7291ca25a863e9d8f8dd9debe17669cfe",
 			"license": "MIT",
@@ -119,6 +340,14 @@
 				"dweb:/ipfs/Qmd8GyAPaEkHZo7s4j1SBR4DAwrxfoi6SCB5kzCUvnBB5X"
 			]
 		},
+		"@openzeppelin/contracts/utils/Address.sol": {
+			"keccak256": "0x28911e614500ae7c607a432a709d35da25f3bc5ddc8bd12b278b66358070c0ea",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://256c8c8af5eb072bc473226ab2b2187149b8fc04f5f4a4820db22527f5ce8e3c",
+				"dweb:/ipfs/QmRvi5BhnL7Rxf85KrJhwM6RRhukm4tzoctRdgQEheNyiN"
+			]
+		},
 		"@openzeppelin/contracts/utils/Context.sol": {
 			"keccak256": "0x8d3cb350f04ff49cfb10aef08d87f19dcbaecc8027b0bed12f3275cd12f38cf0",
 			"license": "MIT",
@@ -127,12 +356,20 @@
 				"dweb:/ipfs/QmfBrGtQP7rZEqEg6Wz6jh2N2Kukpj1z5v3CGWmAqrzm96"
 			]
 		},
-		"localhost/contracts/xStarterPoolPair.sol": {
-			"keccak256": "0xb7d31f8c3f2563046d70cfeb627fde944278c6e61b0c3a99e33135790b71ddc2",
+		"localhost/contracts/Administration.sol": {
+			"keccak256": "0x1f4d64ab2b3ab6348cc8d714e33f09d3ccdcb35a6159a22b0577a3a63fd15a79",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://f59a1faad880aa8f0ce41e664c117a2623bae929224283e03078354be3607818",
-				"dweb:/ipfs/QmQWpgDonrxtJ5jmNKnJk8E7hZ72N2qUhMqQQWAUyABuA5"
+				"bzz-raw://670a859d33b0d40e9a4872d3c75464559ca97c8e87fe943913e91a1c1d62bfe2",
+				"dweb:/ipfs/QmZuVUqJdmNQRhN1dwiYNRviXH5jQ7KnmyAqaxRMKa8r2D"
+			]
+		},
+		"localhost/contracts/xStarterPoolPair.sol": {
+			"keccak256": "0x17d8c7312e417d7bb9f2cf9fc3229d9833f1714ef4c748cf87d11d4eef2ee668",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://9605a588d7f1fb489d4d02fcfdedef54e90c5ae4d4bf76edfe897ba0cf7f66d5",
+				"dweb:/ipfs/QmZf9qkowbhNwrqBHjXNEXWsHMPsg1JPzK72vSUiP7SsLU"
 			]
 		}
 	},
