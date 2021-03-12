@@ -758,11 +758,11 @@
 			]
 		},
 		"localhost/contracts/xStarterPoolPair.sol": {
-			"keccak256": "0x17d8c7312e417d7bb9f2cf9fc3229d9833f1714ef4c748cf87d11d4eef2ee668",
+			"keccak256": "0xc38fb4c60cbc66cd9235a3c1429b19e0cb302eb18c3137fc251207e828ddfc0e",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://9605a588d7f1fb489d4d02fcfdedef54e90c5ae4d4bf76edfe897ba0cf7f66d5",
-				"dweb:/ipfs/QmZf9qkowbhNwrqBHjXNEXWsHMPsg1JPzK72vSUiP7SsLU"
+				"bzz-raw://50cb7cbbd78639edb517809639dca950f2b23ec3ad9bdd2784ddaa46b16fe175",
+				"dweb:/ipfs/QmZkQPiFNPJ79p4jsxNyYeANivzJa1YQge1Z2T21hCehBn"
 			]
 		}
 	},

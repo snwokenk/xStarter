@@ -5,9 +5,16 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Sender.sol";
 import "@openzeppelin/contracts/token/ERC777/ERC777.sol";
+import "@openzeppelin/contracts/token/ERC777/ERC777.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "./Administration.sol";
 
+
+interface ERC20AndOwnable {
+    function totalSupply() external view returns (uint256);
+    function owner() external view  returns (address);
+}
 
 contract ProjectBaseToken is Context, ERC777 {
     using SafeMath for uint256;
@@ -51,25 +58,50 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     // uint timestamp
     uint48 private _endTime;
     
+    // bool if xStarterPoolPair is set up
+    bool isSetup;
+    
     constructor(
-        address admin, 
+        address adminAddress
+        ) Administration(adminAddress) {
+            
+        }
+    
+    function setUpPoolPair(
         address addressOfProjectToken,
         string memory tokenName_,
         string memory tokenSymbol_,
         uint totalTokenSupply_,
         uint48 startTimeTimestamp, 
-        uint48 endTimeTimestamp
-        ) Administration(admin) {
+        uint48 endTimeTimestamp) public onlyAdmin returns(bool success)  {
             
+            
+            require(!isSetup,"initial setup already done");
+            
+            // if address of project token is 0 address deploy token for it
             if(address(0) == addressOfProjectToken) {
-                address[] memory defaultOperators_;
-                _deployToken(tokenName_, tokenSymbol_, totalTokenSupply_, defaultOperators_);
-            } else {
+                    address[] memory defaultOperators_;
+                    success = _deployToken(tokenName_, tokenSymbol_, totalTokenSupply_, defaultOperators_);
+            } 
+            else {
+                ERC20AndOwnable existingToken = ERC20AndOwnable(addressOfProjectToken);
+                
+                address existingTokenOwner = existingToken.owner();
+                uint existingTokenSupply = existingToken.totalSupply();
+                
+                require(existingTokenOwner == admin(),"Admin of pool pair must be owner of token contract");
+                require(existingTokenSupply == totalTokenSupply_);
+                
+                _projectToken = addressOfProjectToken;
+                _totalTokensSupply = totalTokenSupply_;
+                success = true;
                 
             }
             _startTime = startTimeTimestamp;
             _endTime = endTimeTimestamp;
-        }
+        
+        return success;
+    }
     
     function _deployToken(
         string memory name_,
