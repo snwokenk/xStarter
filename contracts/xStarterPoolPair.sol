@@ -60,7 +60,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     uint private _percentOfTotalTokensForILO;
     
     
-    // uint keeping of set aside for ILO
+    // uint amount of tokens  aside for ILO
     uint private _totalTokensILO;
     
     // tokens remaining for ILO
@@ -83,6 +83,46 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
             require(percentOfTokensForILO_ > 0 && percentOfTokensForILO_ <= 100, "percent of tokens must be between 1 and 100");
             _percentOfTotalTokensForILO = percentOfTokensForILO_;
         }
+    function isSetup() public view returns (bool) {
+        return _isSetup;
+    }
+    
+    function endTime() public view returns (uint48) {
+        return _endTime;
+    }
+    function startTime() public view returns (uint48) {
+        return _startTime;
+    }
+    function availTokensILO() public view returns (uint) {
+        return _availTokensILO;
+    }
+    
+    function totalTokensILO() public view returns (uint) {
+        return _totalTokensILO;
+    }
+    function percentOfTotalTokensForILO() public view returns (uint) {
+        return _percentOfTotalTokensForILO;
+    }
+    function totalTokensSupplyControlled() public view returns (uint) {
+        return _totalTokensSupplyControlled;
+    }
+    
+    function totalTokensSupply() public view returns (uint) {
+        return _totalTokensSupply;
+    }
+    
+    function projectToken() public view returns (address) {
+        return _projectToken;
+    }
+    
+    function isEventOpen() public view returns (bool isOpen_) {
+        uint48 currentTime = uint48(block.timestamp);
+        
+        if(currentTime >= startTime() && currentTime < endTime() && availTokensILO() > 0 ) {
+            isOpen_ = true;
+        }
+        
+    }
     
     // Step 2
     function setUpPoolPair(
@@ -144,7 +184,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     }
     
     
-    // step 3 if PoolPair has not been funded, if token was created by poolpair contract it is automatically funded
+    // step 3 if PoolPair has not been funded, if token was created by poolpair contract it is automatically funded, also sets ILO tokens
     function depositAllTokenSupply() public onlyAdmin onlySetup returns(bool success) {
         
         if(_totalTokensSupplyControlled == _totalTokensSupply) { 
