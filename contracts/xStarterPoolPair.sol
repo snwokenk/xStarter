@@ -236,11 +236,27 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     // functions for taking part in ILO
     function nativeTokenSwap() payable external {
         require(msg.value > 0, "No value Sent");
-        uint value_ = msg.value;
-        uint projectTokenAmount = value_.mul(_swapRatio);
-        FunderInfo storage funder = _funders[_msgSender()];
-        funder.fundingTokenAmount = funder.fundingTokenAmount.add(value_);
-        funder.projectTokenAmount = funder.projectTokenAmount.add(projectTokenAmount);
+        _performSwap(msg.value, _msgSender());
+    }
+    
+    // a lock on a specific address can be added so address not calling function to fast
+    function _performSwap(uint fundingTokenAmount_, address funder_) internal {
+        uint projectTokenDesired = fundingTokenAmount_.mul(_swapRatio);
+        require(_availTokensILO > projectTokenDesired, "not enough project tokens" );
+        
+        // subtract from availTokensILO
+        _availTokensILO = _availTokensILO.sub(projectTokenDesired);
+        
+        // might be excessive but makes sure tokens still avai
+        require(_availTokensILO > 0, "not enough project tokens" );
+        FunderInfo storage funder = _funders[funder_];
+        funder.fundingTokenAmount = funder.fundingTokenAmount.add(fundingTokenAmount_);
+        funder.projectTokenAmount = funder.projectTokenAmount.add(projectTokenDesired);
+        
+        
+        
+        
+        
     }
     
     
