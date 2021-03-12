@@ -36,12 +36,24 @@ contract ProjectBaseToken is Context, ERC777 {
 }
 
 
+
+
 contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777Sender {
     using SafeMath for uint256;
     using Address for address;
     
+    struct FunderInfo {
+    uint fundingTokenAmount;
+    uint projectTokenAmount;
+        
+    }
     modifier onlySetup() {
         require(_isSetup, "ILO has not been set up");
+        _;
+    }
+    
+    modifier onlyOpen() {
+        require(isEventOpen(), "ILO event not open");
         _;
     }
     
@@ -57,7 +69,9 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     
     // this is set up by the launchpad, it enforces what the project told the community
     // if the project said 70% of tokens will be offered in the ILO. This will be set in the constructor.
+    address _fundingToken; // if 0 then use nativeTokenSwap
     uint private _percentOfTotalTokensForILO;
+    uint private _swapRatio;
     
     
     // uint amount of tokens  aside for ILO
@@ -75,13 +89,19 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     // bool if xStarterPoolPair is set up
     bool _isSetup;
     
+    mapping(address => FunderInfo) private _funders;
+    
     // step 1
     constructor(
         address adminAddress,
-        uint8 percentOfTokensForILO_
+        uint8 percentOfTokensForILO_,
+        uint24 swapRatio_,
+        address fundingToken_
         ) Administration(adminAddress) {
             require(percentOfTokensForILO_ > 0 && percentOfTokensForILO_ <= 100, "percent of tokens must be between 1 and 100");
+            require(swapRatio_ > 0, "swapRatio must at least 1 ");
             _percentOfTotalTokensForILO = percentOfTokensForILO_;
+            _fundingToken = fundingToken_;
         }
     function isSetup() public view returns (bool) {
         return _isSetup;
@@ -210,6 +230,17 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         // using the percent of tokens set in constructor by launchpad set total tokens for ILO 
         // formular:  (_percentOfTotalTokensForILO/100 ) * _totalTokensSupplyControlled
         _totalTokensILO = _totalTokensSupplyControlled.mul(_percentOfTotalTokensForILO.div(100));
+    }
+    
+    
+    // functions for taking part in ILO
+    function nativeTokenSwap() payable external {
+        require(msg.value > 0, "No value Sent");
+        uint value_ = msg.value;
+        uint projectTokenAmount = value_.mul(_swapRatio);
+        FunderInfo storage funder = _funders[_msgSender()];
+        funder.fundingTokenAmount = funder.fundingTokenAmount.add(value_);
+        funder.projectTokenAmount = funder.projectTokenAmount.add(projectTokenAmount);
     }
     
     
