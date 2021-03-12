@@ -74,6 +74,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         string memory tokenName_,
         string memory tokenSymbol_,
         uint totalTokenSupply_,
+        uint tokenForILO_,
         uint48 startTimeTimestamp, 
         uint48 endTimeTimestamp) public onlyAdmin returns(bool)  {
             
@@ -118,6 +119,11 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         
         return true;
         
+    }
+    
+    
+    // if ILO has not bee
+    function transferAllTokens() public onlyAdmin {
     }
     
     // IERC777Recipient implementation
