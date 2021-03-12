@@ -14,6 +14,8 @@ import "./Administration.sol";
 interface ERC20AndOwnable {
     function totalSupply() external view returns (uint256);
     function owner() external view  returns (address);
+    function allowance(address owner_, address spender) external view returns (uint256);
+    function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
 }
 
 contract ProjectBaseToken is Context, ERC777 {
@@ -38,7 +40,12 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     using SafeMath for uint256;
     using Address for address;
     
-    event TokenCreatedByStarterPool();
+    modifier onlySetup() {
+        require(_isSetup, "ILO has not been set up");
+        _;
+    }
+    
+    event TokenCreatedByXStarterPoolPair(address indexed TokenAddr_, address indexed PoolPairAddr_, address indexed Admin_, uint timestamp_);
     
     // stores address of the project's token
     address private _projectToken;
@@ -47,6 +54,11 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     uint private _totalTokensSupply;
     
     uint private _totalTokensSupplyControlled;
+    
+    // this is set up by the launchpad, it enforces what the project told the community
+    // if the project said 70% of tokens will be offered in the ILO. This will be set in the constructor.
+    uint private _percentOfTotalTokensForILO;
+    
     
     // uint keeping of set aside for ILO
     uint private _totalTokensILO;
@@ -63,20 +75,24 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     // bool if xStarterPoolPair is set up
     bool _isSetup;
     
+    // step 1
     constructor(
-        address adminAddress
+        address adminAddress,
+        uint8 percentOfTokensForILO_
         ) Administration(adminAddress) {
-            
+            require(percentOfTokensForILO_ > 0 && percentOfTokensForILO_ <= 100, "percent of tokens must be between 1 and 100");
+            _percentOfTotalTokensForILO = percentOfTokensForILO_;
         }
     
+    // Step 2
     function setUpPoolPair(
         address addressOfProjectToken,
         string memory tokenName_,
         string memory tokenSymbol_,
         uint totalTokenSupply_,
-        uint tokenForILO_,
-        uint48 startTimeTimestamp, 
-        uint48 endTimeTimestamp) public onlyAdmin returns(bool)  {
+        uint48 startTime_, 
+        uint48 endTime_
+        ) public onlyAdmin returns(bool)  {
             
             
             require(!_isSetup,"initial setup already done");
@@ -96,35 +112,66 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
                 require(existingTokenSupply == totalTokenSupply_);
                 
                 _projectToken = addressOfProjectToken;
-                _totalTokensSupply = totalTokenSupply_;
+                _totalTokensSupply = _totalTokensSupply.add(totalTokenSupply_);
                 
             }
-            _startTime = startTimeTimestamp;
-            _endTime = endTimeTimestamp;
+            _startTime = startTime_;
+            _endTime = endTime_;
             _isSetup = true;
             return _isSetup;
     }
     
+    // function should be called within a function that checks proper access
     function _deployToken(
         string memory name_,
         string memory symbol_,
         uint totalTokenSupply_,
         address[] memory defaultOperators_
-    ) internal onlyAdmin returns(bool){
+    ) internal returns(bool){
         ProjectBaseToken newToken = new ProjectBaseToken(name_,symbol_, totalTokenSupply_, defaultOperators_);
 
         _projectToken = address(newToken);
         _totalTokensSupply = totalTokenSupply_;
-        _totalTokensSupplyControlled = totalTokenSupply_;
+        _totalTokensSupplyControlled = _totalTokensSupplyControlled.add(totalTokenSupply_);
+        
+        //_totalTokensILO = _totalTokensSupplyControlled.mul(_percentOfTotalTokensForILO.div(100));
+        _setTokensForILO();
+        
+        emit TokenCreatedByXStarterPoolPair(_projectToken, address(this), _msgSender(), block.timestamp);
         
         return true;
         
     }
     
     
-    // if ILO has not bee
-    function transferAllTokens() public onlyAdmin {
+    // step 3 if PoolPair has not been funded, if token was created by poolpair contract it is automatically funded
+    function depositAllTokenSupply() public onlyAdmin onlySetup returns(bool success) {
+        
+        if(_totalTokensSupplyControlled == _totalTokensSupply) { 
+            return true;
+            
+        }
+        ERC20AndOwnable existingToken = ERC20AndOwnable(_projectToken);
+        uint allowance = existingToken.allowance(admin(), address(this));
+        require(allowance == _totalTokensSupply, "You must deposit all available tokens by calling the approve function on the token contract");
+        // transfer approved tokens from admin to current ILO contract
+        success = existingToken.transferFrom(_msgSender(), address(this), _totalTokensSupply);
+        
+        if(success) {
+            _totalTokensSupplyControlled =  _totalTokensSupplyControlled.add(_totalTokensSupply);
+            _setTokensForILO();
+        }
+        return success;
+        
     }
+    
+    // function should be called within a function that checks proper access ie onlyAdmin or onlyOwner
+    function _setTokensForILO() internal {
+        // using the percent of tokens set in constructor by launchpad set total tokens for ILO 
+        // formular:  (_percentOfTotalTokensForILO/100 ) * _totalTokensSupplyControlled
+        _totalTokensILO = _totalTokensSupplyControlled.mul(_percentOfTotalTokensForILO.div(100));
+    }
+    
     
     // IERC777Recipient implementation
     function tokensReceived(
