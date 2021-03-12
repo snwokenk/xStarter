@@ -46,6 +46,8 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     // uint keeping track of total project's token supply
     uint private _totalTokensSupply;
     
+    uint private _totalTokensSupplyControlled;
+    
     // uint keeping of set aside for ILO
     uint private _totalTokensILO;
     
@@ -59,7 +61,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     uint48 private _endTime;
     
     // bool if xStarterPoolPair is set up
-    bool isSetup;
+    bool _isSetup;
     
     constructor(
         address adminAddress
@@ -73,15 +75,15 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         string memory tokenSymbol_,
         uint totalTokenSupply_,
         uint48 startTimeTimestamp, 
-        uint48 endTimeTimestamp) public onlyAdmin returns(bool success)  {
+        uint48 endTimeTimestamp) public onlyAdmin returns(bool)  {
             
             
-            require(!isSetup,"initial setup already done");
+            require(!_isSetup,"initial setup already done");
             
             // if address of project token is 0 address deploy token for it
             if(address(0) == addressOfProjectToken) {
                     address[] memory defaultOperators_;
-                    success = _deployToken(tokenName_, tokenSymbol_, totalTokenSupply_, defaultOperators_);
+                    _deployToken(tokenName_, tokenSymbol_, totalTokenSupply_, defaultOperators_);
             } 
             else {
                 ERC20AndOwnable existingToken = ERC20AndOwnable(addressOfProjectToken);
@@ -94,13 +96,12 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
                 
                 _projectToken = addressOfProjectToken;
                 _totalTokensSupply = totalTokenSupply_;
-                success = true;
                 
             }
             _startTime = startTimeTimestamp;
             _endTime = endTimeTimestamp;
-        
-        return success;
+            _isSetup = true;
+            return _isSetup;
     }
     
     function _deployToken(
@@ -113,6 +114,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
 
         _projectToken = address(newToken);
         _totalTokensSupply = totalTokenSupply_;
+        _totalTokensSupplyControlled = totalTokenSupply_;
         
         return true;
         
