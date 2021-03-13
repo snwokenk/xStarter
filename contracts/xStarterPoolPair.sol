@@ -75,8 +75,11 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     // this is set up by the launchpad, it enforces what the project told the community
     // if the project said 70% of tokens will be offered in the ILO. This will be set in the constructor.
     address _fundingToken; // if 0 then use nativeTokenSwap
-    uint private _percentOfTotalTokensForILO;
+    uint8 private _percentOfTotalTokensForILO;
+    uint40 private _minFundingTokenPerAddress;
+    uint40 private _maxFundingTokenPerAddress;
     uint private _swapRatio;
+    
     
     
     // uint amount of tokens  aside for ILO
@@ -235,42 +238,41 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     function _setTokensForILO() internal {
         // using the percent of tokens set in constructor by launchpad set total tokens for ILO 
         // formular:  (_percentOfTotalTokensForILO/100 ) * _totalTokensSupplyControlled
-        _totalTokensILO = _totalTokensSupplyControlled.mul(_percentOfTotalTokensForILO.div(100));
+        _totalTokensILO = _totalTokensSupplyControlled.mul(_percentOfTotalTokensForILO/100);
     }
     
     
     // functions for taking part in ILO
-    function nativeTokenSwap() payable notCurrentlyFunding external {
+    function nativeTokenSwap() payable notCurrentlyFunding external returns(bool){
         require(msg.value > 0, "No value Sent");
         _disallowFunding();
         _performSwap(msg.value, _msgSender());
         _allowFunding();
+        return true;
         
     }
     
     // should be called after approving amount of token
-    function fundingTokenSwap() notCurrentlyFunding external {
+    function fundingTokenSwap() notCurrentlyFunding external returns(bool) {
         require(_fundingToken != address(0), "please use nativeTokenSwap. Only native token allowed. xDai token for xDai side chain etc");
         _disallowFunding();
         uint amount_ = _retrieveApprovedToken();
         _performSwap(amount_, _msgSender());
         _allowFunding();
         
-        
+        return true;
     }
     
     // a lock on a specific address can be added so address not calling function to fast
     function _performSwap(uint fundingTokenAmount_, address funder_) internal {
         uint projectTokenDesired = fundingTokenAmount_.mul(_swapRatio);
-        //require(_availTokensILO > projectTokenDesired, "not enough project tokens" );
         
         // subtract from availTokensILO
         _availTokensILO = _availTokensILO.sub(projectTokenDesired, "not enough project tokens");
-        
-        // might be excessive but makes sure tokens still avai
-        //require(_availTokensILO > 0, "not enough project tokens" );
         FunderInfo storage funder = _funders[funder_];
         funder.fundingTokenAmount = funder.fundingTokenAmount.add(fundingTokenAmount_);
+        require(funder.fundingTokenAmount >= _minFundingTokenPerAddress, "Minimum not met");
+        require(funder.fundingTokenAmount <= _maxFundingTokenPerAddress || _maxFundingTokenPerAddress == 0, "maximum exceeded");
         funder.projectTokenAmount = funder.projectTokenAmount.add(projectTokenDesired);
         
     }
@@ -301,8 +303,8 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         bytes calldata userData,
         bytes calldata operatorData
     ) external pure override{
-        // this contract shouldn't receive tokens
-        revert();
+        // this contract should receive token using approve on ERC20/ and then fundingTokenSwap function on this contract
+        revert("send tokens using approve on ERC20 and then calling fundingTokenSwap");
     }
     
     // IERC777Sender implementation called before tokenis
@@ -314,7 +316,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         bytes calldata userData,
         bytes calldata operatorData
     ) external pure override {
-        revert();
+        revert("send tokens using approve on ERC20 and then calling fundingTokenSwap");
     }
     
 }
