@@ -57,6 +57,11 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         _;
     }
     
+    modifier notCurrentlyFunding() {
+        require(!_currentlyFunding[_msgSender()], "Locked From Funding, A transaction you initiated has not been completed");
+        _;
+    }
+    
     event TokenCreatedByXStarterPoolPair(address indexed TokenAddr_, address indexed PoolPairAddr_, address indexed Admin_, uint timestamp_);
     
     // stores address of the project's token
@@ -90,6 +95,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     bool _isSetup;
     
     mapping(address => FunderInfo) private _funders;
+    mapping(address => bool) private _currentlyFunding;
     
     // step 1
     constructor(
@@ -234,29 +240,55 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     
     
     // functions for taking part in ILO
-    function nativeTokenSwap() payable external {
+    function nativeTokenSwap() payable notCurrentlyFunding external {
         require(msg.value > 0, "No value Sent");
+        _disallowFunding();
         _performSwap(msg.value, _msgSender());
+        _allowFunding();
+        
+    }
+    
+    // should be called after approving amount of token
+    function fundingTokenSwap() notCurrentlyFunding external {
+        require(_fundingToken != address(0), "please use nativeTokenSwap. Only native token allowed. xDai token for xDai side chain etc");
+        _disallowFunding();
+        uint amount_ = _retrieveApprovedToken();
+        _performSwap(amount_, _msgSender());
+        _allowFunding();
+        
+        
     }
     
     // a lock on a specific address can be added so address not calling function to fast
     function _performSwap(uint fundingTokenAmount_, address funder_) internal {
         uint projectTokenDesired = fundingTokenAmount_.mul(_swapRatio);
-        require(_availTokensILO > projectTokenDesired, "not enough project tokens" );
+        //require(_availTokensILO > projectTokenDesired, "not enough project tokens" );
         
         // subtract from availTokensILO
-        _availTokensILO = _availTokensILO.sub(projectTokenDesired);
+        _availTokensILO = _availTokensILO.sub(projectTokenDesired, "not enough project tokens");
         
         // might be excessive but makes sure tokens still avai
-        require(_availTokensILO > 0, "not enough project tokens" );
+        //require(_availTokensILO > 0, "not enough project tokens" );
         FunderInfo storage funder = _funders[funder_];
         funder.fundingTokenAmount = funder.fundingTokenAmount.add(fundingTokenAmount_);
         funder.projectTokenAmount = funder.projectTokenAmount.add(projectTokenDesired);
         
-        
-        
-        
-        
+    }
+    
+    function _retrieveApprovedToken() internal returns(uint allowedAmount_) {
+        address ownAddress = address(this);
+        ERC20AndOwnable existingToken = ERC20AndOwnable(_fundingToken);
+        allowedAmount_ = existingToken.allowance(_msgSender(), ownAddress);
+        require(allowedAmount_ > 0, "Amount must be greater than 0");
+        existingToken.transferFrom(_msgSender(), ownAddress, allowedAmount_);
+        return allowedAmount_;
+    }
+    
+    function _allowFunding() internal {
+        _currentlyFunding[_msgSender()] = true;
+    }
+    function _disallowFunding() internal {
+        _currentlyFunding[_msgSender()] = false;
     }
     
     
