@@ -112,6 +112,9 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
             _percentOfTotalTokensForILO = percentOfTokensForILO_;
             _fundingToken = fundingToken_;
         }
+    function funders(address funder_) public view returns(uint, uint) {
+        return (_funders[funder_].fundingTokenAmount, _funders[funder_].projectTokenAmount);
+    }
     function isSetup() public view returns (bool) {
         return _isSetup;
     }
