@@ -9,14 +9,49 @@ import "@openzeppelin/contracts/token/ERC777/ERC777.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "./Administration.sol";
+//import "./UniswapInterface.sol";
 
 
-interface ERC20AndOwnable {
+
+// https://ropsten.etherscan.io/tx/0xd0fd6a146eca2faff282a10e7604fa1c0c334d6a8a6361e4694a743154b2798f
+// must first approve amount
+
+
+// https://ropsten.etherscan.io/tx/0x2f39644b43bb8f1407e4bb8bf9c1f6ceb116633be8be7c8fa2980235fa088c51
+// transaction showing how to add liquidity for ETH to token pair
+
+
+interface IERC20AndOwnable {
     function totalSupply() external view returns (uint256);
     function owner() external view  returns (address);
     function allowance(address owner_, address spender) external view returns (uint256);
     function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
+    function approve(address spender, uint256 amount) external returns (bool);
 }
+
+interface IUniswapRouter {
+        function addLiquidity(
+        address tokenA,
+        address tokenB,
+        uint amountADesired,
+        uint amountBDesired,
+        uint amountAMin,
+        uint amountBMin,
+        address to,
+        uint deadline
+    ) external returns (uint amountA, uint amountB, uint liquidity);
+    function addLiquidityETH(
+        address token,
+        uint amountTokenDesired,
+        uint amountTokenMin,
+        uint amountETHMin,
+        address to,
+        uint deadline
+    ) external payable returns (uint amountToken, uint amountETH, uint liquidity);
+}
+
+
+
 
 contract ProjectBaseToken is Context, ERC777 {
     using SafeMath for uint256;
@@ -64,6 +99,9 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     
     event TokenCreatedByXStarterPoolPair(address indexed TokenAddr_, address indexed PoolPairAddr_, address indexed Admin_, uint timestamp_);
     
+    address private _addressOfDex;
+    uint24 private _dexDeadlineLength;
+    
     // stores address of the project's token
     address private _projectToken;
     
@@ -75,6 +113,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     // this is set up by the launchpad, it enforces what the project told the community
     // if the project said 70% of tokens will be offered in the ILO. This will be set in the constructor.
     address _fundingToken; // if 0 then use nativeTokenSwap
+    address _liquidityPairAddress; // address of liquidity token pair
     uint8 private _percentOfTotalTokensForILO;
     uint40 private _minFundingTokenPerAddress;
     uint40 private _maxFundingTokenPerAddress;
@@ -87,6 +126,9 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     
     // tokens remaining for ILO
     uint private _availTokensILO;
+    
+    uint _fundingTokenTotal;
+    uint _fundingTokenAvail;
     
     // utc timestamp
     uint48 private _startTime;
@@ -105,12 +147,15 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         address adminAddress,
         uint8 percentOfTokensForILO_,
         uint24 swapRatio_,
+        uint24 dexDeadlineLength_,
         address fundingToken_
         ) Administration(adminAddress) {
             require(percentOfTokensForILO_ > 0 && percentOfTokensForILO_ <= 100, "percent of tokens must be between 1 and 100");
             require(swapRatio_ > 0, "swapRatio must at least 1 ");
             _percentOfTotalTokensForILO = percentOfTokensForILO_;
             _fundingToken = fundingToken_;
+            _dexDeadlineLength = dexDeadlineLength_;
+            
         }
     function funders(address funder_) public view returns(uint, uint) {
         return (_funders[funder_].fundingTokenAmount, _funders[funder_].projectTokenAmount);
@@ -156,6 +201,15 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         
     }
     
+    function isEventDone() public view returns (bool isOpen_) {
+        uint48 currentTime = uint48(block.timestamp);
+        
+        if(currentTime > endTime() || availTokensILO() == 0 ) {
+            isOpen_ = true;
+        }
+        
+    }
+    
     // Step 2
     function setUpPoolPair(
         address addressOfProjectToken,
@@ -175,7 +229,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
                     _deployToken(tokenName_, tokenSymbol_, totalTokenSupply_, defaultOperators_);
             } 
             else {
-                ERC20AndOwnable existingToken = ERC20AndOwnable(addressOfProjectToken);
+                IERC20AndOwnable existingToken = IERC20AndOwnable(addressOfProjectToken);
                 
                 address existingTokenOwner = existingToken.owner();
                 uint existingTokenSupply = existingToken.totalSupply();
@@ -223,7 +277,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
             return true;
             
         }
-        ERC20AndOwnable existingToken = ERC20AndOwnable(_projectToken);
+        IERC20AndOwnable existingToken = IERC20AndOwnable(_projectToken);
         uint allowance = existingToken.allowance(admin(), address(this));
         require(allowance == _totalTokensSupply, "You must deposit all available tokens by calling the approve function on the token contract");
         // transfer approved tokens from admin to current ILO contract
@@ -277,12 +331,14 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         require(funder.fundingTokenAmount >= _minFundingTokenPerAddress, "Minimum not met");
         require(funder.fundingTokenAmount <= _maxFundingTokenPerAddress || _maxFundingTokenPerAddress == 0, "maximum exceeded");
         funder.projectTokenAmount = funder.projectTokenAmount.add(projectTokenDesired);
+        _fundingTokenTotal = _fundingTokenTotal.add(fundingTokenAmount_);
+        _fundingTokenAvail = _fundingTokenAvail.add(fundingTokenAmount_);
         
     }
     
     function _retrieveApprovedToken() internal returns(uint allowedAmount_) {
         address ownAddress = address(this);
-        ERC20AndOwnable existingToken = ERC20AndOwnable(_fundingToken);
+        IERC20AndOwnable existingToken = IERC20AndOwnable(_fundingToken);
         allowedAmount_ = existingToken.allowance(_msgSender(), ownAddress);
         require(allowedAmount_ > 0, "Amount must be greater than 0");
         existingToken.transferFrom(_msgSender(), ownAddress, allowedAmount_);
@@ -294,6 +350,48 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     }
     function _disallowFunding() internal {
         _currentlyFunding[_msgSender()] = false;
+    }
+    
+    function createLiquidityPool() external returns(address pairAddress) {
+        if(address(0) == _fundingToken) {
+            pairAddress = _createLiquidityPairETH();
+        } else {
+            pairAddress = _createLiquidityPairERC20();
+        }
+        
+    }
+    
+    // this can be called by anyone. but should be called AFTER the ILO
+    // on xDai chain ETH would be xDai, on BSC it would be BNB 
+    function _createLiquidityPairETH() internal returns(address pairAddress) {
+        
+        //require(address(0) == _fundingToken, "xStarterPair: FundingTokenError");
+        uint amountETH = _fundingTokenTotal;
+        uint amountProjectToken = _totalTokensSupplyControlled;
+        
+        // approve project token to be sent to dex
+        IERC20AndOwnable existingToken = IERC20AndOwnable(_projectToken);
+        bool approved_ = existingToken.approve(_addressOfDex, amountProjectToken);
+        require(approved_, "xStarterPair: TokenApprovalFail");
+        
+        (uint amountTokenInPool, uint amountETHInPool, uint amountliquidityToken) = IUniswapRouter(_addressOfDex).addLiquidityETH{value: amountETH}(
+            _projectToken,
+            amountProjectToken,
+            amountProjectToken,
+            amountETH,
+            address(this),
+            block.timestamp + _dexDeadlineLength
+            );
+        // TODO: using these amounts make sure they are equal to 
+        
+        
+    }
+    function _createLiquidityPairERC20() internal returns(address pairAddress) {
+        
+        //require(address(0) == _fundingToken, "xStarterPair: FundingTokenError");
+        uint amountERC20 = _fundingTokenTotal;
+        uint amountProjectToken = _totalTokensSupplyControlled;
+        
     }
     
     
