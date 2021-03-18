@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/utils/Context.sol";
 abstract contract Administration is Context {
     event AdministrationTransferred(address indexed previousAdmin, address indexed newAdmin);
 
-    address private _admin;
+    address internal _admin;
 
     constructor (address adminAddress)  {
         require(adminAddress != address(0), "Administration: new admin is the zero address");

@@ -153,6 +153,8 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     // tokens remaining for ILO
     uint private _availTokensILO;
     
+    uint private _adminTokensSold;
+    
     // tokens for liquidity
     uint private _tokensForLiquidity;
     
@@ -195,8 +197,13 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
             _dexDeadlineLength = dexDeadlineLength_;
             
         }
-    function funders(address funder_) public view returns(uint, uint) {
+    function balanceOfFunder(address funder_) public view returns(uint, uint) {
         return (_funders[funder_].fundingTokenAmount, _funders[funder_].projectTokenAmount);
+    }
+    
+    function balanceOfAdmin() public view returns(uint balance_) {
+        balance_ = _totalTokensSupplyControlled.sub(_totalTokensILO);
+        balance_ = balance_.sub(_adminTokensSold);
     }
     function isSetup() public view returns (bool) {
         return _isSetup;
@@ -288,10 +295,11 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
                 uint existingTokenSupply = existingToken.totalSupply();
                 
                 require(existingTokenOwner == admin(),"Admin of pool pair must be owner of token contract");
-                require(existingTokenSupply == totalTokenSupply_);
+                require(existingTokenSupply == totalTokenSupply_, "All tokens from contract must be transferred");
                 
                 _projectToken = addressOfProjectToken;
                 _totalTokensSupply = _totalTokensSupply.add(totalTokenSupply_);
+                _totalTokensSupplyControlled = _totalTokensSupplyControlled.add(totalTokenSupply_);
                 
             }
             _startTime = startTime_;
@@ -468,7 +476,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     }
     
     function withdraw(uint amount_) external returns(bool success) {
-        require(!isContributorTimeLocked, "withdrawal locked");
+        require(!isContributorTimeLocked(), "withdrawal locked");
         FunderInfo memory funder = _funders[_msgSender()];
         funder.projectTokenAmount = funder.projectTokenAmount.sub(amount_);
         _totalTokensSupplyControlled = _totalTokensSupplyControlled.sub(amount_);
@@ -477,9 +485,12 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     }
     
     function withdrawAdmin() external returns (bool success) {
-        require(!isProjectOwnerTimeLocked, "withdrawal locked for admin");
-        uint amount_ = tokenfo
-        _totalTokensSupplyControlled = 
+        require(!isProjectOwnerTimeLocked(), "withdrawal locked for admin");
+        
+        // admin
+        uint amount_ = balanceOfAdmin();
+        _totalTokensSupplyControlled = _totalTokensSupplyControlled.sub(amount_);
+        success = IERC20AndOwnable(_projectToken).approve(_admin, amount_);
     }
     
     function _setLiquidityPairAddress() internal returns(address liquidPair_) {
