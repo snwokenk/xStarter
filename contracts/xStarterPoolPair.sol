@@ -121,6 +121,14 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     uint private _liquidityPairAmount; // amount of liquidity
     uint8 private _percentOfTotalTokensForILO;
     uint8 private _percentOfILOTokensForLiquidity = 50;
+    // timestamp of when contributors tokens will be free to withdraw
+    uint private _contributorsTimeStampLock;
+    // time stamp until project tokens are free usually double the length of contributor time
+    uint private _projectOwnerTimestampLock;
+    
+    // the length in seconds of timelock Minimum is 14 days equivalent or 1,209,600 seconds
+    // also project owners tokens are timelocked for either double the timelock of contributors or an additional 2 months
+    uint private _contributorTimeLockLength;
     
     // the number of tokens to sell to be considered a success ie:  1 - (_availTokensILO / _totalTokensILO) >= _percentRequiredTokenPurchase
     uint8 private _percentRequiredTokenPurchase = 50;
@@ -179,6 +187,21 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     }
     function isSetup() public view returns (bool) {
         return _isSetup;
+    }
+    
+    function isTimeLockSet() public view returns (bool) {
+        return _projectOwnerTimestampLock == 0 && _contributorsTimeStampLock == 0;
+    }
+    
+    
+    function isContributorTimeLocked() public view returns (bool) {
+        require(isTimeLockSet, "Time locked not set");
+        return block.timestamp > _contributorsTimeStampLock;
+    }
+    
+    function isProjectOwnerTimeLocked() public view returns (bool) {
+        require(isTimeLockSet, "Time locked not set");
+        return block.timestamp > _projectOwnerTimestampLock;
     }
     
     function endTime() public view returns (uint48) {
@@ -387,6 +410,18 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         _currentlyFunding[_msgSender()] = false;
     }
     
+    // step 4 validate after ILO
+    function validateILO() external returns(bool) {
+        require(isEventDone(), "ILO not yet done");
+        uint8 availRatio = uint8(_availTokensILO / _totalTokensILO);
+        uint8 percentRatio = (1 - availRatio) * 100;
+        require( percentRatio >= _percentRequiredTokenPurchase);
+        
+        _ILOValidated = true;
+        return true;
+    }
+    
+    // step 5
     function createLiquidityPool() external returns(address pairAddress) {
         // liquidity will be _fundingTokenAvail to _tokensForLiquidity ratio
         require(_ILOValidated, "You must first validate ILO");
@@ -400,22 +435,20 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         _liquidityPairAmount = liquidityAmount;
         // todo after creating liquidity pool set the locks timestamp
         
+        
+        
     }
     
-    // step 4 validate after ILO
-    function validateILO() external returns(bool) {
-        require(isEventDone(), "ILO not yet done");
-        uint8 availRatio = uint8(_availTokensILO / _totalTokensILO);
-        uint8 percentRatio = (1 - availRatio) * 100;
-        require( percentRatio >= _percentRequiredTokenPurchase);
+    
+    
+    function _setTimeLocks() {
+        require(!isTimeLockSet, "Time lock already set");
         
-        _ILOValidated = true;
-        return true;
     }
     
     // this can be called by anyone. but should be called AFTER the ILO
     // on xDai chain ETH would be xDai, on BSC it would be BNB 
-    // step 5 a
+    // step 5a
     function _createLiquidityPairETH() internal returns(uint liquidityTokens_) {
         
         //require(address(0) == _fundingToken, "xStarterPair: FundingTokenError");
@@ -444,6 +477,8 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         
         
     }
+    
+    // step 5b
     function _createLiquidityPairERC20() internal returns(uint liquidityTokens_) {
         
         require(address(0) != _fundingToken, "xStarterPair: FundingTokenError");
