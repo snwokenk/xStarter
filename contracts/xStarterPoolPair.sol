@@ -164,6 +164,8 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     
     bool _ILOValidated;
     
+    bool _liquidityPairCreated;
+    
     mapping(address => FunderInfo) private _funders;
     mapping(address => bool) private _currentlyFunding;
     
@@ -195,12 +197,12 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     
     
     function isContributorTimeLocked() public view returns (bool) {
-        require(isTimeLockSet, "Time locked not set");
+        require(isTimeLockSet(), "Time locked not set");
         return block.timestamp > _contributorsTimeStampLock;
     }
     
     function isProjectOwnerTimeLocked() public view returns (bool) {
-        require(isTimeLockSet, "Time locked not set");
+        require(isTimeLockSet(), "Time locked not set");
         return block.timestamp > _projectOwnerTimestampLock;
     }
     
@@ -422,9 +424,12 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     }
     
     // step 5
-    function createLiquidityPool() external returns(address pairAddress) {
+    function createLiquidityPool() external returns(bool success) {
         // liquidity will be _fundingTokenAvail to _tokensForLiquidity ratio
         require(_ILOValidated, "You must first validate ILO");
+        require(!_liquidityPairCreated, "Liquidity pair already created");
+        _liquidityPairCreated = true;
+    
         uint liquidityAmount;
         if(address(0) == _fundingToken) {
             liquidityAmount = _createLiquidityPairETH();
@@ -433,17 +438,41 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         }
         
         _liquidityPairAmount = liquidityAmount;
-        // todo after creating liquidity pool set the locks timestamp
         
+        success = _setTimeLocks();
         
         
     }
     
-    
-    
-    function _setTimeLocks() {
-        require(!isTimeLockSet, "Time lock already set");
+    // step 6
+    function finalizeILO() external returns(bool success) {
+        require(_liquidityPairCreated, "liquidity pair must be created first");
         
+        // get liquidty pair address 
+        address liquidityPairAddress_;
+        
+        
+    }
+    
+    function _setLiquidityPairAddress() internal returns(address addr) {
+        if(address(0) == _fundingToken) {
+            liquidityPairAddress_ = _createLiquidityPairETH();
+        } else {
+            liquidityPairAddress_ = _createLiquidityPairERC20();
+        }
+    }
+    
+    function _setTimeLocks() internal returns(bool)  {
+        require(!isTimeLockSet(), "Time lock already set");
+        uint timeLockLengthX2 = _contributorTimeLockLength * 2;
+        // if timelock greater than 60 days in seconds 
+        uint projectTimeLockLength = timeLockLengthX2 > 5184000 ? 5184000 : timeLockLengthX2;
+        
+        _projectOwnerTimestampLock = block.timestamp + projectTimeLockLength;
+        _contributorsTimeStampLock = block.timestamp + _contributorTimeLockLength;
+        
+        return true;
+    
     }
     
     // this can be called by anyone. but should be called AFTER the ILO
@@ -517,13 +546,13 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     
     function _callApproveOnProjectToken(address spender_, uint amount_) internal returns(bool success) {
         IERC20AndOwnable existingToken = IERC20AndOwnable(_projectToken);
-        bool success = existingToken.approve(spender_, amount_);
+        success = existingToken.approve(spender_, amount_);
         
     }
     
     function _callApproveOnFundingToken(address spender_, uint amount_) internal returns(bool success) {
         IERC20AndOwnable existingToken = IERC20AndOwnable(_fundingToken);
-        bool success = existingToken.approve(spender_, amount_);
+        success = existingToken.approve(spender_, amount_);
         
     }
     // IERC777Recipient implementation
