@@ -40,6 +40,8 @@ interface IUniswapRouter {
         address to,
         uint deadline
     ) external returns (uint amountA, uint amountB, uint liquidity);
+    
+    // add liquidity, this will automatically create a pair for WETH
     function addLiquidityETH(
         address token,
         uint amountTokenDesired,
@@ -48,6 +50,13 @@ interface IUniswapRouter {
         address to,
         uint deadline
     ) external payable returns (uint amountToken, uint amountETH, uint liquidity);
+    
+    // get the WETH address
+    function WETH() external pure returns (address);
+}
+
+interface IUniswapFactory {
+  function getPair(address tokenA, address tokenB) external view returns (address pair);
 }
 
 
@@ -99,6 +108,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     event TokenCreatedByXStarterPoolPair(address indexed TokenAddr_, address indexed PoolPairAddr_, address indexed Admin_, uint timestamp_);
     
     address private _addressOfDex;
+    address private _addressOfDexFactory;
     uint24 private _dexDeadlineLength;
     
     // stores address of the project's token
@@ -448,17 +458,24 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     function finalizeILO() external returns(bool success) {
         require(_liquidityPairCreated, "liquidity pair must be created first");
         
-        // get liquidty pair address 
-        address liquidityPairAddress_;
+        // set liquidity pair address 
+        _liquidityPairAddress = _setLiquidityPairAddress();
+        
+        // todo: add any final things
+        return true;
         
         
     }
     
-    function _setLiquidityPairAddress() internal returns(address addr) {
+    function _setLiquidityPairAddress() internal returns(address liquidPair_) {
+        
         if(address(0) == _fundingToken) {
-            liquidityPairAddress_ = _createLiquidityPairETH();
+            address WETH_ = IUniswapRouter(_addressOfDex).WETH();
+            liquidPair_ = IUniswapFactory(_addressOfDexFactory).getPair(WETH_, _projectToken);
+            require(address(0) != liquidPair_, "Liquidity Pair Should Be Created But Not Created");
         } else {
-            liquidityPairAddress_ = _createLiquidityPairERC20();
+            liquidPair_ = IUniswapFactory(_addressOfDexFactory).getPair(_fundingToken, _projectToken);
+            require(address(0) != liquidPair_, "Liquidity Pair Should Be Created But Not Created");
         }
     }
     
