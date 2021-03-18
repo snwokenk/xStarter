@@ -178,6 +178,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     
     mapping(address => FunderInfo) private _funders;
     mapping(address => bool) private _currentlyFunding;
+     mapping(address => bool) private _currentlyWithdrawing;
     
     // step 1
     constructor(
@@ -208,12 +209,12 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     
     function isContributorTimeLocked() public view returns (bool) {
         require(isTimeLockSet(), "Time locked not set");
-        return block.timestamp > _contributorsTimeStampLock;
+        return block.timestamp < _contributorsTimeStampLock;
     }
     
     function isProjectOwnerTimeLocked() public view returns (bool) {
         require(isTimeLockSet(), "Time locked not set");
-        return block.timestamp > _projectOwnerTimestampLock;
+        return block.timestamp < _projectOwnerTimestampLock;
     }
     
     function endTime() public view returns (uint48) {
@@ -384,7 +385,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         uint projectTokenReceived = projectTokenDesired * (_percentOfILOTokensForLiquidity/100);
         
         // add to msg.sender token funder balance
-        FunderInfo storage funder = _funders[funder_];
+        FunderInfo memory funder = _funders[funder_];
         funder.fundingTokenAmount = funder.fundingTokenAmount.add(fundingTokenAmount_);
         require(funder.fundingTokenAmount >= _minFundingTokenPerAddress , "Minimum not met");
         // if max is set then make sure not contributing max
@@ -457,7 +458,6 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     // step 6
     function finalizeILO() external returns(bool success) {
         require(_liquidityPairCreated, "liquidity pair must be created first");
-        
         // set liquidity pair address 
         _liquidityPairAddress = _setLiquidityPairAddress();
         
@@ -465,6 +465,21 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         return true;
         
         
+    }
+    
+    function withdraw(uint amount_) external returns(bool success) {
+        require(!isContributorTimeLocked, "withdrawal locked");
+        FunderInfo memory funder = _funders[_msgSender()];
+        funder.projectTokenAmount = funder.projectTokenAmount.sub(amount_);
+        _totalTokensSupplyControlled = _totalTokensSupplyControlled.sub(amount_);
+        success = IERC20AndOwnable(_projectToken).approve(_msgSender(), amount_);
+        //uint amount = 
+    }
+    
+    function withdrawAdmin() external returns (bool success) {
+        require(!isProjectOwnerTimeLocked, "withdrawal locked for admin");
+        uint amount_ = tokenfo
+        _totalTokensSupplyControlled = 
     }
     
     function _setLiquidityPairAddress() internal returns(address liquidPair_) {
