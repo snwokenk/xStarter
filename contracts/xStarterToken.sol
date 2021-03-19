@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.6.0 <0.8.0;
+pragma solidity ^0.7.6;
 
 import "./ERC777ReceiveSend.sol";
 import "@openzeppelin/contracts/token/ERC777/ERC777.sol";
@@ -13,7 +13,6 @@ contract XStarterToken is Ownable, ERC777, ERC777NoReceiveRecipient, ERC777NoSen
         address[] memory defaultOperators
     )
         ERC777("xStarterToken", "XSTN", defaultOperators)
-        public
     {
         _mint(msg.sender, initialSupply * 10 ** 18, "", "");
     }
