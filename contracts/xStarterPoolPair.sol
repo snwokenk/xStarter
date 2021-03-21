@@ -29,6 +29,9 @@ interface IERC20AndOwnable {
     function approve(address spender, uint256 amount) external returns (bool);
 }
 
+interface IERC20Uni {
+    function approve(address spender, uint256 amount) external returns (bool);
+}
 interface IUniswapRouter {
         function addLiquidity(
         address tokenA,
@@ -85,6 +88,9 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     using SafeMath for uint256;
     using Address for address;
     
+    // this is for xDai chain. if deploying to other chains check the length of block creation, some are faster
+    uint constant mineLen = 5 seconds;
+    
     struct FunderInfo {
     uint fundingTokenAmount;
     uint projectTokenAmount;
@@ -129,16 +135,27 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     // address of  dex liquidity token pair, this is the pair that issues liquidity tokens from uniswap or deriivatives
     address _liquidityPairAddress; 
     uint private _liquidityPairAmount; // amount of liquidity
+    // timestamp when contributors can start withdrawing their their Liquidity pool tokens
+    uint private _liqPairTimeLock;
+    uint private _liqPairBlockLock;
+    // length of lock for Liquidity tokens Minimum 365.25 days or 31557600 seconds
+    uint private _liqPairLockLen;
+    
     uint8 private _percentOfTotalTokensForILO;
     uint8 private _percentOfILOTokensForLiquidity = 50;
     // timestamp of when contributors tokens will be free to withdraw
-    uint private _contributorsTimeStampLock;
-    // time stamp until project tokens are free usually double the length of contributor time
-    uint private _projectOwnerTimestampLock;
+    uint private _contribTimeStampLock;
+    // time stamp until project owner tokens are free usually double the length of contributor time
+    uint private _projTimeLock;
+    // block lock, use both timesamp and block number to add time lock
+    uint private _projBlockLock;
     
-    // the length in seconds of timelock Minimum is 14 days equivalent or 1,209,600 seconds
+    
+    // the length in seconds of between block timestamp till timestamp when contributors can receive their tokens 
+    //Minimum is 14 days equivalent or 1,209,600 seconds
     // also project owners tokens are timelocked for either double the timelock of contributors or an additional 2 months
-    uint private _contributorTimeLockLength;
+    uint private _contribTimeLock;
+    uint private _contribBlockLock;
     
     // the number of tokens to sell to be considered a success ie:  1 - (_availTokensILO / _totalTokensILO) >= _percentRequiredTokenPurchase
     uint8 private _percentRequiredTokenPurchase = 50;
@@ -179,6 +196,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     bool _liquidityPairCreated;
     
     mapping(address => FunderInfo) private _funders;
+    mapping(address => bool) private liqTokensWithdrawn;
     mapping(address => bool) private _currentlyFunding;
      mapping(address => bool) private _currentlyWithdrawing;
     
@@ -210,18 +228,23 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     }
     
     function isTimeLockSet() public view returns (bool) {
-        return _projectOwnerTimestampLock == 0 && _contributorsTimeStampLock == 0;
+        return _projTimeLock != 0 && _contribTimeStampLock != 0 && _liqPairTimeLock != 0;
     }
     
     
-    function isContributorTimeLocked() public view returns (bool) {
+    function isContribTokenLocked() public view returns (bool) {
         require(isTimeLockSet(), "Time locked not set");
-        return block.timestamp < _contributorsTimeStampLock;
+        return block.timestamp < _contribTimeStampLock || block.number < _contribBlockLock;
     }
     
-    function isProjectOwnerTimeLocked() public view returns (bool) {
+    function isProjTokenLocked() public view returns (bool) {
         require(isTimeLockSet(), "Time locked not set");
-        return block.timestamp < _projectOwnerTimestampLock;
+        return block.timestamp < _projTimeLock || block.number < _projBlockLock;
+    }
+    
+    function isLiqTokenLocked() public view returns (bool) {
+        require(isTimeLockSet(), "Time locked not set");
+        return block.timestamp < _liqPairTimeLock || block.number < _liqPairBlockLock;
     }
     
     function endTime() public view returns (uint48) {
@@ -455,12 +478,9 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         } else {
             liquidityAmount = _createLiquidityPairERC20();
         }
-        
         _liquidityPairAmount = liquidityAmount;
         
         success = _setTimeLocks();
-        
-        
     }
     
     // step 6
@@ -468,15 +488,12 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         require(_liquidityPairCreated, "liquidity pair must be created first");
         // set liquidity pair address 
         _liquidityPairAddress = _setLiquidityPairAddress();
-        
         // todo: add any final things
         return true;
-        
-        
     }
     
     function withdraw(uint amount_) external returns(bool success) {
-        require(!isContributorTimeLocked(), "withdrawal locked");
+        require(!isContribTokenLocked(), "withdrawal locked");
         FunderInfo memory funder = _funders[_msgSender()];
         funder.projectTokenAmount = funder.projectTokenAmount.sub(amount_);
         _totalTokensSupplyControlled = _totalTokensSupplyControlled.sub(amount_);
@@ -484,8 +501,22 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         //uint amount = 
     }
     
+    // withraws all the liquidity token of the user
+    function withdrawLiquidityTokens() external returns(bool success) {
+        require(!isLiqTokenLocked(), "withdrawal locked ");
+        bool noTokens = liqTokensWithdrawn[_msgSender()];
+        require(!noTokens, "No tokens");
+        
+        // gets the amount of funding token contributed, divides it by total funding token raise and multiples to get the msgsender amount
+        uint amount_ = _funders[_msgSender()].fundingTokenAmount.div(_fundingTokenTotal) * _fundingTokenTotal ;
+        require(amount_ > 0, "No tokens");
+         liqTokensWithdrawn[_msgSender()] = true;
+        success = IERC20Uni(_projectToken).approve(_msgSender(), amount_);
+        
+    }
+    
     function withdrawAdmin() external returns (bool success) {
-        require(!isProjectOwnerTimeLocked(), "withdrawal locked for admin");
+        require(!isProjTokenLocked(), "withdrawal locked");
         
         // admin
         uint amount_ = balanceOfAdmin();
@@ -493,7 +524,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         success = IERC20AndOwnable(_projectToken).approve(_admin, amount_);
     }
     
-    function _setLiquidityPairAddress() internal returns(address liquidPair_) {
+    function _setLiquidityPairAddress() internal view returns(address liquidPair_) {
         
         if(address(0) == _fundingToken) {
             address WETH_ = IUniswapRouter(_addressOfDex).WETH();
@@ -507,12 +538,16 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     
     function _setTimeLocks() internal returns(bool)  {
         require(!isTimeLockSet(), "Time lock already set");
-        uint timeLockLengthX2 = _contributorTimeLockLength * 2;
-        // if timelock greater than 60 days in seconds 
-        uint projectTimeLockLength = timeLockLengthX2 > 5184000 ? 5184000 : timeLockLengthX2;
+        uint timeLockLengthX2 = _contribTimeLock * 2;
+        // if timelock greater than 60 days in seconds, set to length of contributor timelock + 30 days
+        uint timeLen = timeLockLengthX2 > 5184000 ? _contribTimeLock + 2592000 : timeLockLengthX2;
         
-        _projectOwnerTimestampLock = block.timestamp + projectTimeLockLength;
-        _contributorsTimeStampLock = block.timestamp + _contributorTimeLockLength;
+        _projTimeLock = block.timestamp + timeLen;
+        _projBlockLock = block.number + uint(timeLen / mineLen);
+        _contribTimeStampLock = block.timestamp + _contribTimeLock;
+        _contribBlockLock = block.number + uint(_contribTimeLock / mineLen);
+        _liqPairTimeLock = block.timestamp + _liqPairLockLen;
+        _liqPairBlockLock = block.number + uint(_liqPairLockLen / mineLen);
         
         return true;
     
