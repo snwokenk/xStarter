@@ -7,8 +7,11 @@ import "@openzeppelin/contracts/token/ERC777/IERC777Sender.sol";
 import "@openzeppelin/contracts/token/ERC777/ERC777.sol";
 import "@openzeppelin/contracts/token/ERC777/ERC777.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "./Administration.sol";
+import "./ERC777ReceiveSend.sol";
 //import "./UniswapInterface.sol";
 
 
@@ -65,7 +68,7 @@ interface IUniswapFactory {
 
 
 
-contract ProjectBaseToken is Context, ERC777 {
+contract ProjectBaseToken is Context, ERC777, ERC777NoReceiveRecipient, ERC777NoSendSender {
     using SafeMath for uint256;
     using Address for address;
 
@@ -73,13 +76,37 @@ contract ProjectBaseToken is Context, ERC777 {
         string memory name_,
         string memory symbol_,
         uint totalSupply_,
+        address creatorAddr,
         address[] memory defaultOperators_
     ) ERC777(name_, symbol_, defaultOperators_) {
 
         // this will mint total supply 
-        _mint(_msgSender(), totalSupply_, "", "");
+        _mint(creatorAddr, totalSupply_, "", "");
+        //  _mint(_msgSender(), totalSupply_, "", "");
 
     }
+    
+    
+}
+
+contract ProjectBaseTokenERC20 is Context, ERC20{
+    using SafeMath for uint256;
+    using Address for address;
+
+    constructor(
+        string memory name_,
+        string memory symbol_,
+        uint totalSupply_,
+        address creatorAddr
+    ) ERC20(name_, symbol_) {
+
+        // this will mint total supply 
+        _mint(creatorAddr, totalSupply_);
+        //  _mint(_msgSender(), totalSupply_, "", "");
+
+    }
+    
+    
 }
 
 
@@ -214,6 +241,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
             _fundingToken = fundingToken_;
             _dexDeadlineLength = dexDeadlineLength_;
             
+            
         }
     function balanceOfFunder(address funder_) public view returns(uint, uint) {
         return (_funders[funder_].fundingTokenAmount, _funders[funder_].projectTokenAmount);
@@ -338,7 +366,8 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         uint totalTokenSupply_,
         address[] memory defaultOperators_
     ) internal returns(bool){
-        ProjectBaseToken newToken = new ProjectBaseToken(name_,symbol_, totalTokenSupply_, defaultOperators_);
+        //ProjectBaseToken newToken = new ProjectBaseToken(name_,symbol_, totalTokenSupply_, address(this), defaultOperators_);
+        ProjectBaseTokenERC20 newToken = new ProjectBaseTokenERC20(name_,symbol_, totalTokenSupply_, address(this));
 
         _projectToken = address(newToken);
         _totalTokensSupply = totalTokenSupply_;
@@ -378,10 +407,12 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     }
     
     // function should be called within a function that checks proper access ie onlyAdmin or onlyOwner
+    // todo: debug issue in which tokens are not beeing set
     function _setTokensForILO() internal {
         // using the percent of tokens set in constructor by launchpad set total tokens for ILO 
         // formular:  (_percentOfTotalTokensForILO/100 ) * _totalTokensSupplyControlled
-        uint amount = _totalTokensSupplyControlled.mul(_percentOfTotalTokensForILO/100);
+        //uint amount = _totalTokensSupplyControlled.mul(_percentOfTotalTokensForILO/100);
+        uint amount = _totalTokensSupplyControlled * _percentOfTotalTokensForILO/100;
         _totalTokensILO = amount;
         _availTokensILO = amount;
     }
@@ -641,9 +672,9 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         uint256 amount,
         bytes calldata userData,
         bytes calldata operatorData
-    ) external pure override{
+    ) external view  override{
         // this contract should receive token using approve on ERC20/ and then fundingTokenSwap function on this contract
-        revert("send tokens using approve on ERC20 and then calling fundingTokenSwap");
+        require(from == address(this), "approve then call fundingTokenSwap");
     }
     
     // IERC777Sender implementation called before tokenis
@@ -654,8 +685,8 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         uint256 amount,
         bytes calldata userData,
         bytes calldata operatorData
-    ) external pure override {
-        revert("send tokens using approve on ERC20 and then calling fundingTokenSwap");
+    ) external view  override {
+         require(from == address(this), "approve then call fundingTokenSwap");
     }
     
 }

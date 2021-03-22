@@ -1,0 +1,33 @@
+// update this as needed by redeploying smart contracts to new instances of local ganache blockchain. 
+test_uniswap_factory = 0xea4a45E7FF00D5a69472a9AeB1E6AE54C07C6962
+test_WETH = 0x3db38A60B4af700fB3ee24d0CEF3Fa3604fC499D
+test_uniswap_router = 0xB1Ffd5BA1fdE7Abe45b0b161e491c0fA8dFEF92B;
+zero_address = 0x0000000000000000000000000000000000000000;
+1616657019
+1616743424
+Steps when deploying xStarterPoolPair
+
+Step 1: 
+Deploy xStarterPoolPair smart contract Args:
+ADMINADDRESS = address type - address of admin. xStarterPoolPair will be deployed by xStarterLaunchPad, so this passes the msg.sender to xStarterPoolPair
+PERCENTOFTOKENSFORILO_ = uint8 type -   should be between 1 and 100 (all inclusive) and represent percent of total tokens for ILO (ideal is 70% or more)
+SWAPRATIO_ (ie price) = uint24 type- the swap ratio of project tokens for funding tokens for example 1000 project tokens for 1 xDai would mean a swap ratio of 1000
+DEXDEADLINELENGTH_ = uint type -  the deadline for dex tx 1800 seconds 
+FUNDINGTOKEN_ = address tyoe - address of funding token (token project would like to raise) on the xDai chain leave to 0 address to use xDai
+
+step 2
+admin calls setUpPoolPair function Args:
+addressOfProjectToken = address type - address of project token, if address of 0 address, xStarterPoolPair will deploy one
+tokenName_ = string type - used to verify project token or to set up one
+tokenSymbol_ = string type - used to verify project token or set up
+*** 
+TODO:: add token supply to constructor of xStarterPoolPair to enforce  what was voted on 
+***
+totalTokenSupply_ - uint type - used to validate that project token or set totalsupply for new one 
+*** 
+TODO: add startBlock and endBlock and enforce that startTime must be at least 2 days or 172800 seconds 
+from current AND 34560 blocks(assuming 5 second blocks on xdai from current block)
+and validate endtime is at least 1 day or 86400 second and endBlock is 17280 blocks from start block
+***
+startTime_ = uint type - timestamp of ILO start time, contract will calculate startblock based on start time to current block time
+endTime_ = uint type = timestamp of ILO end time,  contract will calculate endBlock based on endTime
