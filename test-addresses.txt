@@ -9,6 +9,8 @@ Steps when deploying xStarterPoolPair
 
 Step 1: 
 Deploy xStarterPoolPair smart contract Args:
+USE THIS STRING substituting admin ADMINADDRESS with your own address:
+"0x16345C0152763Aed9BB32dF124b33200650d4228","70","1000","1800","60","0x0000000000000000000000000000000000000000"
 ADMINADDRESS = address type - address of admin. xStarterPoolPair will be deployed by xStarterLaunchPad, so this passes the msg.sender to xStarterPoolPair
 PERCENTOFTOKENSFORILO_ = uint8 type -   should be between 1 and 100 (all inclusive) and represent percent of total tokens for ILO (ideal is 70% or more)
 SWAPRATIO_ (ie price) = uint24 type- the swap ratio of project tokens for funding tokens for example 1000 project tokens for 1 xDai would mean a swap ratio of 1000
@@ -17,6 +19,9 @@ FUNDINGTOKEN_ = address tyoe - address of funding token (token project would lik
 
 step 2
 admin calls setUpPoolPair function Args:
+USE command in a js console and then copy the string then add start time and end time:
+CMD:
+    console.log('"0x0000000000000000000000000000000000000000",','"xyz",','"xyz", ','"500000000",',`"${parseInt(Date.now() / 1000) + 120}", ` , `"${parseInt(Date.now() / 1000) + 240}"`)
 addressOfProjectToken = address type - address of project token, if address of 0 address, xStarterPoolPair will deploy one
 tokenName_ = string type - used to verify project token or to set up one
 tokenSymbol_ = string type - used to verify project token or set up

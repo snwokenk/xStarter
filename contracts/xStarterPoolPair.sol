@@ -30,6 +30,7 @@ interface IERC20AndOwnable {
     function allowance(address owner_, address spender) external view returns (uint256);
     function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
     function approve(address spender, uint256 amount) external returns (bool);
+    function decimals() external view returns (uint8);
 }
 
 interface IERC20Uni {
@@ -96,10 +97,12 @@ contract ProjectBaseTokenERC20 is Context, ERC20{
     constructor(
         string memory name_,
         string memory symbol_,
+        uint8 decimals_,
         uint totalSupply_,
         address creatorAddr
     ) ERC20(name_, symbol_) {
-
+        
+         _setupDecimals(decimals_);
         // this will mint total supply 
         _mint(creatorAddr, totalSupply_);
         //  _mint(_msgSender(), totalSupply_, "", "");
@@ -116,7 +119,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     using Address for address;
     
     // this is for xDai chain. if deploying to other chains check the length of block creation, some are faster
-    uint constant mineLen = 5 seconds;
+    uint constant MINE_LEN = 5 seconds;
     
     struct FunderInfo {
     uint fundingTokenAmount;
@@ -146,6 +149,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     
     // stores address of the project's token
     address private _projectToken;
+    uint8 private _projectTokenDecimals;
     
     // uint keeping track of total project's token supply. 
     //for record. this is used to make sure total token is the same as voted for by the community
@@ -159,6 +163,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     // this is set up by the launchpad, it enforces what the project told the community
     // if the project said 70% of tokens will be offered in the ILO. This will be set in the constructor.
     address _fundingToken; // if 0 then use nativeTokenSwap
+    uint8 _fundingTokenDecimals; 
     // address of  dex liquidity token pair, this is the pair that issues liquidity tokens from uniswap or deriivatives
     address _liquidityPairAddress; 
     uint private _liquidityPairAmount; // amount of liquidity
@@ -233,18 +238,26 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         uint8 percentOfTokensForILO_,
         uint24 swapRatio_,
         uint24 dexDeadlineLength_,
+        uint48 contribTimeLock_,
         address fundingToken_
+        
         ) Administration(adminAddress) {
             require(percentOfTokensForILO_ > 0 && percentOfTokensForILO_ <= 100, "percent of tokens must be between 1 and 100");
             require(swapRatio_ > 0, "swapRatio must at least 1 ");
             _percentOfTotalTokensForILO = percentOfTokensForILO_;
             _fundingToken = fundingToken_;
             _dexDeadlineLength = dexDeadlineLength_;
+            _contribTimeLock = contribTimeLock_ < 60 ? 60 : contribTimeLock_;
+            //_contribTimeLock = contribTimeLock_ < 1209600 ? 1209600 : contribTimeLock_;
+            
             
             
         }
     function balanceOfFunder(address funder_) public view returns(uint, uint) {
         return (_funders[funder_].fundingTokenAmount, _funders[funder_].projectTokenAmount);
+    }
+    function swapRatio() public view returns(uint) {
+        return _swapRatio;
     }
     
     function balanceOfAdmin() public view returns(uint balance_) {
@@ -306,7 +319,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     function isEventOpen() public view returns (bool isOpen_) {
         uint48 currentTime = uint48(block.timestamp);
         
-        if(currentTime >= startTime() && currentTime < endTime() && availTokensILO() > 0 ) {
+        if(currentTime >= startTime() && currentTime < endTime() && availTokensILO() > 0 && _isSetup) {
             isOpen_ = true;
         }
         
@@ -315,7 +328,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     function isEventDone() public view returns (bool isOpen_) {
         uint48 currentTime = uint48(block.timestamp);
         
-        if(currentTime > endTime() || availTokensILO() == 0 ) {
+        if(_isSetup && (currentTime > endTime() || availTokensILO() == 0)) {
             isOpen_ = true;
         }
         
@@ -326,6 +339,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         address addressOfProjectToken,
         string memory tokenName_,
         string memory tokenSymbol_,
+        uint8  decimals_,
         uint totalTokenSupply_,
         uint48 startTime_, 
         uint48 endTime_
@@ -333,20 +347,24 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
             
             
             require(!_isSetup,"initial setup already done");
+            decimals_ = decimals_ > 18 ? 18 : decimals_;
+            totalTokenSupply_ =  totalTokenSupply_ * 10 ** decimals_;
             
             // if address of project token is 0 address deploy token for it
             if(address(0) == addressOfProjectToken) {
                     address[] memory defaultOperators_;
-                    _deployToken(tokenName_, tokenSymbol_, totalTokenSupply_, defaultOperators_);
+                    _deployToken(tokenName_, tokenSymbol_, decimals_, totalTokenSupply_, defaultOperators_);
             } 
             else {
                 IERC20AndOwnable existingToken = IERC20AndOwnable(addressOfProjectToken);
                 
                 address existingTokenOwner = existingToken.owner();
                 uint existingTokenSupply = existingToken.totalSupply();
+                uint8 expDecimals = existingToken.decimals();
                 
                 require(existingTokenOwner == admin(),"Admin of pool pair must be owner of token contract");
                 require(existingTokenSupply == totalTokenSupply_, "All tokens from contract must be transferred");
+                require(expDecimals == decimals_, "decimals do not match");
                 
                 _projectToken = addressOfProjectToken;
                 _totalTokensSupply = _totalTokensSupply.add(totalTokenSupply_);
@@ -363,11 +381,12 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     function _deployToken(
         string memory name_,
         string memory symbol_,
+        uint8 decimals_,
         uint totalTokenSupply_,
         address[] memory defaultOperators_
     ) internal returns(bool){
         //ProjectBaseToken newToken = new ProjectBaseToken(name_,symbol_, totalTokenSupply_, address(this), defaultOperators_);
-        ProjectBaseTokenERC20 newToken = new ProjectBaseTokenERC20(name_,symbol_, totalTokenSupply_, address(this));
+        ProjectBaseTokenERC20 newToken = new ProjectBaseTokenERC20(name_,symbol_, decimals_, totalTokenSupply_, address(this));
 
         _projectToken = address(newToken);
         _totalTokensSupply = totalTokenSupply_;
@@ -407,7 +426,6 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     }
     
     // function should be called within a function that checks proper access ie onlyAdmin or onlyOwner
-    // todo: debug issue in which tokens are not beeing set
     function _setTokensForILO() internal {
         // using the percent of tokens set in constructor by launchpad set total tokens for ILO 
         // formular:  (_percentOfTotalTokensForILO/100 ) * _totalTokensSupplyControlled
@@ -447,8 +465,9 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         uint projectTokenReceived = projectTokenDesired * (_percentOfILOTokensForLiquidity/100);
         
         // add to msg.sender token funder balance
-        FunderInfo memory funder = _funders[funder_];
+        FunderInfo storage funder = _funders[funder_];
         funder.fundingTokenAmount = funder.fundingTokenAmount.add(fundingTokenAmount_);
+        // todo: have a way set _minFundingTokenPerAddress, 
         require(funder.fundingTokenAmount >= _minFundingTokenPerAddress , "Minimum not met");
         // if max is set then make sure not contributing max
         require(funder.fundingTokenAmount <= _maxFundingTokenPerAddress || _maxFundingTokenPerAddress == 0, "maximum exceeded");
@@ -574,11 +593,11 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         uint timeLen = timeLockLengthX2 > 5184000 ? _contribTimeLock + 2592000 : timeLockLengthX2;
         
         _projTimeLock = block.timestamp + timeLen;
-        _projBlockLock = block.number + uint(timeLen / mineLen);
+        _projBlockLock = block.number + uint(timeLen / MINE_LEN);
         _contribTimeStampLock = block.timestamp + _contribTimeLock;
-        _contribBlockLock = block.number + uint(_contribTimeLock / mineLen);
+        _contribBlockLock = block.number + uint(_contribTimeLock / MINE_LEN);
         _liqPairTimeLock = block.timestamp + _liqPairLockLen;
-        _liqPairBlockLock = block.number + uint(_liqPairLockLen / mineLen);
+        _liqPairBlockLock = block.number + uint(_liqPairLockLen / MINE_LEN);
         
         return true;
     
