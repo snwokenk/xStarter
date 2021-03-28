@@ -190,6 +190,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     uint private _contribBlockLock;
     
     // the number of tokens to sell to be considered a success ie:  1 - (_availTokensILO / _totalTokensILO) >= _percentRequiredTokenPurchase
+    // todo: set this in constructor, this will allow launchpad contract to set this through community vote
     uint8 private _percentRequiredTokenPurchase = 50;
     uint40 private _minFundingTokenPerAddress;
     uint40 private _maxFundingTokenPerAddress;
@@ -222,8 +223,9 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     
     // bool if xStarterPoolPair is set up
     bool _isSetup;
-    
+    // 
     bool _ILOValidated;
+    bool _ILOSuccess;
     
     bool _liquidityPairCreated;
     
@@ -248,11 +250,15 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
             _fundingToken = fundingToken_;
             _dexDeadlineLength = dexDeadlineLength_;
             _contribTimeLock = contribTimeLock_ < 60 ? 60 : contribTimeLock_;
+            _swapRatio = swapRatio_;
             //_contribTimeLock = contribTimeLock_ < 1209600 ? 1209600 : contribTimeLock_;
             
             
             
         }
+    function amountRaised() public view returns(uint) {
+        return _fundingTokenTotal;
+    }
     function balanceOfFunder(address funder_) public view returns(uint, uint) {
         return (_funders[funder_].fundingTokenAmount, _funders[funder_].projectTokenAmount);
     }
@@ -446,6 +452,9 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         
     }
     
+    // todo: remove after debugging
+    event TokenSwapped(address indexed funder_, uint indexed tokensDesired, uint indexed tokensReceived_, uint tokensForLiq_);
+    
     // should be called after approving amount of token
     function fundingTokenSwap() notCurrentlyFunding  onlyOpen external returns(bool) {
         require(_fundingToken != address(0), "please use nativeTokenSwap. Only native token allowed. xDai token for xDai side chain etc");
@@ -461,8 +470,8 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     function _performSwap(uint fundingTokenAmount_, address funder_) internal {
         
         // calculate project tokens based on _swapRatio
-        uint projectTokenDesired = fundingTokenAmount_.mul(_swapRatio);
-        uint projectTokenReceived = projectTokenDesired * (_percentOfILOTokensForLiquidity/100);
+        uint projectTokenDesired = fundingTokenAmount_ * _swapRatio;
+        uint projectTokenReceived = uint(projectTokenDesired * _percentOfILOTokensForLiquidity / 100);
         
         // add to msg.sender token funder balance
         FunderInfo storage funder = _funders[funder_];
@@ -484,6 +493,8 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         // ideally should 50 50
         _tokensForLiquidity = projectTokenDesired - projectTokenReceived;
         
+        emit TokenSwapped(funder_, projectTokenDesired, projectTokenReceived, projectTokenDesired - projectTokenReceived);
+        
         
     }
     
@@ -504,14 +515,18 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         _currentlyFunding[_msgSender()] = false;
     }
     
+    event ILOValidated(address indexed caller_, uint indexed amountRaised_,  uint indexed swappedTokens_);
     // step 4 validate after ILO
     function validateILO() external returns(bool) {
         require(isEventDone(), "ILO not yet done");
-        uint8 availRatio = uint8(_availTokensILO / _totalTokensILO);
-        uint8 percentRatio = (1 - availRatio) * 100;
-        require( percentRatio >= _percentRequiredTokenPurchase);
+        uint swappedTokens = _totalTokensILO - _availTokensILO;
+        uint minNeeded = uint(_totalTokensILO * _percentRequiredTokenPurchase / 100);
+        require( swappedTokens >= minNeeded, 'threshold not reached');
+        // todo: add ability to declare ILO success or failure and if failure allow users to get back their funding Tokens (ether, xDai etc)
         
         _ILOValidated = true;
+        _ILOSuccess = true
+        emit ILOValidated(_msgSender(), amountRaised(), swappedTokens);
         return true;
     }
     
