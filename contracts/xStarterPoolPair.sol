@@ -245,7 +245,9 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         uint24 swapRatio_,
         uint24 dexDeadlineLength_,
         uint48 contribTimeLock_,
-        address fundingToken_
+        address fundingToken_,
+        address addressOfDex_,
+        address addressOfDexFactory_
         
         ) Administration(adminAddress) {
             require(percentOfTokensForILO_ > 0 && percentOfTokensForILO_ <= 100, "percent of tokens must be between 1 and 100");
@@ -255,6 +257,8 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
             _dexDeadlineLength = dexDeadlineLength_;
             _contribTimeLock = contribTimeLock_ < 60 ? 60 : contribTimeLock_;
             _swapRatio = swapRatio_;
+            _addressOfDex = addressOfDex_;
+            _addressOfDexFactory = addressOfDexFactory_;
             //_contribTimeLock = contribTimeLock_ < 1209600 ? 1209600 : contribTimeLock_;
             
             
@@ -281,9 +285,9 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         return _projTimeLock != 0 && _contribTimeStampLock != 0 && _liqPairTimeLock != 0;
     }
     
-    // return true if ILO is complete and ILO did not reach threshold ie _ILOSuccess == false
+    // return true if ILO is complete, Validated and ILO did not reach threshold ie _ILOSuccess == false
     function ILOFailed() public view returns (bool) {
-        return isEventDone() && !_ILOSuccess;
+        return isEventDone() && _ILOValidated && !_ILOSuccess;
     }
     
     function isContribTokenLocked() public view returns (bool) {
@@ -533,14 +537,12 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     event ILOValidated(address indexed caller_, uint indexed amountRaised_,  uint indexed swappedTokens_);
     // step 4 validate after ILO
     function validateILO() external returns(bool) {
-        require(isEventDone(), "ILO not yet done");
+        require(isEventDone() && !_ILOValidated, "ILO not yet done OR already validated");
         uint swappedTokens = _totalTokensILO - _availTokensILO;
         uint minNeeded = uint(_totalTokensILO * _percentRequiredTokenPurchase / 100);
-        require( swappedTokens >= minNeeded, 'threshold not reached');
+        _ILOSuccess = swappedTokens >= minNeeded;
         // todo: add ability to declare ILO success or failure and if failure allow users to get back their funding Tokens (ether, xDai etc)
-        
         _ILOValidated = true;
-        _ILOSuccess = true;
         emit ILOValidated(_msgSender(), amountRaised(), swappedTokens);
         return true;
     }
