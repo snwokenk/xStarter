@@ -126,6 +126,12 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     uint projectTokenAmount;
         
     }
+    struct SwapInfo {
+    uint24 fundTokenReceive;
+    uint24 projectTokenGive;
+        
+    }
+    
     modifier onlySetup() {
         require(_isSetup, "ILO has not been set up");
         _;
@@ -170,7 +176,8 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     uint8 _fundingTokenDecimals; 
     // address of  dex liquidity token pair, this is the pair that issues liquidity tokens from uniswap or deriivatives
     address _liquidityPairAddress; 
-    uint private _liquidityPairAmount; // amount of liquidity
+    uint private _totalLPTokens; // amount of liquidity
+     uint private _availLPTokens; // amount of liquidity
     // timestamp when contributors can start withdrawing their their Liquidity pool tokens
     uint private _liqPairTimeLock;
     uint private _liqPairBlockLock;
@@ -196,9 +203,12 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     // the number of tokens to sell to be considered a success ie:  1 - (_availTokensILO / _totalTokensILO) >= _percentRequiredTokenPurchase
     // todo: set this in constructor, this will allow launchpad contract to set this through community vote
     uint8 private _percentRequiredTokenPurchase = 50;
-    uint40 private _minFundingTokenPerAddress;
-    uint40 private _maxFundingTokenPerAddress;
-    uint private _swapRatio;
+    uint private _minFundPerAddr = 1000000000000 wei;
+    uint private _maxFundPerAddr;
+    // Minimum is 1 gwei, this is a really small amount and should only be overriden by a larger amount
+    uint private _minPerSwap = 1000000000 wei;
+    SwapInfo private _swapRatio;
+    
     
     
 
@@ -242,26 +252,35 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     constructor(
         address adminAddress,
         uint8 percentOfTokensForILO_,
-        uint24 swapRatio_,
+        uint24 fundTokenReceive_,
+        uint24 projectTokenGive_,
         uint24 dexDeadlineLength_,
         uint48 contribTimeLock_,
+        uint minPerSwap_,
+        uint minFundPerAddr_,
+        uint maxFundPerAddr_,
         address fundingToken_,
         address addressOfDex_,
         address addressOfDexFactory_
         
         ) Administration(adminAddress) {
             require(percentOfTokensForILO_ > 0 && percentOfTokensForILO_ <= 100, "percent of tokens must be between 1 and 100");
-            require(swapRatio_ > 0, "swapRatio must at least 1 ");
+            require(projectTokenGive_ > 0 && fundTokenReceive_ > 0, "swap ratio is zero ");
             _percentOfTotalTokensForILO = percentOfTokensForILO_;
             _fundingToken = fundingToken_;
             _dexDeadlineLength = dexDeadlineLength_;
             _contribTimeLock = contribTimeLock_ < 60 ? 60 : contribTimeLock_;
-            _swapRatio = swapRatio_;
+            _swapRatio.fundTokenReceive = fundTokenReceive_;
+            _swapRatio.projectTokenGive = projectTokenGive_;
             _addressOfDex = addressOfDex_;
             _addressOfDexFactory = addressOfDexFactory_;
+            // if provided is less than default take default
+            _minPerSwap = _minPerSwap > minPerSwap_ ? _minPerSwap : minPerSwap_;
+            // todo require a minimum fund per address possible 1000 gwei or 1000000000000 wei
+            _minFundPerAddr = minFundPerAddr_ < _minFundPerAddr ? _minFundPerAddr : minFundPerAddr_;
+            // 0 means not max set
+            _maxFundPerAddr = maxFundPerAddr_ < _minFundPerAddr ? 0 : maxFundPerAddr_;
             //_contribTimeLock = contribTimeLock_ < 1209600 ? 1209600 : contribTimeLock_;
-            
-            
             
         }
     function amountRaised() public view returns(uint) {
@@ -270,8 +289,8 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     function balanceOfFunder(address funder_) public view returns(uint, uint) {
         return (_funders[funder_].fundingTokenAmount, _funders[funder_].projectTokenAmount);
     }
-    function swapRatio() public view returns(uint) {
-        return _swapRatio;
+    function swapRatio() public view returns(uint24, uint24) {
+        return (_swapRatio.fundTokenReceive, _swapRatio.projectTokenGive);
     }
     
     function adminBalance() public view returns(uint balance_) {
@@ -481,17 +500,18 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     // a lock on a specific address can be added so address not calling function to fast
     function _performSwap(uint fundingTokenAmount_, address funder_) internal {
         
-        // calculate project tokens based on _swapRatio
-        uint projectTokenDesired = fundingTokenAmount_ * _swapRatio;
+        // calculate project tokens based on _swapRatio, we are assuming fundingTokenAmount_ is in wei
+        uint projectTokenDesired = fundingTokenAmount_.div(_swapRatio.fundTokenReceive);
+        projectTokenDesired = projectTokenDesired.mul(_swapRatio.projectTokenGive);
         uint projectTokenReceived = uint(projectTokenDesired * _percentOfILOTokensForLiquidity / 100);
         
         // add to msg.sender token funder balance
         FunderInfo storage funder = _funders[funder_];
         funder.fundingTokenAmount = funder.fundingTokenAmount.add(fundingTokenAmount_);
-        // todo: have a way set _minFundingTokenPerAddress, 
-        require(funder.fundingTokenAmount >= _minFundingTokenPerAddress , "Minimum not met");
+        // todo: have a way set _minFundPerAddr, 
+        require(funder.fundingTokenAmount >= _minFundPerAddr , "Minimum not met");
         // if max is set then make sure not contributing max
-        require(funder.fundingTokenAmount <= _maxFundingTokenPerAddress || _maxFundingTokenPerAddress == 0, "maximum exceeded");
+        require(funder.fundingTokenAmount <= _maxFundPerAddr || _maxFundPerAddr == 0, "maximum exceeded");
         funder.projectTokenAmount = funder.projectTokenAmount.add(projectTokenReceived);
         
         // make state changes
@@ -514,7 +534,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         address ownAddress = address(this);
         IERC20AndOwnable existingToken = IERC20AndOwnable(_fundingToken);
         allowedAmount_ = existingToken.allowance(_msgSender(), ownAddress);
-        require(allowedAmount_ > 0, "Amount must be greater than 0");
+        require(allowedAmount_ > _minPerSwap, "Amount must be greater than 0");
         bool success = existingToken.transferFrom(_msgSender(), ownAddress, allowedAmount_);
         require(success, "not able to retrieve approved tokens of funding token");
         return allowedAmount_;
@@ -560,7 +580,8 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         } else {
             liquidityAmount = _createLiquidityPairERC20();
         }
-        _liquidityPairAmount = liquidityAmount;
+        _totalLPTokens = liquidityAmount;
+        _availLPTokens = liquidityAmount;
         
         success = _setTimeLocks();
     }
@@ -624,17 +645,22 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     }
     
     // withraws all the liquidity token of the user
+    // todo: figure a way to make this efficient
     function withdrawLiquidityTokens() external allowedToWithdraw returns(bool success) {
         require(!isLiqTokenLocked(), "withdrawal locked ");
         _disallowWithdraw();
-        bool noTokens = liqTokensWithdrawn[_msgSender()];
-        require(!noTokens, "No tokens");
+        require(!liqTokensWithdrawn[_msgSender()], "No tokens");
+        liqTokensWithdrawn[_msgSender()] = true;
         
-        // gets the amount of funding token contributed, divides it by total funding token raise and multiples to get the msgsender amount
-        uint amount_ = _funders[_msgSender()].fundingTokenAmount.div(_fundingTokenTotal) * _fundingTokenTotal ;
-        require(amount_ > 0, "No tokens");
-         liqTokensWithdrawn[_msgSender()] = true;
-        success = IERC20Uni(_projectToken).approve(_msgSender(), amount_);
+        // get lp tokens per 1 funding token offerrd
+        //reduce to regular size
+        uint lpPer = _fundingTokenTotal.div(10 ** 18);
+        lpPer = _totalLPTokens.div(lpPer);
+        // lpPer * fundingTokenAmount to get lp tokens to send
+        uint LPAmount_ = _funders[_msgSender()].fundingTokenAmount * lpPer;
+        require(LPAmount_ > 0 && LPAmount_ <= _availLPTokens, "not enough lp tokens");
+        _availLPTokens = _availLPTokens.sub(LPAmount_);
+        success = IERC20Uni(_projectToken).approve(_msgSender(), LPAmount_);
         _allowWithdraw();
         
     }
