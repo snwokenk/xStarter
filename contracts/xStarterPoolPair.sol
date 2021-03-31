@@ -440,11 +440,11 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     
     // step 3 if PoolPair has not been funded, if token was created by poolpair contract it is automatically funded, also sets ILO tokens
     function depositAllTokenSupply() public onlyAdmin onlySetup returns(bool success) {
-        
-        if(_totalTokensSupplyControlled == _totalTokensSupply) { 
-            return true;
+        require(_totalTokensSupplyControlled != _totalTokensSupply, "already deposited");
+        // if(_totalTokensSupplyControlled == _totalTokensSupply) { 
+        //     return true;
             
-        }
+        // }
         IERC20AndOwnable existingToken = IERC20AndOwnable(_projectToken);
         uint allowance = existingToken.allowance(admin(), address(this));
         require(allowance == _totalTokensSupply, "You must deposit all available tokens by calling the approve function on the token contract");
@@ -583,7 +583,8 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         _totalLPTokens = liquidityAmount;
         _availLPTokens = liquidityAmount;
         
-        success = _setTimeLocks();
+        return true;
+        
     }
     
     // step 6
@@ -591,8 +592,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         require(_liquidityPairCreated, "liquidity pair must be created first");
         // set liquidity pair address 
         _liquidityPairAddress = _setLiquidityPairAddress();
-        // todo: add any final things
-        return true;
+        success = _setTimeLocks();
     }
     
     
