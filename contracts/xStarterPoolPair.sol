@@ -152,7 +152,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     }
     
     event TokenCreatedByXStarterPoolPair(address indexed TokenAddr_, address indexed PoolPairAddr_, address indexed Admin_, uint timestamp_);
-    
+    event TokenSwapped(address indexed funder_, uint indexed tokensDesired, uint indexed tokensReceived_, uint tokensForLiq_);
     address private _addressOfDex;
     address private _addressOfDexFactory;
     uint24 private _dexDeadlineLength;
@@ -201,8 +201,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     uint private _contribBlockLock;
     
     // the number of tokens to sell to be considered a success ie:  1 - (_availTokensILO / _totalTokensILO) >= _percentRequiredTokenPurchase
-    // todo: set this in constructor, this will allow launchpad contract to set this through community vote
-    uint8 private _percentRequiredTokenPurchase = 50;
+    uint8 private _percentRequiredTokenPurchase = 3;
     uint private _minFundPerAddr = 1000000000000 wei;
     uint private _maxFundPerAddr;
     // Minimum is 1 gwei, this is a really small amount and should only be overriden by a larger amount
@@ -239,6 +238,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     // 
     bool _ILOValidated;
     bool _ILOSuccess;
+    bool _approvedForLP;
     
     bool _liquidityPairCreated;
     
@@ -483,8 +483,6 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         
     }
     
-    // todo: remove after debugging
-    event TokenSwapped(address indexed funder_, uint indexed tokensDesired, uint indexed tokensReceived_, uint tokensForLiq_);
     
     // should be called after approving amount of token
     function fundingTokenSwap() notCurrentlyFunding  onlyOpen external returns(bool) {
@@ -508,7 +506,6 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         // add to msg.sender token funder balance
         FunderInfo storage funder = _funders[funder_];
         funder.fundingTokenAmount = funder.fundingTokenAmount.add(fundingTokenAmount_);
-        // todo: have a way set _minFundPerAddr, 
         require(funder.fundingTokenAmount >= _minFundPerAddr , "Minimum not met");
         // if max is set then make sure not contributing max
         require(funder.fundingTokenAmount <= _maxFundPerAddr || _maxFundPerAddr == 0, "maximum exceeded");
@@ -561,16 +558,38 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         uint swappedTokens = _totalTokensILO - _availTokensILO;
         uint minNeeded = uint(_totalTokensILO * _percentRequiredTokenPurchase / 100);
         _ILOSuccess = swappedTokens >= minNeeded;
-        // todo: add ability to declare ILO success or failure and if failure allow users to get back their funding Tokens (ether, xDai etc)
         _ILOValidated = true;
         emit ILOValidated(_msgSender(), amountRaised(), swappedTokens);
         return true;
     }
     
     // step 5
+    function approveTokensForLiquidityPair() external returns(bool) {
+        
+        require(_ILOValidated && !ILOFailed(), "You must first validate ILO"); 
+        require(address(0) != _addressOfDex, "dex zero addr");
+        uint amountProjectToken = _tokensForLiquidity;
+        
+        if(address(0) == _fundingToken) {
+            _approvedForLP = _callApproveOnProjectToken(_addressOfDex, amountProjectToken);
+        } else {
+            uint amountERC20 = _fundingTokenAvail;
+            _approvedForLP =  _callApproveOnProjectToken(_addressOfDex, amountProjectToken) && _callApproveOnFundingToken(_addressOfDex, amountERC20);
+        }
+        
+        // approve project token to be sent to dex. Spender is dex IUniswapRouter address (honeyswap, uniswap etc)
+        require(_approvedForLP, "xStarterPair: TokenApprovalFail");
+       
+        return _approvedForLP;
+    }
+    
+    
+    // step 6
+    // todo: find out why this function fails, probably create a separate test contract and try
     function createLiquidityPool() external returns(bool success) {
         // liquidity will be _fundingTokenAvail to _tokensForLiquidity ratio
         require(_ILOValidated && !ILOFailed(), "You must first validate ILO");
+         require(_approvedForLP, "xStarterPair: TokenApprovalFail");
         require(!_liquidityPairCreated, "Liquidity pair already created");
         _liquidityPairCreated = true;
     
@@ -587,7 +606,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         
     }
     
-    // step 6
+    // step 7
     function finalizeILO() external returns(bool success) {
         require(_liquidityPairCreated, "liquidity pair must be created first");
         // set liquidity pair address 
@@ -707,7 +726,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     
     // this can be called by anyone. but should be called AFTER the ILO
     // on xDai chain ETH would be xDai, on BSC it would be BNB 
-    // step 5a
+    // step 6a
     function _createLiquidityPairETH() internal returns(uint liquidityTokens_) {
         
         //require(address(0) == _fundingToken, "xStarterPair: FundingTokenError");
@@ -715,8 +734,8 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         uint amountProjectToken = _tokensForLiquidity;
         
         // approve project token to be sent to dex. Spender is dex IUniswapRouter address (honeyswap, uniswap etc)
-        bool approved_ = _callApproveOnProjectToken(_addressOfDex, amountProjectToken);
-        require(approved_, "xStarterPair: TokenApprovalFail");
+        //bool approved_ = _callApproveOnProjectToken(_addressOfDex, amountProjectToken);
+       
         
         (uint amountTokenInPool, uint amountETHInPool, uint amountliquidityToken) = IUniswapRouter(_addressOfDex).addLiquidityETH{value: amountETH}(
             _projectToken,
@@ -737,20 +756,22 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         
     }
     
-    // step 5b
+    // step 6b
     function _createLiquidityPairERC20() internal returns(uint liquidityTokens_) {
         
         require(address(0) != _fundingToken, "xStarterPair: FundingTokenError");
+        //require(_approvedForLP, "xStarterPair: TokenApprovalFail, call syncBalances before calling again");
         
         uint amountERC20 = _fundingTokenAvail;
         uint amountProjectToken = _totalTokensSupplyControlled;
         
         
         // approve project token to be sent to dex. Spender is dex IUniswapRouter address (honeyswap, uniswap etc)
-        bool approvedA_ = _callApproveOnProjectToken(_addressOfDex, amountProjectToken);
-        bool approvedB_ = _callApproveOnFundingToken(_addressOfDex, amountERC20);
+        // bool approvedA_ = _callApproveOnProjectToken(_addressOfDex, amountProjectToken);
+        // bool approvedB_ = _callApproveOnFundingToken(_addressOfDex, amountERC20);
         
-        require(approvedA_ && approvedB_, "xStarterPair: TokenApprovalFail, call syncBalances before calling again");
+        
+        //require(approvedA_ && approvedB_, "xStarterPair: TokenApprovalFail, call syncBalances before calling again");
         
         (uint amountTokenInPool, uint amountETHInPool, uint amountliquidityToken) = IUniswapRouter(_addressOfDex).addLiquidity(
             _projectToken,
