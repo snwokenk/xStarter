@@ -3,3 +3,5 @@ node_modules
 build/
 contracts/artifacts/
 test/artifacts/
+cache/
+ignored_constants.js

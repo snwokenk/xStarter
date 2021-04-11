@@ -700,7 +700,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         if(address(0) == _fundingToken) {
             address WETH_ = IUniswapRouter(_addressOfDex).WETH();
             liquidPair_ = IUniswapFactory(_addressOfDexFactory).getPair(WETH_, _projectToken);
-            require(address(0) != liquidPair_, "Liquidity Pair Should Be Created But Not Created");
+            require(address(0) != liquidPair_, "Liquidity Pair Should Be Created But Hasn't");
         } else {
             liquidPair_ = IUniswapFactory(_addressOfDexFactory).getPair(_fundingToken, _projectToken);
             require(address(0) != liquidPair_, "Liquidity Pair Should Be Created But Not Created");

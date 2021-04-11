@@ -65,7 +65,12 @@ contract LPLaunch {
     mapping(address => uint) balances;
     address _addressOfDex = address(0xB1Ffd5BA1fdE7Abe45b0b161e491c0fA8dFEF92B);
     
-    
+    function getBlockNumber() public view returns(uint) {
+        return block.number;
+    }
+    function getBlockTime() public view returns(uint) {
+        return block.timestamp;
+    }
     function getBalance() public view returns(uint balance){
         balance = balances[msg.sender];
     }
