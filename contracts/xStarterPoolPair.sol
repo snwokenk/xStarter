@@ -589,7 +589,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     function createLiquidityPool() external returns(bool success) {
         // liquidity will be _fundingTokenAvail to _tokensForLiquidity ratio
         require(_ILOValidated && !ILOFailed(), "You must first validate ILO");
-         require(_approvedForLP, "xStarterPair: TokenApprovalFail");
+        require(_approvedForLP, "xStarterPair: TokenApprovalFail");
         require(!_liquidityPairCreated, "Liquidity pair already created");
         _liquidityPairCreated = true;
     
@@ -733,6 +733,7 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
         uint amountETH = _fundingTokenAvail;
         uint amountProjectToken = _tokensForLiquidity;
         
+        
         // approve project token to be sent to dex. Spender is dex IUniswapRouter address (honeyswap, uniswap etc)
         //bool approved_ = _callApproveOnProjectToken(_addressOfDex, amountProjectToken);
        
@@ -796,14 +797,12 @@ contract xStarterPoolPair is Ownable, Administration, IERC777Recipient, IERC777S
     
     
     function _callApproveOnProjectToken(address spender_, uint amount_) internal returns(bool success) {
-        IERC20AndOwnable existingToken = IERC20AndOwnable(_projectToken);
-        success = existingToken.approve(spender_, amount_);
+        success = IERC20(_projectToken).approve(spender_, amount_);
         
     }
     
     function _callApproveOnFundingToken(address spender_, uint amount_) internal returns(bool success) {
-        IERC20AndOwnable existingToken = IERC20AndOwnable(_fundingToken);
-        success = existingToken.approve(spender_, amount_);
+        success = IERC20(_fundingToken).approve(spender_, amount_);
         
     }
     // IERC777Recipient implementation

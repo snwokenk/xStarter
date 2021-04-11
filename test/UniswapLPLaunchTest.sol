@@ -2,6 +2,15 @@
 pragma solidity ^0.7.6;
 
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+
+// import "https://github.com/openzeppelin/contracts/token/ERC20/IERC20.sol";
+// import "https://github.com/openzeppelin/contracts/token/ERC20/ERC20.sol";
+// import "https://github.com/openzeppelin/contracts/utils/Context.sol";
+// import "https://github.com/openzeppelin/contracts/utils/Address.sol";
 
 interface IUniswapRouter {
         function addLiquidity(
@@ -29,6 +38,28 @@ interface IUniswapRouter {
     function WETH() external pure returns (address);
 }
 
+contract ProjectBaseTokenERC20 is Context, ERC20{
+    using SafeMath for uint256;
+    using Address for address;
+
+    constructor(
+        string memory name_,
+        string memory symbol_,
+        uint8 decimals_,
+        uint totalSupply_,
+        address creatorAddr
+    ) ERC20(name_, symbol_) {
+        totalSupply_ =  totalSupply_ * 10 ** decimals_;
+         _setupDecimals(decimals_);
+        // this will mint total supply 
+        _mint(creatorAddr, totalSupply_);
+        //  _mint(_msgSender(), totalSupply_, "", "");
+
+    }
+    
+    
+}
+
 contract LPLaunch {
     uint balanceVal;
     mapping(address => uint) balances;
@@ -51,14 +82,35 @@ contract LPLaunch {
         (success, ) = address(msg.sender).call{value: amount_}('');
         
     }
+    
+    function getBackProjectTokens(address addr) external {
+        uint tBalance =  IERC20(addr).balanceOf(address(this));
+        IERC20(addr).transfer(msg.sender, tBalance);
+        
+    }
+    
+    function _callApproveOnProjectToken(address _projectToken, address spender_, uint amount_) internal returns(bool success) {
+        success = IERC20(_projectToken).approve(spender_, amount_);
+        
+    }
+    event LPCreated(uint indexed ETHAMOUNT, uint indexed TOKENAMOUNT);
     function createLiquidityPairETH(address _projectToken) external returns(uint liquidityTokens_) {
         uint _fundingTokenAvail = address(this).balance;
         //require(address(0) == _fundingToken, "xStarterPair: FundingTokenError");
         uint amountETH = _fundingTokenAvail;
-        uint amountProjectToken = 500000000 ether;
+        uint amountProjectToken = IERC20(_projectToken).balanceOf(address(this));
+        uint deadline = block.timestamp + 6000;
+        
+        emit LPCreated(amountETH, amountProjectToken);
+        
+        
+        
+        _callApproveOnProjectToken(_projectToken, _addressOfDex, amountProjectToken);
         
         // approve project token to be sent to dex. Spender is dex IUniswapRouter address (honeyswap, uniswap etc)
         //bool approved_ = _callApproveOnProjectToken(_addressOfDex, amountProjectToken);
+        
+        
        
         
         (uint amountTokenInPool, uint amountETHInPool, uint amountliquidityToken) = IUniswapRouter(_addressOfDex).addLiquidityETH{value: amountETH}(
@@ -67,7 +119,7 @@ contract LPLaunch {
             amountProjectToken,
             amountETH,
             address(this),
-            block.timestamp + 1800
+            deadline
             );
         
         liquidityTokens_ = amountliquidityToken;
