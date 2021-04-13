@@ -1,7 +1,7 @@
-// update this as needed by redeploying smart contracts to new instances of local ganache blockchain. 
+// use hardhard and alchemyapi to fork ethereum main net. 
 test_uniswap_factory = 0xea4a45E7FF00D5a69472a9AeB1E6AE54C07C6962
 test_WETH = 0x3db38A60B4af700fB3ee24d0CEF3Fa3604fC499D
-test_uniswap_router = 0xB1Ffd5BA1fdE7Abe45b0b161e491c0fA8dFEF92B;
+test_uniswap_router = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
 zero_address = 0x0000000000000000000000000000000000000000;
 1616657019
 1616743424
@@ -17,6 +17,11 @@ USE THIS STRING substituting admin ADMINADDRESS with your own address:
 
 USE THIS FOR SUCCESSFULL ILO: 
 "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266","70","1","15500000","1800","60","10000000000000000","10000000000000000","1000000000000000000","0x0000000000000000000000000000000000000000","0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D","0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"
+
+
+
+FOR xStarterPoolPairB: 
+"0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266","70","1","15500000","1800","60","10000000000000000","10000000000000000","1000000000000000000", "1000000000000000000", "2000000000000000000", "0x0000000000000000000000000000000000000000","0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D","0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"
 
 address adminAddress = address of admin. xStarterPoolPair will be deployed by xStarterLaunchPad, so this passes the msg.sender to xStarterPoolPair
 uint8 percentOfTokensForILO_ = should be between 1 and 100 (all inclusive) and represent percent of total tokens for ILO (ideal is 70% or more)
@@ -36,6 +41,10 @@ uint minFundPerAddr_ =
     min funding tokens allowed to contribute per wallet address
 uint maxFundPerAddr_ = 
     max funding tokens allowed to contribute per wallet address
+uint minFundingTokenRequired_ ONLY FOR xStarterPoolPairB,
+    min funding token amount to raise to be considered successfull
+uint maxFundingToken_n ONLY FOR xStarterPoolPairB,
+    max funding token  amount to raise, if 0 then no maximum
 address fundingToken_ =
     the fundingToken_ to use. if trying to accept native tokens (ie ETH on ethereum network or xDai on xDai network) use zero_address
     if fundingToken is native token then swap must be through NativeTokenSwap function else use FundingTokenSwap
