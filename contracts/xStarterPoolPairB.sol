@@ -292,6 +292,12 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
             _maxFundingToken = maxFundingToken_;
             
         }
+    function addressOfDex() public view returns(address) {
+        return _addressOfDex;
+    }
+    function addressOfDexFactory() public view returns(address) {
+        return _addressOfDexFactory;
+    }
     function amountRaised() public view returns(uint) {
         return _fundingTokenTotal;
     }

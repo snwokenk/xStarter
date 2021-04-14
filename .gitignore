@@ -5,3 +5,4 @@ contracts/artifacts/
 test/artifacts/
 cache/
 ignored_constants.js
+artifacts/

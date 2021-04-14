@@ -3,10 +3,41 @@ const { ALCHEMYURL } = require('./ignored_constants');
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
-import {ALCHEMYURL} from "./ignored_constants";
+require("@nomiclabs/hardhat-web3");
+require("@nomiclabs/hardhat-waffle");
 
 module.exports = {
-  solidity: "0.7.6",
+  solidity:{
+    compilers: [
+      {
+        version: "0.7.6",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200
+          }
+        }
+      },
+      {
+        version: "0.6.6",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200
+          }
+        }
+      },
+      {
+        version: "0.5.16",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200
+          }
+        }
+      },
+    ]
+  },
   defaultNetwork: "hardhat",
   networks: {
     hardhat: {
