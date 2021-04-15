@@ -1,13 +1,19 @@
 const { expect } = require("chai");
-const { BigNumber } = require("ethers");
+const { BigNumber, utils } = require("ethers");
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
 
 describe("xStarterPoolPairB WITH contract deployed token", function(){
    const uniswapRouter = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
    const uniswapFactory = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
    const zeroAddress = "0x0000000000000000000000000000000000000000";
-   const decimals = "18"
-   const anEther = 10 ** decimals
+   const decimals = "18";
+   const anEther = 10 ** decimals;
+   const startTimeLen = 60;
+   const endTimeLen = 120;
+   this.slow(240000)
    
   let poolPairFactory;
   let poolPair;
@@ -18,32 +24,24 @@ describe("xStarterPoolPairB WITH contract deployed token", function(){
 
   beforeEach(async function () {
     // Get the ContractFactory and Signers here.
-    poolPairFactory = await ethers.getContractFactory("xStarterPoolPairB");
-    [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
+    if(!poolPair) {
 
-    // To deploy our contract, we just have to call Token.deploy() and await
-    // for it to be deployed(), which happens onces its transaction has been
-    // mined.
-    poolPair = await poolPairFactory.deploy(
-        owner.address,
-        "70","1","15500000","1800","60",
-        "10000000000000000","10000000000000000",
-        "1000000000000000000", "1000000000000000000", 
-        "2000000000000000000", zeroAddress,
-        uniswapRouter, uniswapFactory
-    );
+        poolPairFactory = await ethers.getContractFactory("xStarterPoolPairB");
+        [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
 
-    // let startTime = (parseInt(Date.now() / 1000) + 120).toString();
-    // let endTime = (parseInt(Date.now() / 1000) + 240).toString;
-    // await poolPair.setUpPoolPair(
-    //     zeroAddress,
-    //     "xyz",
-    //     "xyz",
-    //     decimals,
-    //     "500000000",
-    //     startTime,
-    //     endTime,
-    // )
+        // To deploy our contract, we just have to call Token.deploy() and await
+        // for it to be deployed(), which happens onces its transaction has been
+        // mined.
+        poolPair = await poolPairFactory.deploy(
+            owner.address,
+            "70","1","15500000","1800","60",
+            "10000000000000000","10000000000000000",
+            "1000000000000000000", "1000000000000000000", 
+            "2000000000000000000", zeroAddress,
+            uniswapRouter, uniswapFactory
+        );
+    }
+
   });
 
   describe("Deployment", function () {
@@ -78,12 +76,12 @@ describe("xStarterPoolPairB WITH contract deployed token", function(){
     // tests. It receives the test name, and a callback function.
 
     // // If the callback function is async, Mocha will `await` it.
-    it("Should Revert If Called By Non Admin", async function () {
+    it("setUpPoolPair Should Revert If Called By Non Admin", async function () {
       // Expect receives a value, and wraps it in an Assertion object. These
       // objects have a lot of utility methods to assert values.
         
-        let startTime = parseInt(Date.now() / 1000) + 120;
-        let endTime = parseInt(Date.now() / 1000) + 240;
+        let startTime = parseInt(Date.now() / 1000) + startTimeLen;
+        let endTime = parseInt(Date.now() / 1000) + endTimeLen;
         const poolPairFromOther = poolPair.connect(addr2);
         const response = await poolPairFromOther.setUpPoolPair(
             zeroAddress,
@@ -102,12 +100,12 @@ describe("xStarterPoolPairB WITH contract deployed token", function(){
         
     });
 
-    it("Should be setup", async function () {
+    it("setUpPoolPair Should be setup contract when admin calls", async function () {
         // Expect receives a value, and wraps it in an Assertion object. These
         // objects have a lot of utility methods to assert values.
           
-        let startTime = (parseInt(Date.now() / 1000) + 120);
-        let endTime = (parseInt(Date.now() / 1000) + 240);
+        let startTime = (parseInt(Date.now() / 1000) + startTimeLen);
+        let endTime = (parseInt(Date.now() / 1000) + endTimeLen);
         const response = await poolPair.setUpPoolPair(
             zeroAddress,
             "xyz",
@@ -118,15 +116,11 @@ describe("xStarterPoolPairB WITH contract deployed token", function(){
             endTime,
         )
         
-        
 
         await expect(response.wait()).to.not.be.reverted
         
         let addr = await poolPair.projectToken();
-
-        console.log('addr', addr);
         let supply = await poolPair.totalTokensSupplyControlled();
-        console.log('supply1', BigNumber.from(supply).toString());
         expect(await poolPair.projectToken()).to.not.equal(zeroAddress);
         expect(await poolPair.isSetup()).to.equal(true);
         expect(await poolPair.startTime()).to.equal(startTime);
@@ -135,36 +129,73 @@ describe("xStarterPoolPairB WITH contract deployed token", function(){
           
       });
 
-    // If the callback function is async, Mocha will `await` it.
-    // it("Should set the right router and factory address", async function () {
-    //     // Expect receives a value, and wraps it in an Assertion object. These
-    //     // objects have a lot of utility methods to assert values.
-  
-    //     // This test expects the Admin variable stored in the contract to be equal
-    //     // to our Signer's owner.
-    //     expect(await poolPair.addressOfDex()).to.equal(uniswapRouter);
-    //     expect(await poolPair.addressOfDexFactory()).to.equal(uniswapFactory);
-    //   });
+
 
   });
   describe('depositAllToken', function() {
-      it('should revert because all tokens automatically depositied', async function(){
-        let response = await poolPair.depositAllTokenSupply();
-        await expect(response.wait()).to.be.reverted
-      })
+      
 
       it('should revert because only admin can call', async function(){
         let response = await poolPair.connect(addr1).depositAllTokenSupply();
-        await expect(response.wait()).to.be.reverted
+        await expect(response.wait()).to.be.reverted;
       })
-      it('totalsupplycontrol should be greater than 0', async function() {
+      it('should revert because tokens automatically deposited when created by contract', async function(){
+        let response = await poolPair.depositAllTokenSupply();
+        await expect(response.wait()).to.be.reverted;
+      })
+      it('totalsupplycontrol should be equal to 500 million tokens or 500 million * 10 ** 18', async function() {
           let supply = await poolPair.totalTokensSupplyControlled()
           let addr = await poolPair.projectToken()
 
-          console.log('supply2 is', BigNumber.from(supply));
-          console.log('addr2', addr);
-          expect(supply).to.be.gt(0)
+          expect(supply).to.be.equal(BigNumber.from('500000000000000000000000000'))
       })
   })
+
+  describe('contributeNativeToken', function() {
+      
+
+    it('should revert because event not open', async function(){
+      let response = await poolPair.connect(addr1).contributeNativeToken({value: '1000000000000000000'});
+    //   console.log('response is',response)
+      await expect(response.wait()).to.be.reverted;
+    })
+
+    it('wait till open, contribute and check balance has changed', async function(){
+        // because this will wait for some time let mocha know setting to 3 minutes 
+        this.timeout(240000)
+        for (let index = 0; index < 10; index++) {
+            await sleep(20000);
+            let isOpen = await poolPair.isEventOpen()
+            console.log('event is open', isOpen)
+
+            if(isOpen) {break}
+            
+        }
+        let response = await poolPair.connect(addr1).contributeNativeToken({value: utils.parseEther('1.0')});
+        await response.wait();
+        let val = await poolPair.balanceOfFunder(addr1.address);
+        expect(BigNumber.from(val[0]).toString()).to.equal('1000000000000000000');
+        let amtRaised = await poolPair.amountRaised()
+        expect(BigNumber.from(amtRaised).toString()).to.equal('1000000000000000000');
+
+        response = await poolPair.connect(addr2).contributeNativeToken({value: utils.parseEther('1.0')});
+        await response.wait();
+        val = await poolPair.balanceOfFunder(addr2.address);
+        expect(BigNumber.from(val[0]).toString()).to.equal('1000000000000000000');
+        amtRaised = await poolPair.amountRaised()
+        expect(BigNumber.from(amtRaised).toString()).to.equal('2000000000000000000');
+        // expect(await poolPair.balanceOfFunders(addr1.address)).to.equal(true);
+      })
+    // it('should revert because tokens automatically deposited when created by contract', async function(){
+    //   let response = await poolPair.depositAllTokenSupply();
+    //   await expect(response.wait()).to.be.reverted;
+    // })
+    // it('totalsupplycontrol should be equal to 500 million tokens or 500 million * 10 ** 18', async function() {
+    //     let supply = await poolPair.totalTokensSupplyControlled()
+    //     let addr = await poolPair.projectToken()
+
+    //     expect(supply).to.be.equal(BigNumber.from('500000000000000000000000000'))
+    // })
+})
 
 })
