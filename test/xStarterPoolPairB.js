@@ -1,8 +1,14 @@
 const { expect } = require("chai");
+const { BigNumber } = require("ethers");
 
-describe("xStarterPoolPairB Contract", function(){
-   let uniswapRouter = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
-   let uniswapFactory = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
+
+describe("xStarterPoolPairB WITH contract deployed token", function(){
+   const uniswapRouter = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
+   const uniswapFactory = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
+   const zeroAddress = "0x0000000000000000000000000000000000000000";
+   const decimals = "18"
+   const anEther = 10 ** decimals
+   
   let poolPairFactory;
   let poolPair;
   let owner;
@@ -23,9 +29,21 @@ describe("xStarterPoolPairB Contract", function(){
         "70","1","15500000","1800","60",
         "10000000000000000","10000000000000000",
         "1000000000000000000", "1000000000000000000", 
-        "2000000000000000000", "0x0000000000000000000000000000000000000000",
+        "2000000000000000000", zeroAddress,
         uniswapRouter, uniswapFactory
     );
+
+    // let startTime = (parseInt(Date.now() / 1000) + 120).toString();
+    // let endTime = (parseInt(Date.now() / 1000) + 240).toString;
+    // await poolPair.setUpPoolPair(
+    //     zeroAddress,
+    //     "xyz",
+    //     "xyz",
+    //     decimals,
+    //     "500000000",
+    //     startTime,
+    //     endTime,
+    // )
   });
 
   describe("Deployment", function () {
@@ -39,7 +57,6 @@ describe("xStarterPoolPairB Contract", function(){
 
       // This test expects the Admin variable stored in the contract to be equal
       // to our Signer's owner.
-      console.log('owner address is', owner.address)
         expect(await poolPair.admin()).to.equal(owner.address);
     });
 
@@ -54,10 +71,100 @@ describe("xStarterPoolPairB Contract", function(){
         expect(await poolPair.addressOfDexFactory()).to.equal(uniswapFactory);
       });
 
-    // it("Should assign the total supply of tokens to the owner", async function () {
-    //   const ownerBalance = await hardhatToken.balanceOf(owner.address);
-    //   expect(await hardhatToken.totalSupply()).to.equal(ownerBalance);
-    // });
   });
+
+  describe("setUpPoolPair Transaction", function () {
+    // `it` is another Mocha function. This is the one you use to define your
+    // tests. It receives the test name, and a callback function.
+
+    // // If the callback function is async, Mocha will `await` it.
+    it("Should Revert If Called By Non Admin", async function () {
+      // Expect receives a value, and wraps it in an Assertion object. These
+      // objects have a lot of utility methods to assert values.
+        
+        let startTime = parseInt(Date.now() / 1000) + 120;
+        let endTime = parseInt(Date.now() / 1000) + 240;
+        const poolPairFromOther = poolPair.connect(addr2);
+        const response = await poolPairFromOther.setUpPoolPair(
+            zeroAddress,
+            "xyz",
+            "xyz",
+            decimals,
+            500000000,
+            startTime,
+            endTime,
+        )
+        await expect(response.wait()).to.be.reverted;
+
+
+        // to.be.reverted not working so just make sure nothing changed
+        //expect(await poolPair.isSetup()).to.equal(false);
+        
+    });
+
+    it("Should be setup", async function () {
+        // Expect receives a value, and wraps it in an Assertion object. These
+        // objects have a lot of utility methods to assert values.
+          
+        let startTime = (parseInt(Date.now() / 1000) + 120);
+        let endTime = (parseInt(Date.now() / 1000) + 240);
+        const response = await poolPair.setUpPoolPair(
+            zeroAddress,
+            "xyz",
+            "xyz",
+            decimals,
+            500000000,
+            startTime,
+            endTime,
+        )
+        
+        
+
+        await expect(response.wait()).to.not.be.reverted
+        
+        let addr = await poolPair.projectToken();
+
+        console.log('addr', addr);
+        let supply = await poolPair.totalTokensSupplyControlled();
+        console.log('supply1', BigNumber.from(supply).toString());
+        expect(await poolPair.projectToken()).to.not.equal(zeroAddress);
+        expect(await poolPair.isSetup()).to.equal(true);
+        expect(await poolPair.startTime()).to.equal(startTime);
+        expect(await poolPair.endTime()).to.equal(endTime);
+
+          
+      });
+
+    // If the callback function is async, Mocha will `await` it.
+    // it("Should set the right router and factory address", async function () {
+    //     // Expect receives a value, and wraps it in an Assertion object. These
+    //     // objects have a lot of utility methods to assert values.
+  
+    //     // This test expects the Admin variable stored in the contract to be equal
+    //     // to our Signer's owner.
+    //     expect(await poolPair.addressOfDex()).to.equal(uniswapRouter);
+    //     expect(await poolPair.addressOfDexFactory()).to.equal(uniswapFactory);
+    //   });
+
+  });
+  describe('depositAllToken', function() {
+      it('should revert because all tokens automatically depositied', async function(){
+        let response = await poolPair.depositAllTokenSupply();
+        await expect(response.wait()).to.be.reverted
+      })
+
+      it('should revert because only admin can call', async function(){
+        let response = await poolPair.connect(addr1).depositAllTokenSupply();
+        await expect(response.wait()).to.be.reverted
+      })
+      it('totalsupplycontrol should be greater than 0', async function() {
+          let supply = await poolPair.totalTokensSupplyControlled()
+          let addr = await poolPair.projectToken()
+
+          console.log('supply2 is', BigNumber.from(supply));
+          console.log('addr2', addr);
+          expect(supply).to.be.gt(0)
+      })
+  })
 
 })

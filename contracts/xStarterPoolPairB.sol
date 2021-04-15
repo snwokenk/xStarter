@@ -402,7 +402,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         uint48 endTime_
         ) public onlyAdmin returns(bool)  {
             
-            
+            require(admin() == msg.sender, "Administration: caller is not the admin");
             require(!_isSetup,"initial setup already done");
             require(startTime_ > block.timestamp && endTime_ > startTime_, "ILO dates not correct");
             decimals_ = decimals_ > 18 ? 18 : decimals_;
