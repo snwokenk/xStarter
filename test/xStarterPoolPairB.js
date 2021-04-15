@@ -20,6 +20,7 @@ describe("xStarterPoolPairB WITH contract deployed token", function(){
   let owner;
   let addr1;
   let addr2;
+  let addr3;
   let addrs;
 
   beforeEach(async function () {
@@ -27,7 +28,7 @@ describe("xStarterPoolPairB WITH contract deployed token", function(){
     if(!poolPair) {
 
         poolPairFactory = await ethers.getContractFactory("xStarterPoolPairB");
-        [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
+        [owner, addr1, addr2, addr3, ...addrs] = await ethers.getSigners();
 
         // To deploy our contract, we just have to call Token.deploy() and await
         // for it to be deployed(), which happens onces its transaction has been
@@ -184,7 +185,23 @@ describe("xStarterPoolPairB WITH contract deployed token", function(){
         expect(BigNumber.from(val[0]).toString()).to.equal('1000000000000000000');
         amtRaised = await poolPair.amountRaised()
         expect(BigNumber.from(amtRaised).toString()).to.equal('2000000000000000000');
-        // expect(await poolPair.balanceOfFunders(addr1.address)).to.equal(true);
+
+        response = await poolPair.connect(addr3).contributeNativeToken({value: utils.parseEther('1.0')});
+        await expect(response.wait()).to.be.reverted
+        val = await poolPair.balanceOfFunder(addr3.address);
+        expect(BigNumber.from(val[0]).toString()).to.equal('0');
+
+    
+        
+
+      })
+
+      it('event should be done', async function() {
+        let isDone = await poolPair.isEventDone()
+        let isOpen = await poolPair.isEventOpen()
+        // should be true since max raise is 2 ethers
+        expect(isDone).to.equal(true);
+        expect(isOpen).to.equal(false);
       })
     // it('should revert because tokens automatically deposited when created by contract', async function(){
     //   let response = await poolPair.depositAllTokenSupply();

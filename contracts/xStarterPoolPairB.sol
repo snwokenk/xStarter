@@ -385,7 +385,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     function isEventDone() public view returns (bool isOpen_) {
         uint48 currentTime = uint48(block.timestamp);
         
-        if(_isSetup && (currentTime >= endTime())) {
+        if(_isSetup && ( currentTime >= endTime() )|| ( _maxFundingToken > 0 && amountRaised() == _maxFundingToken )) {
             isOpen_ = true;
         }
         
