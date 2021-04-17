@@ -8,6 +8,7 @@ function sleep(ms) {
 describe("xStarterPoolPairB WITH contract deployed token", function(){
    const uniswapRouter = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
    const uniswapFactory = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
+   const WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
    const zeroAddress = "0x0000000000000000000000000000000000000000";
    const decimals = "18";
    const anEther = 10 ** decimals;
@@ -17,6 +18,11 @@ describe("xStarterPoolPairB WITH contract deployed token", function(){
    
   let poolPairFactory;
   let poolPair;
+  let projectTokenInst;
+  let routerContractFactory;
+  let routerFactoryContractFactory;
+  let routerInst;
+  let routerFactoryInst;
   let owner;
   let addr1;
   let addr2;
@@ -28,6 +34,9 @@ describe("xStarterPoolPairB WITH contract deployed token", function(){
     if(!poolPair) {
 
         poolPairFactory = await ethers.getContractFactory("xStarterPoolPairB");
+        projectTokenFactory = await ethers.getContractFactory("contracts/xStarterPoolPairB.sol:ProjectBaseTokenERC20");
+        routerContractFactory = await ethers.getContractFactory("UniswapV2Router02");
+        routerFactoryContractFactory = await ethers.getContractFactory('UniswapV2Factory');
         [owner, addr1, addr2, addr3, ...addrs] = await ethers.getSigners();
 
         // To deploy our contract, we just have to call Token.deploy() and await
@@ -41,6 +50,7 @@ describe("xStarterPoolPairB WITH contract deployed token", function(){
             "2000000000000000000", zeroAddress,
             uniswapRouter, uniswapFactory
         );
+        
     }
 
   });
@@ -203,16 +213,124 @@ describe("xStarterPoolPairB WITH contract deployed token", function(){
         expect(isDone).to.equal(true);
         expect(isOpen).to.equal(false);
       })
-    // it('should revert because tokens automatically deposited when created by contract', async function(){
-    //   let response = await poolPair.depositAllTokenSupply();
-    //   await expect(response.wait()).to.be.reverted;
-    // })
-    // it('totalsupplycontrol should be equal to 500 million tokens or 500 million * 10 ** 18', async function() {
-    //     let supply = await poolPair.totalTokensSupplyControlled()
-    //     let addr = await poolPair.projectToken()
+})
 
-    //     expect(supply).to.be.equal(BigNumber.from('500000000000000000000000000'))
-    // })
+describe('validateILO', function() {
+      
+
+    it('ILO should succeed', async function(){
+      let response = await poolPair.validateILO();
+    //   console.log('response is',response)
+      await expect(response.wait()).to.not.be.reverted;
+      let ILOFailed = await poolPair.ILOFailed();
+      expect(ILOFailed).to.equal(false);
+      expect(await poolPair.tokensForLiquidity()).to.equal('175000000000000000000000000')
+    })
+})
+
+describe('approveTokensForLiquidityPair', function() {
+      // this checks to make sure tokens are approved for uniswap or uniswap forks dex exchanges
+
+    it('approval should succeed', async function(){
+      let response = await poolPair.approveTokensForLiquidityPair();
+      await expect(response.wait()).to.not.be.reverted;
+
+      // check project token allowances
+      let projectTokenAddr = await poolPair.projectToken()
+      projectTokenInst = await projectTokenFactory.attach(projectTokenAddr)
+      let amount = await projectTokenInst.totalSupply();
+      console.log('amount is', amount.toString());
+      expect(amount).to.equal('500000000000000000000000000');
+
+      amount = await projectTokenInst.allowance(poolPair.address, uniswapRouter)
+
+      console.log('allowance amount is ', amount.toString())
+      expect(amount).to.equal('175000000000000000000000000');
+    })
+})
+
+describe('approveTokensForLiquidityPair', function() {
+    // this checks to make sure tokens are approved for uniswap or uniswap forks dex exchanges
+
+  it('approval should succeed', async function(){
+    let response = await poolPair.approveTokensForLiquidityPair();
+    await expect(response.wait()).to.not.be.reverted;
+
+    // // check project token allowances
+    // let projectTokenAddr = await poolPair.projectToken()
+    // projectTokenInst = await projectTokenFactory.attach(projectTokenAddr)
+    // let amount = await projectTokenInst.totalSupply();
+    // console.log('amount is', amount.toString());
+    // expect(amount).to.equal('500000000000000000000000000');
+
+    // amount = await projectTokenInst.allowance(poolPair.address, uniswapRouter)
+
+    // console.log('allowance amount is ', amount.toString())
+    // expect(amount).to.equal('175000000000000000000000000');
+  })
+
+  it('allowance amount should be correct', async function(){
+
+    // check project token allowances
+    let projectTokenAddr = await poolPair.projectToken()
+    projectTokenInst = await projectTokenFactory.attach(projectTokenAddr)
+    let amount = await projectTokenInst.totalSupply();
+    console.log('amount is', amount.toString());
+    expect(amount).to.equal('500000000000000000000000000');
+
+    amount = await projectTokenInst.allowance(poolPair.address, uniswapRouter)
+
+    console.log('allowance amount is ', amount.toString())
+    expect(amount).to.equal('175000000000000000000000000');
+  })
+})
+
+describe('createLiquidityPool', function() {
+    // this checks to make sure tokens are approved for uniswap or uniswap forks dex exchanges
+
+  it('lp creation should succeed', async function(){
+    let response = await poolPair.createLiquidityPool();
+    await expect(response.wait()).to.not.be.reverted;
+  })
+
+  it('lp tokens should be greater than 0', async function(){
+
+    // check project token allowances
+    let lpTokenAmount = await poolPair.availLPTokens()
+    console.log('amount is', lpTokenAmount.toString());
+    expect(lpTokenAmount).to.be.gte(0);
+
+    // validate weth address, and project token address lp pair address same as poolpair
+
+    
+  })
+})
+
+  describe('finalizeILO', function() {
+    // this checks to make sure tokens are approved for uniswap or uniswap forks dex exchanges
+
+  it('lp creation should succeed', async function(){
+    let response = await poolPair.finalizeILO();
+    await expect(response.wait()).to.not.be.reverted;
+  })
+
+  it('liquidity pool address should be same on pool pair and uniswap* factory', async function(){
+
+    let routerFactoryAddr = await poolPair.addressOfDexFactory()
+    routerFactoryInst = await routerFactoryContractFactory.attach(routerFactoryAddr)
+    let projectTokenAddr = await poolPair.projectToken()
+
+    let lpAddr1 = await routerFactoryInst.getPair(WETH, projectTokenAddr)
+
+    let lpAddr2 = await poolPair.liquidityPairAddress()
+
+    console.log('lp address from factory and lp address from pool pair', lpAddr1, lpAddr2)
+    expect(lpAddr2).to.equal(lpAddr1);
+
+    // validate weth address, and project token address lp pair address same as poolpair
+
+    
+  })
 })
 
 })

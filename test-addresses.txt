@@ -1,6 +1,6 @@
 // use hardhard and alchemyapi to fork ethereum main net. 
 test_uniswap_factory = 0xea4a45E7FF00D5a69472a9AeB1E6AE54C07C6962
-test_WETH = 0x3db38A60B4af700fB3ee24d0CEF3Fa3604fC499D
+test_WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2
 test_uniswap_router = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D;
 zero_address = 0x0000000000000000000000000000000000000000;
 1616657019

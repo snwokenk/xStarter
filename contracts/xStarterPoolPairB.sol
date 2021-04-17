@@ -304,6 +304,13 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     function availLPTokens() public view returns(uint) {
         return _availLPTokens;
     }
+    function liquidityPairAddress() public view returns(address) {
+        return _liquidityPairAddress;
+    }
+    
+    function tokensForLiquidity() public view returns(uint) {
+        return _tokensForLiquidity;
+    }
     function balanceOfFunder(address funder_) public view returns(uint, uint) {
         return (_funders[funder_].fundingTokenAmount, _funders[funder_].projectTokenAmount);
     }
