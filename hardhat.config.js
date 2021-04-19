@@ -51,4 +51,7 @@ module.exports = {
       }
     },
   },
+  paths: {
+    artifacts: './xstarter-frontend/src/artifacts'
+  }
 };

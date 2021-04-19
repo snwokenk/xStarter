@@ -32,7 +32,11 @@ describe("xStarterPoolPairB WITH contract deployed token", function(){
   beforeEach(async function () {
     // Get the ContractFactory and Signers here.
     if(!poolPair) {
-
+        // print out test private key
+        // https://ethereum.stackexchange.com/a/79319/71015
+        let testMnemomic = "test test test test test test test test test test test junk"
+        let mnemonicWallet = ethers.Wallet.fromMnemonic(testMnemomic);
+        console.log('test private key is', mnemonicWallet.privateKey);
         poolPairFactory = await ethers.getContractFactory("xStarterPoolPairB");
         projectTokenFactory = await ethers.getContractFactory("contracts/xStarterPoolPairB.sol:ProjectBaseTokenERC20");
         routerContractFactory = await ethers.getContractFactory("UniswapV2Router02");

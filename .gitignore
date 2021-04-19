@@ -6,3 +6,5 @@ test/artifacts/
 cache/
 ignored_constants.js
 artifacts/
+xstarter-frontend/node_modules
+xstarter-frontend/src/artifacts
