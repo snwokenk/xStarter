@@ -148,7 +148,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         _;
     }
     modifier allowedToWithdraw() {
-        require(!_currentlyWithdrawing[_msgSender()], "Locked From Funding, A transaction you initiated has not been completed");
+        require(!_currentlyWithdrawing[_msgSender()], "Locked From Withdrawing, A transaction you initiated has not been completed");
         _;
     }
     
@@ -221,6 +221,8 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     
     // tokens for liquidity
     uint private _tokensForLiquidity;
+    // stores value of tokens for liquidity and  is used to calculate contributors share
+    uint private _amountForProjTokenCalc;
     
     
     
@@ -249,7 +251,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     mapping(address => bool) private liqTokensWithdrawn;
     mapping(address => bool) private _projTokensWithdrawn;
     mapping(address => bool) private _currentlyFunding;
-     mapping(address => bool) private _currentlyWithdrawing;
+    mapping(address => bool) private _currentlyWithdrawing;
     
     // step 1
     constructor(
@@ -311,8 +313,15 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     function tokensForLiquidity() public view returns(uint) {
         return _tokensForLiquidity;
     }
-    function balanceOfFunder(address funder_) public view returns(uint, uint) {
-        return (_funders[funder_].fundingTokenAmount, _funders[funder_].projectTokenAmount);
+    function amountForProjTokenCalc() public view returns(uint) {
+        return _amountForProjTokenCalc;
+    }
+    function fundingTokenBalanceOfFunder(address funder_) public view returns(uint) {
+        return _funders[funder_].fundingTokenAmount;
+    }
+    function projectTokenBalanceOfFunder(address funder_) public view returns(uint) {
+        require(_ILOValidated, "project balance not available till ILO validated");
+        return _getProjTknBal(funder_);
     }
     function swapRatio() public view returns(uint24, uint24) {
         return (_swapRatio.fundTokenReceive, _swapRatio.projectTokenGive);
@@ -321,6 +330,9 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     function adminBalance() public view returns(uint balance_) {
         return _adminBalance;
     }
+    function isWithdrawing(address addr_) public view returns(bool) {
+        return _currentlyWithdrawing[addr_ ];
+    } 
     function isSetup() public view returns (bool) {
         return _isSetup;
     }
@@ -608,7 +620,6 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     
     
     // step 6
-    // todo: find out why this function fails, probably create a separate test contract and try
     function createLiquidityPool() external returns(bool success) {
         // liquidity will be _fundingTokenAvail to _tokensForLiquidity ratio
         require(_ILOValidated && !ILOFailed(), "You must first validate ILO");
@@ -617,6 +628,8 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         _liquidityPairCreated = true;
     
         uint liquidityAmount;
+        // save current amount to be used later to calculate each individual contributors share of project tokens
+        _amountForProjTokenCalc = _tokensForLiquidity;
         if(address(0) == _fundingToken) {
             liquidityAmount = _createLiquidityPairETH();
         } else {
@@ -638,36 +651,39 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     }
     
     
+    event Withdrawn(address funder_, uint amount_);
     
     function withdraw() external allowedToWithdraw returns(bool success) {
          _disallowWithdraw();
         require(!isContribTokenLocked(), "withdrawal locked");
         require(!_projTokensWithdrawn[_msgSender()], "project tokens already withdrawn");
-        FunderInfo storage funder = _funders[_msgSender()];
-        require(funder.fundingTokenAmount > 0, "Did Not Contribute");
+        uint amount_ = projectTokenBalanceOfFunder(_msgSender());
         _projTokensWithdrawn[_msgSender()] = true;
-        
-        uint amount_ = _getProjTknBal(_msgSender(), funder.fundingTokenAmount);
+        // FunderInfo storage funder = _funders[_msgSender()];
+        // require(funder.fundingTokenAmount > 0, "Did Not Contribute");
+        require(amount_ > 0, 'amount must be greater than 0');
         //funder.projectTokenAmount = funder.projectTokenAmount.sub(amount_);
-        _totalTokensSupplyControlled = _totalTokensSupplyControlled.sub(amount_);
         success = IERC20AndOwnable(_projectToken).approve(_msgSender(), amount_);
+         _totalTokensSupplyControlled = _totalTokensSupplyControlled.sub(amount_);
         
         _allowWithdraw();
+        emit Withdrawn(_msgSender(), amount_);
     }
     
     // todo: verify the balance is right
-    function _getProjTknBal(address funder_, uint funderContAmt_) internal view returns(uint balance) {
-        // *** CHECK TO MAKE SURE PROJECT TOKENS ARE NOT WITHDRAWN BEFORE CALLING THIS FUNCTION ***
+    function _getProjTknBal(address funder_) internal view returns(uint balance) {
+        if(_projTokensWithdrawn[funder_] == true) {
+            return 0;
+        }
+        uint tokensForContributors = _totalTokensILO - _amountForProjTokenCalc;
         
-        uint tokensForContributors = _totalTokensILO - _tokensForLiquidity;
-        
-        uint amtPer = _fundingTokenTotal.div(10 ** 18);
-        amtPer = tokensForContributors.div(amtPer);
+        // uint amtPer = _fundingTokenTotal.div(10 ** 18);
+        uint amtPer = tokensForContributors / _fundingTokenTotal;
         // lpPer * fundingTokenAmount to get lp tokens to send
-        balance  = _funders[_msgSender()].fundingTokenAmount * amtPer;
+        balance  = _funders[funder_].fundingTokenAmount * amtPer;
         
     }
-    // TODO: verify this function is safe, since it requires sending back ether/xDai/native token
+
     function withdrawOnFailure() external allowedToWithdraw returns(bool success) {
         require(ILOFailed(), "ILO not failed");
         _disallowWithdraw();
@@ -705,7 +721,6 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     }
     
     // withraws all the liquidity token of the user
-    // todo: figure a way to make this efficient
     function withdrawLiquidityTokens() external allowedToWithdraw returns(bool success) {
         require(!isLiqTokenLocked(), "withdrawal locked ");
         _disallowWithdraw();

@@ -1,5 +1,6 @@
 const { expect } = require("chai");
 const { BigNumber, utils } = require("ethers");
+// const getRevertReason = require('eth-revert-reason')
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -71,6 +72,7 @@ describe("xStarterPoolPairB WITH contract deployed token", function(){
       // This test expects the Admin variable stored in the contract to be equal
       // to our Signer's owner.
         expect(await poolPair.admin()).to.equal(owner.address);
+        console.log(poolPair.address)
     });
 
     // If the callback function is async, Mocha will `await` it.
@@ -98,20 +100,15 @@ describe("xStarterPoolPairB WITH contract deployed token", function(){
         let startTime = parseInt(Date.now() / 1000) + startTimeLen;
         let endTime = parseInt(Date.now() / 1000) + endTimeLen;
         const poolPairFromOther = poolPair.connect(addr2);
-        const response = await poolPairFromOther.setUpPoolPair(
-            zeroAddress,
-            "xyz",
-            "xyz",
-            decimals,
-            500000000,
-            startTime,
-            endTime,
-        )
-        await expect(response.wait()).to.be.reverted;
-
-
-        // to.be.reverted not working so just make sure nothing changed
-        //expect(await poolPair.isSetup()).to.equal(false);
+        await expect(poolPairFromOther.setUpPoolPair(
+          zeroAddress,
+          "xyz",
+          "xyz",
+          decimals,
+          500000000,
+          startTime,
+          endTime,
+      )).to.be.revertedWith("Administration: caller is not the admin");
         
     });
 
@@ -147,16 +144,15 @@ describe("xStarterPoolPairB WITH contract deployed token", function(){
 
 
   });
+
   describe('depositAllToken', function() {
       
 
       it('should revert because only admin can call', async function(){
-        let response = await poolPair.connect(addr1).depositAllTokenSupply();
-        await expect(response.wait()).to.be.reverted;
+        await expect(poolPair.connect(addr1).depositAllTokenSupply()).to.be.revertedWith("Administration: caller is not the admin");
       })
       it('should revert because tokens automatically deposited when created by contract', async function(){
-        let response = await poolPair.depositAllTokenSupply();
-        await expect(response.wait()).to.be.reverted;
+        await expect(poolPair.depositAllTokenSupply()).to.be.revertedWith("revert already deposited");
       })
       it('totalsupplycontrol should be equal to 500 million tokens or 500 million * 10 ** 18', async function() {
           let supply = await poolPair.totalTokensSupplyControlled()
@@ -170,9 +166,8 @@ describe("xStarterPoolPairB WITH contract deployed token", function(){
       
 
     it('should revert because event not open', async function(){
-      let response = await poolPair.connect(addr1).contributeNativeToken({value: '1000000000000000000'});
     //   console.log('response is',response)
-      await expect(response.wait()).to.be.reverted;
+      await expect(poolPair.connect(addr1).contributeNativeToken({value: '1000000000000000000'})).to.be.revertedWith("ILO event not open");
     })
 
     it('wait till open, contribute and check balance has changed', async function(){
@@ -188,29 +183,25 @@ describe("xStarterPoolPairB WITH contract deployed token", function(){
         }
         let response = await poolPair.connect(addr1).contributeNativeToken({value: utils.parseEther('1.0')});
         await response.wait();
-        let val = await poolPair.balanceOfFunder(addr1.address);
-        expect(BigNumber.from(val[0]).toString()).to.equal('1000000000000000000');
+        let val = await poolPair.fundingTokenBalanceOfFunder(addr1.address);
+        expect(BigNumber.from(val).toString()).to.equal('1000000000000000000');
         let amtRaised = await poolPair.amountRaised()
         expect(BigNumber.from(amtRaised).toString()).to.equal('1000000000000000000');
 
         response = await poolPair.connect(addr2).contributeNativeToken({value: utils.parseEther('1.0')});
         await response.wait();
-        val = await poolPair.balanceOfFunder(addr2.address);
-        expect(BigNumber.from(val[0]).toString()).to.equal('1000000000000000000');
+        val = await poolPair.fundingTokenBalanceOfFunder(addr2.address);
+        expect(BigNumber.from(val).toString()).to.equal('1000000000000000000');
         amtRaised = await poolPair.amountRaised()
         expect(BigNumber.from(amtRaised).toString()).to.equal('2000000000000000000');
 
-        response = await poolPair.connect(addr3).contributeNativeToken({value: utils.parseEther('1.0')});
-        await expect(response.wait()).to.be.reverted
-        val = await poolPair.balanceOfFunder(addr3.address);
-        expect(BigNumber.from(val[0]).toString()).to.equal('0');
-
-    
-        
+        await expect(poolPair.connect(addr3).contributeNativeToken({value: utils.parseEther('1.0')})).to.be.revertedWith("revert ILO event not open")
+        val = await poolPair.fundingTokenBalanceOfFunder(addr3.address);
+        expect(BigNumber.from(val).toString()).to.equal('0');
 
       })
 
-      it('event should be done', async function() {
+      it('event should be done because maximum reached', async function() {
         let isDone = await poolPair.isEventDone()
         let isOpen = await poolPair.isEventOpen()
         // should be true since max raise is 2 ethers
@@ -336,5 +327,90 @@ describe('createLiquidityPool', function() {
     
   })
 })
+
+describe('check timelocks', function() {
+  // this checks to make sure tokens are approved for uniswap or uniswap forks dex exchanges
+
+it('should be timlocked', async function(){
+  let timeLockSet = await poolPair.isTimeLockSet();
+  expect(timeLockSet).to.equal(true);
+})
+
+it('should revert when trying to withdraw token as contributor', async function(){
+    //   console.log('response is',response)
+      await expect(poolPair.connect(addr1).withdraw()).to.be.revertedWith("revert withdrawal locked");
+})
+it('should revert when trying to withdraw token as project owner', async function(){
+    //   console.log('response is',response)
+      await expect(poolPair.withdrawAdmin()).to.be.revertedWith("revert withdrawal locked");
+})
+
+})
+
+describe('withdraw tokens', function() {
+
+  it('should equal right amount', async function(){
+    // this checks to make sure tokens are approved for uniswap or uniswap forks dex exchanges
+    // because this will wait for some time let mocha know setting to 3 minutes 
+    this.timeout(240000)
+    for (let index = 0; index < 10; index++) {
+        await sleep(20000);
+        let contributionLocked = await poolPair.isContribTokenLocked();
+        console.log('contribution locked', contributionLocked)
+
+        if(!contributionLocked) {break}
+        
+    }
+      let bal = await poolPair.projectTokenBalanceOfFunder(addr1.address);
+      console.log('balance is', bal.toString())
+        // 500 million tokens, 350 million for ilo, 50% for liquidity, so 175 million remaining, only 2 contributors so 87.5 million * 10 ** 18
+      expect(bal.toString()).to.be.equal('87500000000000000000000000')
+
+      let response = await poolPair.connect(addr1).withdraw();
+      //   console.log('response is',response)
+      await expect(response.wait()).to.not.be.reverted;
+
+      // let allowBal = await projectTokenInst.allowance(poolPair.address, addr1.address);
+      // expect(allowBal).to.be.equal(bal)
+
+      // response = await projectTokenInst.connect(addr1).transferFrom(poolPair.address, addr1.address)
+      // await response.wait()
+
+      // let tokenBalance = await projectTokenInst.balanceOf(addr.address)
+      // expect(tokenBalance.toString()).to.equal('87500000000000000000000000')
+
+        
+  })
+
+  it('allowance should equal right amount', async function(){
+    // this checks to make sure tokens are approved for uniswap or uniswap forks dex exchanges
+    // because this will wait for some time let mocha know setting to 3 minutes 
+
+      let allowBal = await projectTokenInst.allowance(poolPair.address, addr1.address);
+      expect(allowBal.toString()).to.be.equal('87500000000000000000000000')
+
+        
+  })
+  
+  it('after transferFrom balanceOf should be right amount', async function(){
+    // this checks to make sure tokens are approved for uniswap or uniswap forks dex exchanges
+    // because this will wait for some time let mocha know setting to 3 minutes 
+
+      let response = await projectTokenInst.connect(addr1).transferFrom(poolPair.address, addr1.address, '87500000000000000000000000')
+      await response.wait()
+
+      let tokenBalance = await projectTokenInst.balanceOf(addr1.address)
+      expect(tokenBalance.toString()).to.equal('87500000000000000000000000')
+
+        
+  })
+  
+
+
+})
+
+// describe('withdraw admin tokens', function() {
+
+// })
 
 })
