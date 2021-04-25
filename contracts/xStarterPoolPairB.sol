@@ -323,6 +323,10 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         require(_ILOValidated, "project balance not available till ILO validated");
         return _getProjTknBal(funder_);
     }
+    function projectLPTokenBalanceOfFunder(address funder_) public view returns(uint) {
+        require(_availLPTokens > 0, "LP tokens not yet set");
+        return _getLiqTknBal(funder_);
+    }
     function swapRatio() public view returns(uint24, uint24) {
         return (_swapRatio.fundTokenReceive, _swapRatio.projectTokenGive);
     }
@@ -573,10 +577,10 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     }
     
     function _allowWithdraw() internal {
-        _currentlyWithdrawing[_msgSender()] = true;
+        _currentlyWithdrawing[_msgSender()] = false;
     }
     function _disallowWithdraw() internal {
-        _currentlyWithdrawing[_msgSender()] = false;
+        _currentlyWithdrawing[_msgSender()] = true;
     }
     
     event ILOValidated(address indexed caller_, uint indexed amountRaised_, bool success_,  uint indexed swappedTokens_);
@@ -676,11 +680,38 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
             return 0;
         }
         uint tokensForContributors = _totalTokensILO - _amountForProjTokenCalc;
-        
+        uint amtPer;
+        // avoid solidity rounding fractions to 0
+        if(tokensForContributors > _fundingTokenTotal) {
+            
+            amtPer = tokensForContributors / _fundingTokenTotal;
+            balance  = _funders[funder_].fundingTokenAmount * amtPer;
+        }else {
+            amtPer = _fundingTokenTotal / tokensForContributors;
+            balance  = _funders[funder_].fundingTokenAmount / amtPer;
+        }
         // uint amtPer = _fundingTokenTotal.div(10 ** 18);
-        uint amtPer = tokensForContributors / _fundingTokenTotal;
+       
         // lpPer * fundingTokenAmount to get lp tokens to send
-        balance  = _funders[funder_].fundingTokenAmount * amtPer;
+       
+        
+    }
+    
+    function _getLiqTknBal(address funder_) internal view returns(uint balance) {
+        if(liqTokensWithdrawn[_msgSender()] == true) {
+            return 0;
+        }
+        
+        uint amtPer;
+        // avoid solidity rounding fractions to 0
+        if(_totalLPTokens > _fundingTokenTotal) {
+            amtPer = _totalLPTokens / _fundingTokenTotal;
+            balance  = _funders[funder_].fundingTokenAmount * amtPer;
+        }else {
+            amtPer = _fundingTokenTotal / _totalLPTokens;
+            balance  = _funders[funder_].fundingTokenAmount / amtPer;
+        }
+        
         
     }
 
@@ -725,15 +756,9 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         require(!isLiqTokenLocked(), "withdrawal locked ");
         _disallowWithdraw();
         require(!liqTokensWithdrawn[_msgSender()], "No tokens");
+        uint LPAmount_ = _getLiqTknBal(_msgSender());
         liqTokensWithdrawn[_msgSender()] = true;
         
-        // get lp tokens per 1 funding token offerrd
-        //reduce to regular size
-        // todo put this step in a library
-        uint lpPer = _fundingTokenTotal.div(10 ** 18);
-        lpPer = _totalLPTokens.div(lpPer);
-        // lpPer * fundingTokenAmount to get lp tokens to send
-        uint LPAmount_ = _funders[_msgSender()].fundingTokenAmount * lpPer;
         require(LPAmount_ > 0 && LPAmount_ <= _availLPTokens, "not enough lp tokens");
         _availLPTokens = _availLPTokens.sub(LPAmount_);
         success = IERC20Uni(_projectToken).approve(_msgSender(), LPAmount_);
