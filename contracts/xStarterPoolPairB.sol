@@ -680,21 +680,20 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
             return 0;
         }
         uint tokensForContributors = _totalTokensILO - _amountForProjTokenCalc;
-        uint amtPer;
+        balance = _getProportionAmt(tokensForContributors, _fundingTokenTotal, _funders[funder_].fundingTokenAmount);
         // avoid solidity rounding fractions to 0
-        if(tokensForContributors > _fundingTokenTotal) {
+        // if(tokensForContributors > _fundingTokenTotal) {
             
-            amtPer = tokensForContributors / _fundingTokenTotal;
-            balance  = _funders[funder_].fundingTokenAmount * amtPer;
-        }else {
-            amtPer = _fundingTokenTotal / tokensForContributors;
-            balance  = _funders[funder_].fundingTokenAmount / amtPer;
-        }
+        //     amtPer = tokensForContributors / _fundingTokenTotal;
+        //     balance  = _funders[funder_].fundingTokenAmount * amtPer;
+        // }else {
+        //     amtPer = _fundingTokenTotal / tokensForContributors;
+        //     balance  = _funders[funder_].fundingTokenAmount / amtPer;
+        // }
         // uint amtPer = _fundingTokenTotal.div(10 ** 18);
        
         // lpPer * fundingTokenAmount to get lp tokens to send
        
-        
     }
     
     function _getLiqTknBal(address funder_) internal view returns(uint balance) {
@@ -702,17 +701,27 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
             return 0;
         }
         
-        uint amtPer;
-        // avoid solidity rounding fractions to 0
-        if(_totalLPTokens > _fundingTokenTotal) {
-            amtPer = _totalLPTokens / _fundingTokenTotal;
-            balance  = _funders[funder_].fundingTokenAmount * amtPer;
-        }else {
-            amtPer = _fundingTokenTotal / _totalLPTokens;
-            balance  = _funders[funder_].fundingTokenAmount / amtPer;
-        }
+        balance = _getProportionAmt(_totalLPTokens, _fundingTokenTotal, _funders[funder_].fundingTokenAmount);
+        // uint amtPer;
+        // // avoid solidity rounding fractions to 0
+        // if(_totalLPTokens > _fundingTokenTotal) {
+        //     amtPer = _totalLPTokens / _fundingTokenTotal;
+        //     balance  = _funders[funder_].fundingTokenAmount * amtPer;
+        // }else {
+        //     amtPer = _fundingTokenTotal / _totalLPTokens;
+        //     balance  = _funders[funder_].fundingTokenAmount / amtPer;
+        // }
         
         
+    }
+    
+    function _getProportionAmt(uint totalRewardTokens, uint totalFundingTokens, uint funderFundingAmount) internal view returns (uint proportionalRewardTokens) {
+        // assumes each both tokens a decimals = 18, while precision is lost, reducing this blunts the loss of precision
+        uint reducedTotalFundingTokens = totalFundingTokens / (10 ** 12);
+        uint reducedFunderFundingAmount = funderFundingAmount / (10 ** 12);
+        uint amtPer = totalRewardTokens / reducedTotalFundingTokens;
+        
+        proportionalRewardTokens = amtPer * reducedFunderFundingAmount;
     }
 
     function withdrawOnFailure() external allowedToWithdraw returns(bool success) {
