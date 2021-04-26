@@ -183,7 +183,8 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     uint private _liqPairTimeLock;
     uint private _liqPairBlockLock;
     // length of lock for Liquidity tokens Minimum 365.25 days or 31557600 seconds
-    uint private _liqPairLockLen;
+    // todo: set this in constructor or initialize (if we're to use the upgradeable part)
+    uint private _liqPairLockLen = 60;
     
     uint8 private _percentOfTotalTokensForILO;
     uint8 private _percentOfILOTokensForLiquidity = 50;
@@ -248,7 +249,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     
     uint private _adminBalance;
     mapping(address => FunderInfo) private _funders;
-    mapping(address => bool) private liqTokensWithdrawn;
+    mapping(address => bool) private _liqTokensWithdrawn;
     mapping(address => bool) private _projTokensWithdrawn;
     mapping(address => bool) private _currentlyFunding;
     mapping(address => bool) private _currentlyWithdrawing;
@@ -607,6 +608,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         
         require(_ILOValidated && !ILOFailed(), "You must first validate ILO"); 
         require(address(0) != _addressOfDex, "dex zero addr");
+        require(!_approvedForLP, "approved tokens for liquidity already called");
         uint amountProjectToken = _tokensForLiquidity;
         
         if(address(0) == _fundingToken) {
@@ -655,7 +657,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     }
     
     
-    event Withdrawn(address funder_, uint amount_);
+    event WithdrawnProjectToken(address funder_, uint amount_);
     
     function withdraw() external allowedToWithdraw returns(bool success) {
          _disallowWithdraw();
@@ -671,7 +673,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
          _totalTokensSupplyControlled = _totalTokensSupplyControlled.sub(amount_);
         
         _allowWithdraw();
-        emit Withdrawn(_msgSender(), amount_);
+        emit WithdrawnProjectToken(_msgSender(), amount_);
     }
     
     // todo: verify the balance is right
@@ -697,7 +699,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     }
     
     function _getLiqTknBal(address funder_) internal view returns(uint balance) {
-        if(liqTokensWithdrawn[_msgSender()] == true) {
+        if(_liqTokensWithdrawn[funder_] == true) {
             return 0;
         }
         
@@ -760,18 +762,21 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         _allowWithdraw();
     }
     
+    event WithdrawnLiquidityToken(address funder_, uint amount_);
+    
     // withraws all the liquidity token of the user
     function withdrawLiquidityTokens() external allowedToWithdraw returns(bool success) {
         require(!isLiqTokenLocked(), "withdrawal locked ");
         _disallowWithdraw();
-        require(!liqTokensWithdrawn[_msgSender()], "No tokens");
+        require(!_liqTokensWithdrawn[_msgSender()], "No tokens");
         uint LPAmount_ = _getLiqTknBal(_msgSender());
-        liqTokensWithdrawn[_msgSender()] = true;
+        _liqTokensWithdrawn[_msgSender()] = true;
         
         require(LPAmount_ > 0 && LPAmount_ <= _availLPTokens, "not enough lp tokens");
         _availLPTokens = _availLPTokens.sub(LPAmount_);
-        success = IERC20Uni(_projectToken).approve(_msgSender(), LPAmount_);
+        success = IERC20Uni(_liquidityPairAddress).approve(_msgSender(), LPAmount_);
         _allowWithdraw();
+        emit WithdrawnLiquidityToken(_msgSender(), LPAmount_);
         
     }
     

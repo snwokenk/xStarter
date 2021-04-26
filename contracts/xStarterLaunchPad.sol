@@ -16,17 +16,24 @@ struct ILOProposal {
     string tokenName;
     string tokenSymbol;
     uint totalSupply;
+    uint8 decimals;
     uint8 percentOfTokensForILO;
     address tokenAddress;
     uint blockNumber;
     
 }
 
+struct GovernanceProposal {
+    address proposer;
+    string proposalHash;
+}
+
 contract xStarterLaunchPad is Ownable{
     using SafeMath for uint256;
     using Address for address;
     
-    mapping(string => ILOProposal) proposals;
+    mapping(string => ILOProposal) ILOProposals;
+    mapping(string => GovernanceProposal) govProposals;
     
     
 }
