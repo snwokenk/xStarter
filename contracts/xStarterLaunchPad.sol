@@ -23,6 +23,7 @@ struct ILOProposal {
     address tokenAddress;
     uint blockNumber;
     bool isApproved;
+    bool isOpen;
     
 }
 
@@ -39,21 +40,65 @@ contract xStarterLaunchPad is Ownable{
     using SafeMath for uint256;
     using Address for address;
     modifier onlyDepositor() {
-        require(depositBalance(_msgSender()) >= minDeposit, 'must have minimum deposit');
+        require(depositBalance(_msgSender()) >= _minDeposit, 'must have minimum deposit');
         _;
     }
     
-    uint minDeposit;
-    
-    mapping(string => ILOProposal) private ILOProposals;
-    mapping(string => GovernanceProposal) private govProposals;
-    mapping(address => uint) private proposalRefundableDeposits;
-    
-    function depositBalance(address addr_) public view returns(uint) {
-        return proposalRefundableDeposits[addr_];
+     modifier allowedToInteract() {
+        require(!_currentlyInteracting[_msgSender()], "Locked From Interaction, A transaction you initiated has not been completed");
+        _;
     }
     
-    function createProposal() external onlyDepositor returns(bool success) {
+    // min amount of tokens to have deposited 
+    uint _minDeposit;
+    address _xStarterToken;
+    
+    mapping(address => ILOProposal) private _ILOProposals;
+    mapping(address => GovernanceProposal) private _govProposals;
+    mapping(address => uint) private _tokenDeposits;
+    mapping(address => bool) private _currentlyFunding;
+    mapping(address => bool) private _currentlyInteracting;
+    
+    function _allowInteraction() internal {
+        _currentlyInteracting[_msgSender()] = false;
+    }
+    function _disallowInteraction() internal {
+        _currentlyInteracting[_msgSender()] = true;
+    }
+    
+    function depositBalance(address addr_) public view returns(uint) {
+        return _tokenDeposits[addr_];
+    }
+    
+    function depositApprovedToken() external allowedToInteract returns(bool success) {
+        _disallowInteraction();
+        uint approvedAmount = IERC20(_xStarterToken).allowance(_msgSender(), address(this));
+        require(depositBalance(_msgSender()) + approvedAmount >= _minDeposit, 'new deposit plus current deposit must be greater than minimum Deposit');
+        success = IERC20(_xStarterToken).transferFrom(_msgSender(), address(this), approvedAmount);
+        require(success,'not able to transfer approved tokens');
+        _tokenDeposits[_msgSender()] = _tokenDeposits[_msgSender()].add(approvedAmount);
+        _allowInteraction();
+        
+        
+    }
+    function withdrawTokens(uint amount_) external allowedToInteract returns(bool success) {
+        // todo: before withdrawing tokens make sure there are no open  proposals by msg.sender, if there is make sure after withdrawal amount left is greater than _minDeposit
+        require(depositBalance(_msgSender()) >= amount_, 'Not enough funds');
+        _disallowInteraction();
+        _tokenDeposits[_msgSender()] = _tokenDeposits[_msgSender()].sub(amount_);
+        
+        // require(!_ILOProposals[_msgSender].isOpen || _ILOProposals[_msgSender].isOpen && _tokenDeposits[_msgSender()] >= _minDeposit, 'Open' )
+        // if(_ILOProposals[_msgSender].isOpen && )
+        
+        success = IERC20(_xStarterToken).approve(_msgSender(), amount_);
+        _allowInteraction();
+    }
+    
+    function createILOProposal() external onlyDepositor returns(bool success) {
+        
+    }
+    
+    function createGovernanceProposal() external onlyDepositor returns(bool success) {
         
     }
     

@@ -498,13 +498,11 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         // transfer approved tokens from admin to current ILO contract
         success = existingToken.transferFrom(_msgSender(), address(this), _totalTokensSupply);
         
-        if(success) {
-            _totalTokensSupplyControlled =  _totalTokensSupplyControlled.add(_totalTokensSupply);
-            _setTokensForILO();
-        }else {
-            revert('could not transfer project tokens to pool pair contract');
-        }
-        return success;
+        require(success,'could not transfer project tokens to pool pair contract');
+
+        _totalTokensSupplyControlled =  _totalTokensSupplyControlled.add(_totalTokensSupply);
+        _setTokensForILO();
+
         
     }
     
