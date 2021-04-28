@@ -32,6 +32,7 @@ struct GovernanceProposal {
     string proposalHash; // sha256 hash of proposer/title/description
     uint blockNumber;
     bool isApproved;
+    bool isOpen;
     
 }
 
@@ -53,22 +54,18 @@ contract xStarterLaunchPad is Ownable{
     uint _minDeposit;
     address _xStarterToken;
     
-    mapping(address => ILOProposal) private _ILOProposals;
-    mapping(address => GovernanceProposal) private _govProposals;
+    mapping(string => ILOProposal) private _ILOProposals;
+    mapping(string => GovernanceProposal) private _govProposals;
+    mapping(address => bool) _currentlyProposing;
     mapping(address => uint) private _tokenDeposits;
     mapping(address => bool) private _currentlyFunding;
     mapping(address => bool) private _currentlyInteracting;
-    
-    function _allowInteraction() internal {
-        _currentlyInteracting[_msgSender()] = false;
-    }
-    function _disallowInteraction() internal {
-        _currentlyInteracting[_msgSender()] = true;
-    }
+
     
     function depositBalance(address addr_) public view returns(uint) {
         return _tokenDeposits[addr_];
     }
+    
     
     function depositApprovedToken() external allowedToInteract returns(bool success) {
         _disallowInteraction();
@@ -84,6 +81,7 @@ contract xStarterLaunchPad is Ownable{
     function withdrawTokens(uint amount_) external allowedToInteract returns(bool success) {
         // todo: before withdrawing tokens make sure there are no open  proposals by msg.sender, if there is make sure after withdrawal amount left is greater than _minDeposit
         require(depositBalance(_msgSender()) >= amount_, 'Not enough funds');
+        require(canWithdraw(amount_), 'Must maintain a minimum deposit until proposal is completed');
         _disallowInteraction();
         _tokenDeposits[_msgSender()] = _tokenDeposits[_msgSender()].sub(amount_);
         
@@ -101,6 +99,19 @@ contract xStarterLaunchPad is Ownable{
     function createGovernanceProposal() external onlyDepositor returns(bool success) {
         
     }
+    
+    function _allowInteraction() internal {
+        _currentlyInteracting[_msgSender()] = false;
+    }
+    function _disallowInteraction() internal {
+        _currentlyInteracting[_msgSender()] = true;
+    }
+    function canWithdraw(uint amount_) internal returns(bool) {
+        if(_currentlyProposing[_msgSender()]) { return true; }
+        
+        return _tokenDeposits[_msgSender()].sub(amount_) >= _minDeposit;
+    }
+        
     
     
     
