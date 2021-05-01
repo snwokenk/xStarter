@@ -52,7 +52,7 @@ describe("xStarterPoolPairB WITH contract deployed token", function(){
         // mined.
         poolPair = await poolPairFactory.deploy(
             owner.address,
-            "70","1","15500000","1800","60",
+            "70","1800","60",
             "10000000000000000","10000000000000000",
             "1000000000000000000", "1000000000000000000", 
             "2000000000000000000", zeroAddress,

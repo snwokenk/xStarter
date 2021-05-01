@@ -255,11 +255,12 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     mapping(address => bool) private _currentlyWithdrawing;
     
     // step 1
+    // todo: remove some of the unused parameters on the constructor 
     constructor(
         address adminAddress,
         uint8 percentOfTokensForILO_,
-        uint24 fundTokenReceive_,
-        uint24 projectTokenGive_,
+        // uint24 fundTokenReceive_,
+        // uint24 projectTokenGive_,
         uint24 dexDeadlineLength_,
         uint48 contribTimeLock_,
         uint minPerSwap_,
@@ -279,8 +280,6 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
             _fundingToken = fundingToken_;
             _dexDeadlineLength = dexDeadlineLength_;
             _contribTimeLock = contribTimeLock_ < 60 ? 60 : contribTimeLock_;
-            _swapRatio.fundTokenReceive = fundTokenReceive_;
-            _swapRatio.projectTokenGive = projectTokenGive_;
             _addressOfDex = addressOfDex_;
             _addressOfDexFactory = addressOfDexFactory_;
             // if provided is less than default take default
@@ -328,6 +327,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         require(_availLPTokens > 0, "LP tokens not yet set");
         return _getLiqTknBal(funder_);
     }
+    //todo: swapRatio should be called after ILO, which would allow individuals to see how much tokens they're receiving per funding token
     function swapRatio() public view returns(uint24, uint24) {
         return (_swapRatio.fundTokenReceive, _swapRatio.projectTokenGive);
     }

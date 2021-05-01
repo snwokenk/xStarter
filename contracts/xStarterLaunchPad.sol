@@ -14,7 +14,7 @@ import "./xStarterPoolPairB.sol";
 
 struct ILOProposal {
     address proposer;
-    //string proposalHash; // sha256 hash of proposer + tokenName+ tokenSymbol+ totalSupply(string)+ decimals(string) + percentOfTokensForILO(string)
+    address fundingToken;
     string tokenName;
     string tokenSymbol;
     uint totalSupply;
@@ -25,6 +25,17 @@ struct ILOProposal {
     uint timestamp;
     bool isApproved;
     bool isOpen;
+    
+}
+struct DeployedILO {
+    address ILO;
+    address admin; // person responsible for calling functions that an admin is required
+    address proposer; // initial proposer
+    string tokenSymbol;
+    string tokenName;
+    uint totalSupply;
+    uint blockNumber;
+    uint timestamp;
     
 }
 
@@ -62,6 +73,7 @@ contract xStarterLaunchPad is Ownable{
     address _xStarterNFT;
     
     mapping(string => ILOProposal) private _ILOProposals;
+    mapping(string => DeployedILO) private _deployedILOs;
     // mapping(string => GovernanceProposal) private _govProposals;
     mapping(address => uint16) _numOfProposals;
     mapping(address => uint) private _tokenDeposits;
@@ -111,15 +123,31 @@ contract xStarterLaunchPad is Ownable{
     
 
     
-    function createILOProposal(string memory tokenName_, string memory tokenSymbol_, uint totalSupply_, uint8 percentOfTokensForILO_) external onlyEnoughDeposits returns(bool success) {
+    function createILOProposal(string memory tokenName_, string memory tokenSymbol_, uint totalSupply_, uint8 percentOfTokensForILO_, address fundingToken_) external onlyEnoughDeposits returns(bool success) {
         
-        success = _createILOProposal(tokenName_, tokenSymbol_, totalSupply_, percentOfTokensForILO_);
+        success = _createILOProposal(tokenName_, tokenSymbol_, totalSupply_, percentOfTokensForILO_, fundingToken_);
         
     }
     
-    function deployILOContract(string memory tokenSymbol_, address ILOAdmin_) external returns(bool) {
+    function deployILOContract(string memory tokenSymbol_, address ILOAdmin_) external allowedToInteract returns(bool success) {
         // anyone can deploy an ILO, but if ILOAdmin_ != ILO proposer then, then the msg.sender must be the ILO proposer
         // ILO proposer also gets the NFT rewards, so it makes no sense for anyone but the 
+        _disallowInteraction();
+
+        ILOProposal storage proposal = _ILOProposals[tokenSymbol_];
+        _deployedILOs[tokenSymbol_] = DeployedILO(
+            address(0),
+            ILOAdmin_,
+            proposal.proposer,
+            tokenSymbol_,
+            proposal.tokenName,
+            proposal.totalSupply,
+            block.number,
+            block.timestamp
+            );
+        
+        success = _deployILO(tokenSymbol_, _deployedILOs[tokenSymbol_]);
+        _allowInteraction();
         
     }
     
@@ -139,14 +167,19 @@ contract xStarterLaunchPad is Ownable{
         return _tokenDeposits[_msgSender()].sub(amount_) >= _depositPerProposal * _numOfProposals[_msgSender()];
     }
     
+    function _deployILO(string memory tokenSymbol_, DeployedILO memory deployedILO_) internal returns (bool){
+        
+    }
+    
     event ILOProposalCreated(address indexed proposer, string indexed tokenSymbol_, string indexed tokenName_, uint totalSupply_);
-    function _createILOProposal(string memory tokenName_, string memory tokenSymbol_, uint totalSupply_, uint8 percentOfTokensForILO_) internal returns(bool) {
+    function _createILOProposal(string memory tokenName_, string memory tokenSymbol_, uint totalSupply_, uint8 percentOfTokensForILO_, address fundingToken_) internal returns(bool) {
         
         
         // bytes32 memory proposalHash = keccak256(abi.encode(tokenName_, tokenSymbol_, totalSupply_, percentOfTokensForILO_, _msgSender()));
         require(!_ILOProposals[tokenSymbol_].isOpen && !_ILOProposals[tokenSymbol_].isApproved, "proposal with token symbol is either in the process of voting or already approved");
         _ILOProposals[tokenSymbol_] = ILOProposal(
             _msgSender(), 
+            fundingToken_,
             tokenName_, 
             tokenSymbol_, 
             totalSupply_, 
