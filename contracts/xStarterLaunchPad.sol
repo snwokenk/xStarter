@@ -28,14 +28,14 @@ struct ILOProposal {
     
 }
 
-struct GovernanceProposal {
-    address proposer;
-    string proposalHash; // sha256 hash of proposer/title/description
-    uint blockNumber;
-    bool isApproved;
-    bool isOpen;
+// struct GovernanceProposal {
+//     address proposer;
+//     string proposalHash; // sha256 hash of proposer/title/description
+//     uint blockNumber;
+//     bool isApproved;
+//     bool isOpen;
     
-}
+// }
 
 // contract launches xStarterPoolPairB contracts for approved ILO proposals and enforces
 contract xStarterLaunchPad is Ownable{
@@ -52,17 +52,32 @@ contract xStarterLaunchPad is Ownable{
         _;
     }
     
+    bool initialized;
+    bool deploying;
+    
     // min amount of tokens to have deposited 
     uint _depositPerProposal;
     address _xStarterToken;
+    address _xStarterGovernance;
+    address _xStarterNFT;
     
     mapping(string => ILOProposal) private _ILOProposals;
-    mapping(string => GovernanceProposal) private _govProposals;
+    // mapping(string => GovernanceProposal) private _govProposals;
     mapping(address => uint16) _numOfProposals;
     mapping(address => uint) private _tokenDeposits;
     mapping(address => bool) private _currentlyFunding;
     mapping(address => bool) private _currentlyInteracting;
 
+    function initialize(address xStarterToken_, address xStarterGovernance_, uint depositPerProposal_) external returns(bool) {
+        require(!initialized, "contract has already been initialized");
+        initialized = true;
+        
+        _xStarterToken = xStarterToken_;
+        _xStarterGovernance = xStarterGovernance_;
+        _depositPerProposal = depositPerProposal_;
+        return true;
+        
+    }
     
     function depositBalance(address addr_) public view returns(uint) {
         return _tokenDeposits[addr_];
@@ -102,9 +117,15 @@ contract xStarterLaunchPad is Ownable{
         
     }
     
-    function createGovernanceProposal() external onlyEnoughDeposits returns(bool success) {
+    function deployILOContract(string memory tokenSymbol_, address ILOAdmin_) external returns(bool) {
+        // anyone can deploy an ILO, but if ILOAdmin_ != ILO proposer then, then the msg.sender must be the ILO proposer
+        // ILO proposer also gets the NFT rewards, so it makes no sense for anyone but the 
         
     }
+    
+    // function createGovernanceProposal() external onlyEnoughDeposits returns(bool success) {
+        
+    // }
     
     function _allowInteraction() internal {
         _currentlyInteracting[_msgSender()] = false;
