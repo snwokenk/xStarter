@@ -12,30 +12,28 @@ import "@openzeppelin/contracts/utils/Context.sol";
 import "./Administration.sol";
 import "./xStarterPoolPairB.sol";
 
+interface iXstarterGovernance {
+    function ILOApproved(string memory tokenSymbol_) external returns(bool);
+}
+
+
 struct ILOProposal {
     address proposer;
+    address admin;
     address fundingToken;
     string tokenName;
     string tokenSymbol;
     uint totalSupply;
     uint8 decimals; // set at 18
     uint8 percentOfTokensForILO; // (minimum 50%)
-    address tokenAddress;
     uint blockNumber;
     uint timestamp;
     bool isApproved;
     bool isOpen;
-    
-}
-struct DeployedILO {
-    address ILO;
-    address admin; // person responsible for calling functions that an admin is required
-    address proposer; // initial proposer
-    string tokenSymbol;
-    string tokenName;
-    uint totalSupply;
-    uint blockNumber;
-    uint timestamp;
+    uint deployedBlockNumber;
+    uint deployedTimestamp;
+    bool isDeployed;
+    address ILOAddress;
     
 }
 
@@ -72,13 +70,15 @@ contract xStarterLaunchPad is Ownable{
     address _xStarterGovernance;
     address _xStarterNFT;
     
+    
     mapping(string => ILOProposal) private _ILOProposals;
-    mapping(string => DeployedILO) private _deployedILOs;
+    // mapping(string => DeployedILO) private _deployedILOs;
     // mapping(string => GovernanceProposal) private _govProposals;
     mapping(address => uint16) _numOfProposals;
     mapping(address => uint) private _tokenDeposits;
     mapping(address => bool) private _currentlyFunding;
     mapping(address => bool) private _currentlyInteracting;
+    mapping(string => address) private supportedDex;
 
     function initialize(address xStarterToken_, address xStarterGovernance_, uint depositPerProposal_) external returns(bool) {
         require(!initialized, "contract has already been initialized");
@@ -93,6 +93,11 @@ contract xStarterLaunchPad is Ownable{
     
     function depositBalance(address addr_) public view returns(uint) {
         return _tokenDeposits[addr_];
+    }
+    function isDeployed(string memory tokenSymbol_) public view returns(bool) {
+        
+        return _ILOProposals[tokenSymbol_].isDeployed;
+        
     }
     
     
@@ -133,20 +138,15 @@ contract xStarterLaunchPad is Ownable{
         // anyone can deploy an ILO, but if ILOAdmin_ != ILO proposer then, then the msg.sender must be the ILO proposer
         // ILO proposer also gets the NFT rewards, so it makes no sense for anyone but the 
         _disallowInteraction();
-
-        ILOProposal storage proposal = _ILOProposals[tokenSymbol_];
-        _deployedILOs[tokenSymbol_] = DeployedILO(
-            address(0),
-            ILOAdmin_,
-            proposal.proposer,
-            tokenSymbol_,
-            proposal.tokenName,
-            proposal.totalSupply,
-            block.number,
-            block.timestamp
-            );
         
-        success = _deployILO(tokenSymbol_, _deployedILOs[tokenSymbol_]);
+        require(!_ILOProposals[tokenSymbol_].isDeployed, "ILO already deployed or being deployed");
+        
+        bool isApproved = iXstarterGovernance(_xStarterGovernance).ILOApproved(tokenSymbol_);
+        require(isApproved, "ILO has not been approved in the governance contract");
+        
+        success = _deployILO(tokenSymbol_, ILOAdmin_);
+        require(success, "Not able to deploy ILO");
+        
         _allowInteraction();
         
     }
@@ -167,7 +167,35 @@ contract xStarterLaunchPad is Ownable{
         return _tokenDeposits[_msgSender()].sub(amount_) >= _depositPerProposal * _numOfProposals[_msgSender()];
     }
     
-    function _deployILO(string memory tokenSymbol_, DeployedILO memory deployedILO_) internal returns (bool){
+    function _deployILO(string memory tokenSymbol_, address ILOAdmin_) internal returns (bool){
+        
+        ILOProposal storage proposal = _ILOProposals[tokenSymbol_];
+        proposal.isOpen = false;
+        proposal.isApproved = true;
+        proposal.isDeployed = true;
+        proposal.deployedBlockNumber = block.number;
+        proposal.deployedTimestamp = block.timestamp;
+        proposal.admin = ILOAdmin_;
+        
+        // todo: some of these parameters should be included in ILOProposal struct
+        xStarterPoolPairB ILO = new xStarterPoolPairB(
+            ILOAdmin_,
+            proposal.percentOfTokensForILO,
+            1800,
+            60, // contrib lock
+            1, // minPerswap
+            1, // minFundPerAddr_
+            1 ether, // maxfund
+            1 ether, // min amount of funding tokens required (softcap)
+            2 ether, // max amount of funding (hardcap),
+            address(0), //fundong token address, address 0 means use native token (ether for ethereum main net, xDai for xDai sidechain, etc)
+            address(0),
+            address(0)
+            
+        );
+        proposal.ILOAddress = address(ILO);
+        
+        return true;
         
     }
     
@@ -178,18 +206,22 @@ contract xStarterLaunchPad is Ownable{
         // bytes32 memory proposalHash = keccak256(abi.encode(tokenName_, tokenSymbol_, totalSupply_, percentOfTokensForILO_, _msgSender()));
         require(!_ILOProposals[tokenSymbol_].isOpen && !_ILOProposals[tokenSymbol_].isApproved, "proposal with token symbol is either in the process of voting or already approved");
         _ILOProposals[tokenSymbol_] = ILOProposal(
-            _msgSender(), 
+            _msgSender(),
+            _msgSender(),
             fundingToken_,
             tokenName_, 
             tokenSymbol_, 
             totalSupply_, 
             18, 
             percentOfTokensForILO_, 
-            address(0), 
             block.number, 
             block.timestamp, 
             false, 
-            true
+            true,
+            0,
+            0,
+            false,
+            address(0)
         );
         
         emit ILOProposalCreated(_msgSender(), tokenSymbol_, tokenName_, totalSupply_);

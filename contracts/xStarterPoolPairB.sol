@@ -279,6 +279,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
             _percentOfTotalTokensForILO = percentOfTokensForILO_;
             _fundingToken = fundingToken_;
             _dexDeadlineLength = dexDeadlineLength_;
+            // todo; in final production contract should be not less than 1209600 seconds or 14 days
             _contribTimeLock = contribTimeLock_ < 60 ? 60 : contribTimeLock_;
             _addressOfDex = addressOfDex_;
             _addressOfDexFactory = addressOfDexFactory_;
