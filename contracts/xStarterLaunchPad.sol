@@ -11,6 +11,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "./Administration.sol";
 import "./xStarterPoolPairB.sol";
+import "./Interaction.sol";
 
 interface iXstarterGovernance {
     function ILOApproved(string memory tokenSymbol_) external returns(bool);
@@ -47,7 +48,7 @@ struct ILOProposal {
 // }
 
 // contract launches xStarterPoolPairB contracts for approved ILO proposals and enforces
-contract xStarterLaunchPad is Ownable{
+contract xStarterLaunchPad is Ownable, Interaction{
     using SafeMath for uint256;
     using Address for address;
     modifier onlyEnoughDeposits() {
@@ -56,10 +57,6 @@ contract xStarterLaunchPad is Ownable{
         _;
     }
     
-     modifier allowedToInteract() {
-        require(!_currentlyInteracting[_msgSender()], "Locked From Interaction, A transaction you initiated has not been completed");
-        _;
-    }
     
     bool initialized;
     bool deploying;
@@ -77,7 +74,6 @@ contract xStarterLaunchPad is Ownable{
     mapping(address => uint16) _numOfProposals;
     mapping(address => uint) private _tokenDeposits;
     mapping(address => bool) private _currentlyFunding;
-    mapping(address => bool) private _currentlyInteracting;
     mapping(string => address) private supportedDex;
 
     function initialize(address xStarterToken_, address xStarterGovernance_, uint depositPerProposal_) external returns(bool) {
@@ -155,12 +151,7 @@ contract xStarterLaunchPad is Ownable{
         
     // }
     
-    function _allowInteraction() internal {
-        _currentlyInteracting[_msgSender()] = false;
-    }
-    function _disallowInteraction() internal {
-        _currentlyInteracting[_msgSender()] = true;
-    }
+    
     function _canWithdraw(uint amount_) internal view returns(bool) {
         if(_numOfProposals[_msgSender()] == 0) { return true; }
         
