@@ -716,7 +716,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         
     }
     
-    function _getProportionAmt(uint totalRewardTokens, uint totalFundingTokens, uint funderFundingAmount) internal view returns (uint proportionalRewardTokens) {
+    function _getProportionAmt(uint totalRewardTokens, uint totalFundingTokens, uint funderFundingAmount) internal pure returns (uint proportionalRewardTokens) {
         // assumes each both tokens a decimals = 18, while precision is lost, reducing this blunts the loss of precision
         uint reducedTotalFundingTokens = totalFundingTokens / (10 ** 12);
         uint reducedFunderFundingAmount = funderFundingAmount / (10 ** 12);

@@ -38,14 +38,64 @@ struct ILOProposal {
     
 }
 
-// struct GovernanceProposal {
-//     address proposer;
-//     string proposalHash; // sha256 hash of proposer/title/description
-//     uint blockNumber;
-//     bool isApproved;
-//     bool isOpen;
+// launched by user, directly deploying from launchpad increases the code size
+contract xStarterDeployer {
+    bool initialized;
+    address LaunchPad = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
     
-// }
+    function initialize(address launchPad_) external returns(bool) {
+        require(msg.sender == LaunchPad, 'Not authorized');
+        require(!initialized, "already initialized");
+        LaunchPad = launchPad_;
+        return true;
+    }
+    
+    function deployILO(address adminAddress,
+        uint8 percentOfTokensForILO_,
+        uint24 dexDeadlineLength_,
+        uint48 contribTimeLock_,
+        uint minPerSwap_,
+        uint minFundPerAddr_,
+        uint maxFundPerAddr_,
+        uint minFundingTokenRequired_,
+        uint maxFundingToken_,
+        address fundingToken_,
+        address addressOfDex_,
+        address addressOfDexFactory_) external returns(address ILO_) {
+            
+            xStarterPoolPairB ILO = new xStarterPoolPairB(
+                 adminAddress,
+                 percentOfTokensForILO_,
+                 dexDeadlineLength_,
+                 contribTimeLock_,
+                 minPerSwap_,
+                 minFundPerAddr_,
+                 maxFundPerAddr_,
+                 minFundingTokenRequired_,
+                 maxFundingToken_,
+                 fundingToken_,
+                 addressOfDex_,
+                 addressOfDexFactory_
+                );
+            ILO_ = address(ILO);
+        
+    }
+}
+
+interface iXstarterDeployer {
+    function deployILO(address adminAddress,
+        uint8 percentOfTokensForILO_,
+        uint24 dexDeadlineLength_,
+        uint48 contribTimeLock_,
+        uint minPerSwap_,
+        uint minFundPerAddr_,
+        uint maxFundPerAddr_,
+        uint minFundingTokenRequired_,
+        uint maxFundingToken_,
+        address fundingToken_,
+        address addressOfDex_,
+        address addressOfDexFactory_) external returns(address ILO_);
+}
 
 // contract launches xStarterPoolPairB contracts for approved ILO proposals and enforces
 contract xStarterLaunchPad is Ownable, Interaction{
@@ -66,6 +116,7 @@ contract xStarterLaunchPad is Ownable, Interaction{
     address _xStarterToken;
     address _xStarterGovernance;
     address _xStarterNFT;
+    address _xStarterDeployer;
     
     
     mapping(string => ILOProposal) private _ILOProposals;
@@ -84,6 +135,11 @@ contract xStarterLaunchPad is Ownable, Interaction{
         _xStarterGovernance = xStarterGovernance_;
         _depositPerProposal = depositPerProposal_;
         return true;
+        
+    }
+    
+    function ILOProposalExist(string memory tokenSymbol_) public view returns(bool) {
+        return keccak256(bytes(_ILOProposals[tokenSymbol_].tokenSymbol)) == keccak256(bytes(tokenSymbol_));
         
     }
     
@@ -169,7 +225,7 @@ contract xStarterLaunchPad is Ownable, Interaction{
         proposal.admin = ILOAdmin_;
         
         // todo: some of these parameters should be included in ILOProposal struct
-        xStarterPoolPairB ILO = new xStarterPoolPairB(
+        address ILO = iXstarterDeployer(_xStarterDeployer).deployILO(
             ILOAdmin_,
             proposal.percentOfTokensForILO,
             1800,
@@ -184,7 +240,7 @@ contract xStarterLaunchPad is Ownable, Interaction{
             address(0)
             
         );
-        proposal.ILOAddress = address(ILO);
+        proposal.ILOAddress = ILO;
         
         return true;
         

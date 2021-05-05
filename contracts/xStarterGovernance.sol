@@ -15,9 +15,18 @@ enum VoteChoice{ YES, NO }
 struct Voter {
     uint balance; // token balance
     uint lockedBalance; // balance locked in
+    ILOVoteInfo[] votes; // only allowed to have 3 active votes
+    bool isVoter;
     // available balance is balance - lockedBalance
 }
 
+struct ILOVoteInfo {
+    string name; // name of ILO proposal
+    uint index; 
+    uint amount;
+    bool amtLocked; // if amount is part of locked balance, cleanVotes, should unlock any amount that current block > endBlock
+    uint endBlock;
+}
 struct Vote {
     ProposalType proposalType;
     string name;
@@ -49,14 +58,16 @@ contract xStarterGovernance is Context, Interaction {
     
     
     address _xStarterToken;
+    address _xStarterLaunchPad;
     address _xStarterNFT;
+    uint _minVoteCount; // yes+no >= minVoteCount
     
     mapping (string => ILOProposal) _ILOProposals;
     mapping (address => Voter) _voters;
     
-    uint totalBalance;
-    uint totalAccumulated;
-    uint totalSpent;
+    uint _totalBalance;
+    uint _totalAccumulated;
+    uint _totalSpent;
     
     modifier onlyILOOpen(string memory name_) {
         require(ILOOpen(name_), "ILO has not been set up");
@@ -76,33 +87,67 @@ contract xStarterGovernance is Context, Interaction {
         availBal = voter.balance - voter.lockedBalance;
         
     }
-    function ILOApproved(string memory tokenSymbol_) public returns(bool) {
-        return true;
+    function ILOApproved(string memory name_) public view returns(bool) {
+        require(block.number > _ILOProposals[name_].endBlock, "Voting on ILO not complete");
+        ILOProposal storage proposal = _ILOProposals[name_];
+        return proposal.yesCount + proposal.noCount > _minVoteCount && _ILOProposals[name_].yesCount > _ILOProposals[name_].noCount;  
     }
     
+    event ILOVoted(string indexed name_, address indexed voter_, VoteChoice indexed choice_, uint amount_ );
     // create a modifier that verifies that ILO can be voted on
     function voteForILO(string memory name_, uint amount_, VoteChoice choice_) external allowedToInteract onlyILOOpen(name_) returns(bool) {
         _disallowInteraction();
         require(balance(_msgSender()) > amount_, "not enough balance");
         Voter storage voter = _voters[_msgSender()];
+        require(voter.votes.length < 3, "you have 3 active votes, call cleanVotes to clean ended votes");
         ILOProposal storage proposal = _ILOProposals[name_];
         voter.lockedBalance = voter.lockedBalance.add(amount_);
-        proposal.votes.push(Vote(
+        if(choice_ == VoteChoice.YES) {
+            proposal.yesCount = proposal.yesCount.add(amount_);
+        }else {
+            proposal.noCount = proposal.noCount.add(amount_);
+        }
+        Vote memory vote = Vote(
             ProposalType.ILO,
             name_,
             amount_,
             _msgSender(),
             choice_
-            )
-        );
+            );
+        proposal.votes.push(vote);
+        voter.votes.push(ILOVoteInfo(name_, proposal.votes.length - 1, amount_, true, proposal.endBlock));
+        emit ILOVoted(name_, _msgSender(), choice_, amount_);
         _allowInteraction();
         return true;
     }
+    // cleans votes and unlocks any locked balance
+    function cleanVotes(address voter_) public allowedToInteract returns (bool) {
+        _disallowInteraction();
+         Voter storage voter = _voters[voter_];
+         for (uint i=0; i<voter.votes.length; i++) {
+             ILOVoteInfo storage vote = voter.votes[i];
+             if(block.number > vote.endBlock && vote.amtLocked) {
+                 vote.amtLocked = false;
+                 voter.lockedBalance = voter.lockedBalance.sub(vote.amount);
+             }
+         }
+         _allowInteraction();
+         return true;
+        
+    }
+    // audit can be done off chain, by using emitted events
+    function auditILOVote(string memory name_) external returns(bool) {
+        
+    }
+    // call this function to have every vote emitted
+    function auditThroughEmission(string memory name_) external {
+        
+    }
     
-    function validateILO(string memory name_) external returns(bool) {}
-    
-    
-    function addILO(string memory name_) external returns(bool) {}
+    // ILO must already be registered on Launchpad
+    function addILO(string memory name_) external returns(bool) {
+        
+    }
     
     event Withdrawn(address indexed depositor_, uint indexed amount_);
     function withdraw(uint amount_) external allowedToInteract returns(bool success) {
