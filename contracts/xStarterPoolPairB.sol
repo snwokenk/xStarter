@@ -27,7 +27,7 @@ import "./ERC777ReceiveSend.sol";
 
 interface IERC20AndOwnable {
     function totalSupply() external view returns (uint256);
-    function owner() external view  returns (address);
+    // function owner() external view  returns (address);
     function allowance(address owner_, address spender) external view returns (uint256);
     function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
     function approve(address spender, uint256 amount) external returns (bool);
@@ -441,17 +441,17 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
             else {
                 IERC20AndOwnable existingToken = IERC20AndOwnable(addressOfProjectToken);
                 
-                address existingTokenOwner = existingToken.owner();
+                // address existingTokenOwner = existingToken.owner();
                 uint existingTokenSupply = existingToken.totalSupply();
                 uint8 expDecimals = existingToken.decimals();
                 
-                require(existingTokenOwner == admin(),"Admin of pool pair must be owner of token contract");
+                // require(existingTokenOwner == admin(),"Admin of pool pair must be owner of token contract");
                 require(existingTokenSupply == totalTokenSupply_, "All tokens from contract must be transferred");
                 require(expDecimals == decimals_, "decimals do not match");
                 
                 _projectToken = addressOfProjectToken;
                 _totalTokensSupply = _totalTokensSupply.add(totalTokenSupply_);
-                _totalTokensSupplyControlled = _totalTokensSupplyControlled.add(totalTokenSupply_);
+                // _totalTokensSupplyControlled = _totalTokensSupplyControlled.add(totalTokenSupply_);
                 
             }
             _startTime = startTime_;
