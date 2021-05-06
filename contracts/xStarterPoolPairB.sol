@@ -521,6 +521,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     
     // functions for taking part in ILO
     function contributeNativeToken() payable notCurrentlyFunding onlyOpen external returns(bool){
+        require(_fundingToken == address(0), "please use contributeFundingToken");
         require(msg.value > _minPerSwap, "No value Sent");
         _disallowFunding();
         _contribute(msg.value, _msgSender());
@@ -532,7 +533,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     
     // should be called after approving amount of token
     function contributeFundingToken() notCurrentlyFunding  onlyOpen external returns(bool) {
-        require(_fundingToken != address(0), "please use nativeTokenSwap. Only native token allowed. xDai token for xDai side chain etc");
+        require(_fundingToken != address(0), "please use nativeTokenSwap.");
         _disallowFunding();
         uint amount_ = _retrieveApprovedToken();
         _contribute(amount_, _msgSender());
