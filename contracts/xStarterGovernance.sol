@@ -8,7 +8,10 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./Interaction.sol";
 
 // available voting points = (balance * (block.number - blockOfLastRefresh)) + accumulatedVP - spentVP
-
+interface iXstarterLaunchPad {
+    function ILOProposalExist(string memory tokenSymbol_) external view returns(bool);
+    function IsProposerOrAdmin(address msgSender_, string memory tokenSymbol_) external view returns(bool);
+}
 enum ProposalType{ ILO, GOV }
 enum VoteChoice{ YES, NO }
 
@@ -21,7 +24,7 @@ struct Voter {
 }
 
 struct ILOVoteInfo {
-    string name; // name of ILO proposal
+    string symbol; // symbol of ILO proposal
     uint index; 
     uint amount;
     bool amtLocked; // if amount is part of locked balance, cleanVotes, should unlock any amount that current block > endBlock
@@ -29,7 +32,7 @@ struct ILOVoteInfo {
 }
 struct Vote {
     ProposalType proposalType;
-    string name;
+    string symbol;
     uint amount; // amount stake
     address voter;
     VoteChoice choice;
@@ -37,6 +40,18 @@ struct Vote {
 }
 
 struct ILOProposal {
+    uint yesCount;
+    uint noCount;
+    Vote[] votes;
+    bool isValidated; // vote was individually validated onchain, this is not necessary, unless someone decides to validate, proposal votes 
+    // bool isApproved;
+    uint startBlock;
+    uint endBlock;
+    address validator; // who validated the ILO, 
+    
+}
+
+struct GOVProposal {
     uint yesCount;
     uint noCount;
     Vote[] votes;
@@ -69,8 +84,8 @@ contract xStarterGovernance is Context, Interaction {
     uint _totalAccumulated;
     uint _totalSpent;
     
-    modifier onlyILOOpen(string memory name_) {
-        require(ILOOpen(name_), "ILO has not been set up");
+    modifier onlyILOOpen(string memory symbol_) {
+        require(ILOOpen(symbol_), "ILO has not been set up");
         _;
     }
     
@@ -78,8 +93,8 @@ contract xStarterGovernance is Context, Interaction {
         _xStarterToken = xStarterToken_;
     }
     
-    function ILOOpen(string memory name_) public view returns(bool) {
-        return block.number >= _ILOProposals[name_].startBlock && block.number < _ILOProposals[name_].endBlock;
+    function ILOOpen(string memory symbol_) public view returns(bool) {
+        return block.number >= _ILOProposals[symbol_].startBlock && block.number < _ILOProposals[symbol_].endBlock;
     }
     function balance(address voter_) public view returns(uint availBal) {
         // voting points is accumulated by the number of blocks after deposit
@@ -87,20 +102,20 @@ contract xStarterGovernance is Context, Interaction {
         availBal = voter.balance - voter.lockedBalance;
         
     }
-    function ILOApproved(string memory name_) public view returns(bool) {
-        require(block.number > _ILOProposals[name_].endBlock, "Voting on ILO not complete");
-        ILOProposal storage proposal = _ILOProposals[name_];
-        return proposal.yesCount + proposal.noCount > _minVoteCount && _ILOProposals[name_].yesCount > _ILOProposals[name_].noCount;  
+    function ILOApproved(string memory symbol_) public view returns(bool) {
+        require(block.number > _ILOProposals[symbol_].endBlock, "Voting on ILO not complete");
+        ILOProposal storage proposal = _ILOProposals[symbol_];
+        return proposal.yesCount + proposal.noCount > _minVoteCount && _ILOProposals[symbol_].yesCount > _ILOProposals[symbol_].noCount;  
     }
     
-    event ILOVoted(string indexed name_, address indexed voter_, VoteChoice indexed choice_, uint amount_ );
+    event ILOVoted(string indexed symbol_, address indexed voter_, VoteChoice indexed choice_, uint amount_ );
     // create a modifier that verifies that ILO can be voted on
-    function voteForILO(string memory name_, uint amount_, VoteChoice choice_) external allowedToInteract onlyILOOpen(name_) returns(bool) {
+    function voteForILO(string memory symbol_, uint amount_, VoteChoice choice_) external allowedToInteract onlyILOOpen(symbol_) returns(bool) {
         _disallowInteraction();
         require(balance(_msgSender()) > amount_, "not enough balance");
         Voter storage voter = _voters[_msgSender()];
         require(voter.votes.length < 3, "you have 3 active votes, call cleanVotes to clean ended votes");
-        ILOProposal storage proposal = _ILOProposals[name_];
+        ILOProposal storage proposal = _ILOProposals[symbol_];
         voter.lockedBalance = voter.lockedBalance.add(amount_);
         if(choice_ == VoteChoice.YES) {
             proposal.yesCount = proposal.yesCount.add(amount_);
@@ -109,14 +124,14 @@ contract xStarterGovernance is Context, Interaction {
         }
         Vote memory vote = Vote(
             ProposalType.ILO,
-            name_,
+            symbol_,
             amount_,
             _msgSender(),
             choice_
             );
         proposal.votes.push(vote);
-        voter.votes.push(ILOVoteInfo(name_, proposal.votes.length - 1, amount_, true, proposal.endBlock));
-        emit ILOVoted(name_, _msgSender(), choice_, amount_);
+        voter.votes.push(ILOVoteInfo(symbol_, proposal.votes.length - 1, amount_, true, proposal.endBlock));
+        emit ILOVoted(symbol_, _msgSender(), choice_, amount_);
         _allowInteraction();
         return true;
     }
@@ -136,16 +151,29 @@ contract xStarterGovernance is Context, Interaction {
         
     }
     // audit can be done off chain, by using emitted events
-    function auditILOVote(string memory name_) external returns(bool) {
+    function auditILOVote(string memory symbol_) external returns(bool) {
         
     }
     // call this function to have every vote emitted
-    function auditThroughEmission(string memory name_) external {
+    function auditThroughEmission(string memory symbol_) external {
         
     }
     
+    event ILOProposalAdded(address indexed msgSender_, string indexed symbol_, uint indexed startBlock_, uint endBlock_);
     // ILO must already be registered on Launchpad
-    function addILO(string memory name_) external returns(bool) {
+    function addILO(string memory symbol_) external allowedToInteract returns(bool) {
+        _disallowInteraction();
+        bool authorized = iXstarterLaunchPad(_xStarterLaunchPad).IsProposerOrAdmin(_msgSender(), symbol_);
+        require(authorized, "must be admin or proposer of ILO on Launchpad contract");
+        require(_ILOProposals[symbol_].startBlock == 0, 'IlO proposal already exist');
+        // 86400 / 5 = 17280 blocks assuming 5 sec blocks
+        uint sBlock = block.number + 17280;
+        _ILOProposals[symbol_].startBlock = sBlock;
+        _ILOProposals[symbol_].endBlock = sBlock + 17280;
+        emit ILOProposalAdded(_msgSender(), symbol_, sBlock, sBlock + 17280);
+        _allowInteraction();
+        
+        return true;
         
     }
     

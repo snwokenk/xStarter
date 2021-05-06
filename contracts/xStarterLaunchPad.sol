@@ -142,6 +142,9 @@ contract xStarterLaunchPad is Ownable, Interaction{
         return keccak256(bytes(_ILOProposals[tokenSymbol_].tokenSymbol)) == keccak256(bytes(tokenSymbol_));
         
     }
+    function IsProposerOrAdmin(address msgSender_, string memory tokenSymbol_) public view returns(bool) {
+        return _ILOProposals[tokenSymbol_].proposer != address(0) && (_ILOProposals[tokenSymbol_].proposer == msgSender_ || _ILOProposals[tokenSymbol_].admin == msgSender_);
+    }
     
     function depositBalance(address addr_) public view returns(uint) {
         return _tokenDeposits[addr_];
