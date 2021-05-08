@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
@@ -8,8 +8,9 @@ import "@openzeppelin/contracts/token/ERC777/ERC777.sol";
 import "@openzeppelin/contracts/token/ERC777/ERC777.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./Administration.sol";
 import "./ERC777ReceiveSend.sol";
 //import "./UniswapInterface.sol";
@@ -102,7 +103,7 @@ contract ProjectBaseTokenERC20 is Context, ERC20{
         address creatorAddr
     ) ERC20(name_, symbol_) {
         
-         _setupDecimals(decimals_);
+        //  _setupDecimals(decimals_);
         // this will mint total supply 
         _mint(creatorAddr, totalSupply_);
         //  _mint(_msgSender(), totalSupply_, "", "");

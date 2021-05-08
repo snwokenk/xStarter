@@ -54,7 +54,6 @@ describe("xStarterPoolPairB WITH project token deployed by poolpair and ERC20 fu
         fundingTokenInst = await projectTokenFactory.deploy(
           "abc",
           "abc",
-          decimals,
           BigNumber.from('500000000000000000000000000'),
           owner.address
         )
@@ -66,13 +65,6 @@ describe("xStarterPoolPairB WITH project token deployed by poolpair and ERC20 fu
             "2000000000000000000", fundingTokenInst.address,
             uniswapRouter, uniswapFactory
         );
-        // projectTokenInst = await projectTokenFactory.deploy(
-        // "xyz",
-        // "xyz",
-        // decimals,
-        // BigNumber.from('500000000000000000000000000'),
-        // owner.address
-        // )
         
         
           await fundingTokenInst.transfer(addr1.address, '10000000000000000000')
@@ -128,7 +120,6 @@ describe("xStarterPoolPairB WITH project token deployed by poolpair and ERC20 fu
           zeroAddress,
           "xyz",
           "xyz",
-          decimals,
           500000000,
           startTime,
           endTime,
@@ -146,7 +137,6 @@ describe("xStarterPoolPairB WITH project token deployed by poolpair and ERC20 fu
             zeroAddress,
             "xyz",
             "xyz",
-            decimals,
             500000000,
             startTime,
             endTime,
@@ -558,7 +548,6 @@ describe("xStarterPoolPairB WITH project token deployed by admin and ERC20 fundi
         fundingTokenInst = await projectTokenFactory.deploy(
           "abc",
           "abc",
-          decimals,
           BigNumber.from('500000000000000000000000000'),
           owner.address
         )
@@ -573,7 +562,6 @@ describe("xStarterPoolPairB WITH project token deployed by admin and ERC20 fundi
         projectTokenInst = await projectTokenFactory.deploy(
         "xyz",
         "xyz",
-        decimals,
         BigNumber.from('500000000000000000000000000'),
         owner.address
         )
@@ -640,7 +628,6 @@ describe("xStarterPoolPairB WITH project token deployed by admin and ERC20 fundi
           projectTokenInst.address,
           "xyz",
           "xyz",
-          decimals,
           500000000,
           startTime,
           endTime,
@@ -659,7 +646,6 @@ describe("xStarterPoolPairB WITH project token deployed by admin and ERC20 fundi
             projectTokenInst.address,
             "xyz",
             "xyz",
-            decimals,
             500000000,
             startTime,
             endTime,
@@ -1090,7 +1076,6 @@ describe("xStarterPoolPairB WITH project token deployed by admin and native", fu
         projectTokenInst = await projectTokenFactory.deploy(
         "xyz",
         "xyz",
-        decimals,
         BigNumber.from('500000000000000000000000000'),
         owner.address
         )
@@ -1152,7 +1137,6 @@ describe("xStarterPoolPairB WITH project token deployed by admin and native", fu
           projectTokenInst.address,
           "xyz",
           "xyz",
-          decimals,
           500000000,
           startTime,
           endTime,
@@ -1171,7 +1155,6 @@ describe("xStarterPoolPairB WITH project token deployed by admin and native", fu
             projectTokenInst.address,
             "xyz",
             "xyz",
-            decimals,
             500000000,
             startTime,
             endTime,
@@ -1645,7 +1628,6 @@ describe("xStarterPoolPairB WITH token deployed by poolpair and native funding t
           zeroAddress,
           "xyz",
           "xyz",
-          decimals,
           500000000,
           startTime,
           endTime,
@@ -1663,7 +1645,6 @@ describe("xStarterPoolPairB WITH token deployed by poolpair and native funding t
             zeroAddress,
             "xyz",
             "xyz",
-            decimals,
             500000000,
             startTime,
             endTime,

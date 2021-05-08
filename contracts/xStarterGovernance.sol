@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./Interaction.sol";
 
@@ -19,12 +19,21 @@ struct Voter {
     uint balance; // token balance
     uint lockedBalance; // balance locked in
     ILOVoteInfo[] votes; // only allowed to have 3 active votes
+    GOVVoteInfo[] gVotes;
     bool isVoter;
     // available balance is balance - lockedBalance
 }
 
 struct ILOVoteInfo {
     string symbol; // symbol of ILO proposal
+    uint index; 
+    uint amount;
+    bool amtLocked; // if amount is part of locked balance, cleanVotes, should unlock any amount that current block > endBlock
+    uint endBlock;
+}
+
+struct GOVVoteInfo {
+    string name; // symbol of ILO proposal
     uint index; 
     uint amount;
     bool amtLocked; // if amount is part of locked balance, cleanVotes, should unlock any amount that current block > endBlock
@@ -47,7 +56,8 @@ struct ILOProposal {
     // bool isApproved;
     uint startBlock;
     uint endBlock;
-    address validator; // who validated the ILO, 
+    address validator; // who validated the ILO,
+    string queryString; // could be a query string or an ipfs string address
     
 }
 
@@ -59,7 +69,8 @@ struct GOVProposal {
     bool isApproved;
     uint startBlock;
     uint endBlock;
-    address validator; // who validated the ILO, 
+    address validator; // who validated the ILO,
+    string queryString;
     
 }
 
@@ -78,14 +89,19 @@ contract xStarterGovernance is Context, Interaction {
     uint _minVoteCount; // yes+no >= minVoteCount
     
     mapping (string => ILOProposal) _ILOProposals;
+    mapping (string => GOVProposal) _GOVProposals;
     mapping (address => Voter) _voters;
     
     uint _totalBalance;
     uint _totalAccumulated;
     uint _totalSpent;
     
-    modifier onlyILOOpen(string memory symbol_) {
-        require(ILOOpen(symbol_), "ILO has not been set up");
+    modifier onlyILOVoteOpen(string memory symbol_) {
+        require(ILOVoteOpen(symbol_), "ILO has not been set up");
+        _;
+    }
+    modifier onlyGOVVoteOpen(string memory name_) {
+        require(GOVVoteOpen(name_), "ILO has not been set up");
         _;
     }
     
@@ -93,9 +109,13 @@ contract xStarterGovernance is Context, Interaction {
         _xStarterToken = xStarterToken_;
     }
     
-    function ILOOpen(string memory symbol_) public view returns(bool) {
+    function ILOVoteOpen(string memory symbol_) public view returns(bool) {
         return block.number >= _ILOProposals[symbol_].startBlock && block.number < _ILOProposals[symbol_].endBlock;
     }
+    function GOVVoteOpen(string memory name_) public view returns(bool) {
+        return block.number >= _GOVProposals[name_].startBlock && block.number < _GOVProposals[name_].endBlock;
+    }
+    
     function balance(address voter_) public view returns(uint availBal) {
         // voting points is accumulated by the number of blocks after deposit
         Voter memory voter = _voters[voter_];
@@ -108,9 +128,15 @@ contract xStarterGovernance is Context, Interaction {
         return proposal.yesCount + proposal.noCount > _minVoteCount && _ILOProposals[symbol_].yesCount > _ILOProposals[symbol_].noCount;  
     }
     
+    function GOVApproved(string memory name_) public view returns(bool) {
+        require(block.number > _GOVProposals[name_].endBlock, "Voting on ILO not complete");
+        GOVProposal storage proposal = _GOVProposals[name_];
+        return proposal.yesCount + proposal.noCount > _minVoteCount && _GOVProposals[name_].yesCount > _GOVProposals[name_].noCount;  
+    }
+    
     event ILOVoted(string indexed symbol_, address indexed voter_, VoteChoice indexed choice_, uint amount_ );
     // create a modifier that verifies that ILO can be voted on
-    function voteForILO(string memory symbol_, uint amount_, VoteChoice choice_) external allowedToInteract onlyILOOpen(symbol_) returns(bool) {
+    function voteForILO(string memory symbol_, uint amount_, VoteChoice choice_) external allowedToInteract onlyILOVoteOpen(symbol_) returns(bool) {
         _disallowInteraction();
         require(balance(_msgSender()) > amount_, "not enough balance");
         Voter storage voter = _voters[_msgSender()];
@@ -135,12 +161,48 @@ contract xStarterGovernance is Context, Interaction {
         _allowInteraction();
         return true;
     }
+    
+    event GOVVoted(string indexed name_, address indexed voter_, VoteChoice indexed choice_, uint amount_ );
+    // create a modifier that verifies that ILO can be voted on
+    function voteForGOV(string memory name_, uint amount_, VoteChoice choice_) external allowedToInteract onlyGOVVoteOpen(name_) returns(bool) {
+        _disallowInteraction();
+        require(balance(_msgSender()) > amount_, "not enough balance");
+        Voter storage voter = _voters[_msgSender()];
+        require(voter.votes.length < 3, "you have 3 active votes, call cleanVotes to clean ended votes");
+        GOVProposal storage proposal = _GOVProposals[name_];
+        voter.lockedBalance = voter.lockedBalance.add(amount_);
+        if(choice_ == VoteChoice.YES) {
+            proposal.yesCount = proposal.yesCount.add(amount_);
+        }else {
+            proposal.noCount = proposal.noCount.add(amount_);
+        }
+        Vote memory vote = Vote(
+            ProposalType.ILO,
+            name_,
+            amount_,
+            _msgSender(),
+            choice_
+            );
+        proposal.votes.push(vote);
+        voter.gVotes.push(GOVVoteInfo(name_, proposal.votes.length - 1, amount_, true, proposal.endBlock));
+        emit GOVVoted(name_, _msgSender(), choice_, amount_);
+        _allowInteraction();
+        return true;
+    }
+    
     // cleans votes and unlocks any locked balance
     function cleanVotes(address voter_) public allowedToInteract returns (bool) {
         _disallowInteraction();
          Voter storage voter = _voters[voter_];
          for (uint i=0; i<voter.votes.length; i++) {
              ILOVoteInfo storage vote = voter.votes[i];
+             if(block.number > vote.endBlock && vote.amtLocked) {
+                 vote.amtLocked = false;
+                 voter.lockedBalance = voter.lockedBalance.sub(vote.amount);
+             }
+         }
+         for (uint i=0; i<voter.gVotes.length; i++) {
+             GOVVoteInfo storage vote = voter.gVotes[i];
              if(block.number > vote.endBlock && vote.amtLocked) {
                  vote.amtLocked = false;
                  voter.lockedBalance = voter.lockedBalance.sub(vote.amount);
@@ -171,6 +233,25 @@ contract xStarterGovernance is Context, Interaction {
         _ILOProposals[symbol_].startBlock = sBlock;
         _ILOProposals[symbol_].endBlock = sBlock + 17280;
         emit ILOProposalAdded(_msgSender(), symbol_, sBlock, sBlock + 17280);
+        _allowInteraction();
+        
+        return true;
+        
+    }
+    
+    event GOVProposalAdded(address indexed msgSender_, string indexed name_, uint indexed startBlock_, uint endBlock_);
+    // ILO must already be registered on Launchpad
+    // todo: add query string (aim is to use ipfs and access ipfs through ipfs.io for browsers that do not have the ipfs extension or support ipfs natively)
+    function addGOV(string memory name_) external allowedToInteract returns(bool) {
+        _disallowInteraction();
+        // bool authorized = iXstarterLaunchPad(_xStarterLaunchPad).IsProposerOrAdmin(_msgSender(), symbol_);
+        // require(authorized, "must be admin or proposer of ILO on Launchpad contract");
+        require(_GOVProposals[name_].startBlock == 0, 'Gov proposal already exist');
+        // 86400 / 5 = 17280 blocks assuming 5 sec blocks
+        uint sBlock = block.number + 17280;
+        _GOVProposals[name_].startBlock = sBlock;
+        _GOVProposals[name_].endBlock = sBlock + 17280;
+        emit ILOProposalAdded(_msgSender(), name_, sBlock, sBlock + 17280);
         _allowInteraction();
         
         return true;

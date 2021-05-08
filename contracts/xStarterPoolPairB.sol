@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
@@ -8,8 +8,9 @@ import "@openzeppelin/contracts/token/ERC777/ERC777.sol";
 import "@openzeppelin/contracts/token/ERC777/ERC777.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/introspection/IERC1820Registry.sol";
+import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./Administration.sol";
 import "./ERC777ReceiveSend.sol";
 //import "./UniswapInterface.sol";
@@ -98,12 +99,11 @@ contract ProjectBaseTokenERC20 is Context, ERC20{
     constructor(
         string memory name_,
         string memory symbol_,
-        uint8 decimals_,
         uint totalSupply_,
         address creatorAddr
     ) ERC20(name_, symbol_) {
         
-         _setupDecimals(decimals_);
+        //  _setupDecimals(decimals_);
         // this will mint total supply 
         _mint(creatorAddr, totalSupply_);
         //  _mint(_msgSender(), totalSupply_, "", "");
@@ -157,6 +157,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     address private _addressOfDex;
     address private _addressOfDexFactory;
     uint24 private _dexDeadlineLength;
+    uint _decimals = 18;
     
     // stores address of the project's token
     address private _projectToken;
@@ -425,7 +426,6 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         address addressOfProjectToken,
         string memory tokenName_,
         string memory tokenSymbol_,
-        uint8  decimals_,
         uint totalTokenSupply_,
         uint48 startTime_, 
         uint48 endTime_
@@ -434,13 +434,12 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
             require(admin() == msg.sender, "Administration: caller is not the admin");
             require(!_isSetup,"initial setup already done");
             require(startTime_ > block.timestamp && endTime_ > startTime_, "ILO dates not correct");
-            decimals_ = decimals_ > 18 ? 18 : decimals_;
-            totalTokenSupply_ =  totalTokenSupply_ * 10 ** decimals_;
+            totalTokenSupply_ =  totalTokenSupply_ * 10 ** _decimals;
             
             // if address of project token is 0 address deploy token for it
             if(address(0) == addressOfProjectToken) {
                     address[] memory defaultOperators_;
-                    _deployToken(tokenName_, tokenSymbol_, decimals_, totalTokenSupply_, defaultOperators_);
+                    _deployToken(tokenName_, tokenSymbol_, totalTokenSupply_, defaultOperators_);
             } 
             else {
                 IERC20AndOwnable existingToken = IERC20AndOwnable(addressOfProjectToken);
@@ -451,7 +450,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
                 
                 // require(existingTokenOwner == admin(),"Admin of pool pair must be owner of token contract");
                 require(existingTokenSupply == totalTokenSupply_, "All tokens from contract must be transferred");
-                require(expDecimals == decimals_, "decimals do not match");
+                require(expDecimals == _decimals, "decimals do not match");
                 
                 _projectToken = addressOfProjectToken;
                 _totalTokensSupply = _totalTokensSupply.add(totalTokenSupply_);
@@ -469,12 +468,11 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     function _deployToken(
         string memory name_,
         string memory symbol_,
-        uint8 decimals_,
         uint totalTokenSupply_,
         address[] memory defaultOperators_
     ) internal returns(bool){
         //ProjectBaseToken newToken = new ProjectBaseToken(name_,symbol_, totalTokenSupply_, address(this), defaultOperators_);
-        ProjectBaseTokenERC20 newToken = new ProjectBaseTokenERC20(name_,symbol_, decimals_, totalTokenSupply_, address(this));
+        ProjectBaseTokenERC20 newToken = new ProjectBaseTokenERC20(name_,symbol_, totalTokenSupply_, address(this));
 
         _projectToken = address(newToken);
         _totalTokensSupply = totalTokenSupply_;

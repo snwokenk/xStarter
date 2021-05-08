@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.7.6;
-pragma abicoder v2;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
@@ -157,10 +156,10 @@ contract xStarterLaunchPad is Ownable, Interaction{
         
     }
     
-    function ILOProposalExist(string memory tokenSymbol_) public view returns(bool) {
-        return keccak256(bytes(_ILOProposals[tokenSymbol_].tokenSymbol)) == keccak256(bytes(tokenSymbol_));
+    // function ILOProposalExist(string memory tokenSymbol_) public view returns(bool) {
+    //     return keccak256(bytes(_ILOProposals[tokenSymbol_].tokenSymbol)) == keccak256(bytes(tokenSymbol_));
         
-    }
+    // }
     
     function IsProposerOrAdmin(address msgSender_, string memory tokenSymbol_) public view returns(bool) {
         return _ILOProposals[tokenSymbol_].proposer != address(0) && (_ILOProposals[tokenSymbol_].proposer == msgSender_ || _ILOProposals[tokenSymbol_].admin == msgSender_);
