@@ -396,6 +396,10 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         return _projectToken;
     }
     
+    function fundingToken() public view returns (address) {
+        return _fundingToken;
+    }
+    
     // different
     function isEventOpen() public view returns (bool isOpen_) {
         uint48 currentTime = uint48(block.timestamp);
@@ -860,7 +864,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         //require(_approvedForLP, "xStarterPair: TokenApprovalFail, call syncBalances before calling again");
         
         uint amountERC20 = _fundingTokenAvail;
-        uint amountProjectToken = _totalTokensSupplyControlled;
+        uint amountProjectToken = _tokensForLiquidity;
         
         
         // approve project token to be sent to dex. Spender is dex IUniswapRouter address (honeyswap, uniswap etc)
