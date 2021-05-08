@@ -209,8 +209,9 @@ contract xStarterGovernance is Context, Interaction {
     
     function _subtractFromBal(address voter_, uint amount_) internal returns(bool) {
         
-        uint freeBal = _voters[voter_].balance - _voters[voter_].lockedBalance;
-        require(freeBal >= amount_, "not enough free balance");
+        uint bal = balance(voter_);
+        
+        require(bal >= amount_, "not enough free balance");
         _voters[voter_].balance = _voters[voter_].balance.sub(amount_);
         return true;
         

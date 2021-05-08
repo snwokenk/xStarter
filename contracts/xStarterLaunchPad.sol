@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.7.6;
-
+pragma abicoder v2;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
@@ -118,7 +118,7 @@ contract xStarterLaunchPad is Ownable, Interaction{
     address _xStarterNFT;
     address _xStarterDeployer;
     
-    
+    // todo: let mapping be string and uint in which index is the position of ILOproposal in array
     mapping(string => ILOProposal) private _ILOProposals;
     // mapping(string => DeployedILO) private _deployedILOs;
     // mapping(string => GovernanceProposal) private _govProposals;
@@ -126,6 +126,8 @@ contract xStarterLaunchPad is Ownable, Interaction{
     mapping(address => uint) private _tokenDeposits;
     mapping(address => bool) private _currentlyFunding;
     mapping(string => address) private supportedDex;
+    
+    ILOProposal[] private _ILOProposalArray;
 
     function initialize(address xStarterToken_, address xStarterGovernance_, uint depositPerProposal_) external returns(bool) {
         require(!initialized, "contract has already been initialized");
@@ -137,11 +139,29 @@ contract xStarterLaunchPad is Ownable, Interaction{
         return true;
         
     }
+    function getProposal(string memory tokenSymbol_) public view returns(ILOProposal memory proposal) {
+        proposal = _ILOProposals[tokenSymbol_];
+    }
+    
+    // gets ILOProposals 5 at a time
+    function getProposals(uint16 round_) public view returns(ILOProposal[] memory proposals, bool endOfArray) {
+        // uint start = round_ * 5
+        uint end = (round_*5) + 4;
+        endOfArray =  end > _ILOProposalArray.length - 1;
+        end = !endOfArray ? end : _ILOProposalArray.length - 1;
+        uint start = end - 4;
+        
+        for (uint i=start ; i <= end; i++) {
+            proposals[i] = _ILOProposalArray[i];
+        }
+        
+    }
     
     function ILOProposalExist(string memory tokenSymbol_) public view returns(bool) {
         return keccak256(bytes(_ILOProposals[tokenSymbol_].tokenSymbol)) == keccak256(bytes(tokenSymbol_));
         
     }
+    
     function IsProposerOrAdmin(address msgSender_, string memory tokenSymbol_) public view returns(bool) {
         return _ILOProposals[tokenSymbol_].proposer != address(0) && (_ILOProposals[tokenSymbol_].proposer == msgSender_ || _ILOProposals[tokenSymbol_].admin == msgSender_);
     }
