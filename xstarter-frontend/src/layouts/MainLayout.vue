@@ -5,13 +5,14 @@
       <q-toolbar>
         <q-toolbar-title style="width: 10%" >
           <div >
-            <img v-if="$q.dark.isActive" class="logo-style" src="~assets/xstarter_dark_logo.webp">
+            <img v-if="$q.dark.isActive" class="logo-style" src="~assets/xstarter_dark_logo.png">
             <img v-else class="logo-style" src="~assets/xstarter_light_logo.png">
 
           </div>
         </q-toolbar-title>
         <div class="q-gutter-x-sm">
-          <q-btn rounded outline :label="metamaskInstalled.value ? 'Connect' : 'Install Metamask'"  :icon="metamaskInstalled.value ? undefined : 'error_outline'" :color="darkLightText" :disable="!metamaskInstalled.value" @click="connectEthereum"/>
+          <q-btn rounded outline :label="connectBtnLabel"  :icon="metamaskInstalled.value ? undefined : 'error_outline'" :color="metamaskInstalled.value ? darkLightText: 'negative'" :disable="!metamaskInstalled.value" @click="connectEthereum"/>
+          <q-btn label="sign" @click="signTx"/>
           <q-btn round flat :color="darkLightText" :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'" @click="setDarkMode"/>
         </div>
       </q-toolbar>
@@ -51,7 +52,7 @@
 // https://docs.metamask.io/guide/ethereum-provider.html#methods
 // https://ethereum.stackexchange.com/questions/97693/what-is-the-correct-way-to-deploy-a-react-app-that-uses-metamask
 
-import { defineComponent, ref, watch } from 'vue'
+import { defineComponent, ref, watch, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { ethers } from 'boot/ethers'
 import detectEthereumProvider from '@metamask/detect-provider';
@@ -71,8 +72,8 @@ export default defineComponent({
 
 
 
-    const provider = ref(undefined)
-    const signer = ref(undefined)
+    let provider = undefined
+    let signer = undefined
     const ethereumProvider = ref(undefined)
     const metamaskInstalled = ref(false)
     const connectedAccounts = ref([])
@@ -89,37 +90,57 @@ export default defineComponent({
           })
         }catch (e) {
           console.log(e)
+          return
         }
-      }
 
       connectedAndPermissioned.value = metamaskInstalled.value && connectedAccounts.value.length > 0
+      if (connectedAndPermissioned.value) {
+        provider = new ethers.providers.Web3Provider(ethereumProvider.value)
+        signer = provider.getSigner()
+        console.log('is permssioned 1', connectedAndPermissioned.value, await provider.getBlockNumber())
+      }
+      ethereumProvider.value.on('accountsChanged', checkExisting)
 
-      console.log('is permssioned', connectedAndPermissioned.value)
+      console.log('is permssioned 2', connectedAndPermissioned.value)
     }
-    checkExisting()
+    }
+    onMounted(() => {
+      checkExisting()
+    })
     const connectEthereum = async () => {
       if (!metamaskInstalled.value) {
         console.log('please install metamask')
       }else {
         console.log('ethereum provider', ethereumProvider.value)
-        if (provider.value && signer.value) {return}
 
-        connectedAccounts.value = await ethereumProvider.value.request({
-          method: 'eth_requestAccounts'})
+        if (connectedAndPermissioned.value) {return}
+        try {
+          connectedAccounts.value = await ethereumProvider.value.request({
+            method: 'eth_requestAccounts'})
+        }catch (e) {
+
+        }
+
         connectedAndPermissioned.value = metamaskInstalled.value && connectedAccounts.value.length > 0
 
-        provider.value = new ethers.providers.Web3Provider(ethereumProvider.value)
-        signer.value = provider.value.getSigner()
-        console.log(signer.value, 'signer value')
+        // provider = new ethers.providers.Web3Provider(ethereumProvider.value)
+        // signer = provider.getSigner()
+        console.log(signer, 'signer value')
       }
 
+    }
+    const getProvider = () => {
+      return provider
+    }
+    const getSigner = () => {
+      return signer
     }
     return {
       setDarkMode,
       connectEthereum,
       checkExisting,
-      provider,
-      signer,
+      getProvider,
+      getSigner,
       metamaskInstalled,
       ethereumProvider,
       connectedAccounts,
@@ -129,18 +150,32 @@ export default defineComponent({
   computed: {
     darkLightText(){
       return this.$q.dark.isActive ? 'light' : 'dark'
+    },
+
+    connectBtnLabel() {
+      console.log('connected permission', this.connectedAndPermissioned)
+      if (this.connectedAndPermissioned) {
+        return 'Connected'
+      }
+
+      return this.metamaskInstalled.value ? 'Connect' : 'Install Metamask'
     }
   },
   methods: {
     async signTx() {
-      console.log('this signer', this.signer)
-      const tx = this.signer.sendTransaction({
-        to: "ricmoo.firefly.eth",
-        value: this.$ethers.utils.parseEther("1.0")
-      });
+      console.log('this signer', this.getSigner(), this.ethereumProvider.selectedAddress)
+      console.log('connected accounts', this.connectedAccounts)
+      const resp = await this.getProvider().getBalance('0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc');
+      // const resp = await this.getSigner().sendTransaction({
+      //   to: "0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc",
+      //   value: this.$ethers.utils.parseEther("1.0")
+      // });
       // const resp = await this.provider.getBlockNumber()
-      // console.log('response is', resp)
+      console.log('response is', resp, this.$ethers.utils.formatEther(resp), resp._isBigNumber)
     }
+  },
+  mounted() {
+
   }
 })
 </script>
