@@ -11,7 +11,7 @@
           </div>
         </q-toolbar-title>
         <div class="q-gutter-x-sm">
-          <q-btn rounded outline label="Connect" :color="darkLightText"/>
+          <q-btn rounded outline :label="metamaskInstalled.value ? 'Connect' : 'Install Metamask'"  :icon="metamaskInstalled.value ? undefined : 'error_outline'" :color="darkLightText" :disable="!metamaskInstalled.value" @click="connectEthereum"/>
           <q-btn round flat :color="darkLightText" :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'" @click="setDarkMode"/>
         </div>
       </q-toolbar>
@@ -47,10 +47,15 @@
 
 <script>
 
-
+// https://docs.metamask.io/guide/getting-started.html#basic-considerations
+// https://docs.metamask.io/guide/ethereum-provider.html#methods
+// https://ethereum.stackexchange.com/questions/97693/what-is-the-correct-way-to-deploy-a-react-app-that-uses-metamask
 
 import { defineComponent, ref, watch } from 'vue'
 import { useQuasar } from 'quasar'
+import { ethers } from 'boot/ethers'
+import detectEthereumProvider from '@metamask/detect-provider';
+
 
 export default defineComponent({
   name: 'MainLayout',
@@ -63,13 +68,78 @@ export default defineComponent({
     const setDarkMode = async () => {
       $q.dark.toggle()
     }
+
+
+
+    const provider = ref(undefined)
+    const signer = ref(undefined)
+    const ethereumProvider = ref(undefined)
+    const metamaskInstalled = ref(false)
+    const connectedAccounts = ref([])
+    const connectedAndPermissioned = ref(Boolean(metamaskInstalled.value && connectedAccounts.value.length > 0))
+    // check if you already have connection and permission
+    // can be called when account or network changes
+    const checkExisting = async () => {
+      ethereumProvider.value = await detectEthereumProvider();
+      metamaskInstalled.value = ref(Boolean(ethereumProvider.value))
+      if (metamaskInstalled.value) {
+        try {
+          connectedAccounts.value = await ethereumProvider.value.request({
+            method: 'eth_accounts'
+          })
+        }catch (e) {
+          console.log(e)
+        }
+      }
+
+      connectedAndPermissioned.value = metamaskInstalled.value && connectedAccounts.value.length > 0
+
+      console.log('is permssioned', connectedAndPermissioned.value)
+    }
+    checkExisting()
+    const connectEthereum = async () => {
+      if (!metamaskInstalled.value) {
+        console.log('please install metamask')
+      }else {
+        console.log('ethereum provider', ethereumProvider.value)
+        if (provider.value && signer.value) {return}
+
+        connectedAccounts.value = await ethereumProvider.value.request({
+          method: 'eth_requestAccounts'})
+        connectedAndPermissioned.value = metamaskInstalled.value && connectedAccounts.value.length > 0
+
+        provider.value = new ethers.providers.Web3Provider(ethereumProvider.value)
+        signer.value = provider.value.getSigner()
+        console.log(signer.value, 'signer value')
+      }
+
+    }
     return {
-      setDarkMode
+      setDarkMode,
+      connectEthereum,
+      checkExisting,
+      provider,
+      signer,
+      metamaskInstalled,
+      ethereumProvider,
+      connectedAccounts,
+      connectedAndPermissioned
     }
   },
   computed: {
     darkLightText(){
       return this.$q.dark.isActive ? 'light' : 'dark'
+    }
+  },
+  methods: {
+    async signTx() {
+      console.log('this signer', this.signer)
+      const tx = this.signer.sendTransaction({
+        to: "ricmoo.firefly.eth",
+        value: this.$ethers.utils.parseEther("1.0")
+      });
+      // const resp = await this.provider.getBlockNumber()
+      // console.log('response is', resp)
     }
   }
 })
