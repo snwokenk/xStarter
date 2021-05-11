@@ -11,8 +11,8 @@
           </div>
         </q-toolbar-title>
         <div class="q-gutter-x-sm">
-          <q-btn rounded outline :label="connectBtnLabel"  :icon="metamaskInstalled.value ? undefined : 'error_outline'" :color="metamaskInstalled.value ? darkLightText: 'negative'" :disable="!metamaskInstalled.value" @click="connectEthereum"/>
-          <q-btn label="sign" @click="signTx"/>
+          <q-btn rounded outline size="md" :label="connectBtnLabel"  :icon="metamaskInstalled.value ? undefined : 'error_outline'" :color="metamaskInstalled.value ? darkLightText: 'negative'" :disable="!metamaskInstalled.value" @click="connectEthereum"/>
+<!--          <q-btn outline :color="darkLightText" label="sign"  @click="signTx"/>-->
           <q-btn round flat :color="darkLightText" :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'" @click="setDarkMode"/>
         </div>
       </q-toolbar>
@@ -99,6 +99,7 @@ export default defineComponent({
         signer = provider.getSigner()
         console.log('is permssioned 1', connectedAndPermissioned.value, await provider.getBlockNumber())
       }
+      // checks to see if any account has permission
       ethereumProvider.value.on('accountsChanged', checkExisting)
 
       console.log('is permssioned 2', connectedAndPermissioned.value)
@@ -155,7 +156,9 @@ export default defineComponent({
     connectBtnLabel() {
       console.log('connected permission', this.connectedAndPermissioned)
       if (this.connectedAndPermissioned) {
-        return 'Connected'
+        let addr = this.connectedAccounts[0]
+
+        return `${addr.slice(0, 6)}....${addr.slice(addr.length - 4)}`
       }
 
       return this.metamaskInstalled.value ? 'Connect' : 'Install Metamask'
