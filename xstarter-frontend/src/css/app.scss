@@ -21,7 +21,7 @@
 @font-face {
   font-family: 'Segoe UI Bold';
   font-style: normal;
-  font-weight: normal;
+  font-weight: 900;
   src: local('Segoe UI Bold'), url('./fonts/Segoe UI Bold.woff') format('woff');
 }
 
@@ -36,10 +36,17 @@
 body.body--dark {
   //background: #0f4c75;
   background: #161f4f;
+  .black-white-dark-theme{
+    color: white;
+    background: black;
+  }
   .display-card {
     border-color: #ace5e3;
     background: #000A48 !important;
     .display-card-date-text {
+      color: #bababa !important;
+    }
+    .display-card-small-title {
       color: #bababa !important;
     }
     .display-card-duration-container {
@@ -51,15 +58,25 @@ body.body--dark {
       color: #fff;
 
     }
+    .amount-raised-number-text {
+      color: #00c3cb;
+    }
   }
 }
 
 body.body--light {
   background: #f5f8f8;
+  .black-white-dark-theme{
+    color: black;
+    background: white;
+  }
   .display-card {
     border-color: rgba(49, 187, 182, 0.56) !important;
     .display-card-date-text {
       color: #707070 !important;
+    }
+    .display-card-small-title {
+      color: #717171 !important;
     }
     .display-card-duration-container {
       background: rgba(172, 236, 244, 0.35);
@@ -68,6 +85,9 @@ body.body--light {
     .display-card-duration-text {
       color: #343434;
     }
+    .amount-raised-number-text {
+      color: #007785;
+    }
 
   }
 }
@@ -75,8 +95,8 @@ body.body--light {
 .display-card {
   min-width: 320px;
   max-width: 500px !important;
-  height: 350px;
-  min-height: 350px !important;
+  height: 400px;
+  min-height: 400px !important;
   border-radius: 25px !important;
   border: 2px solid;
   .display-card-date-text {
@@ -84,6 +104,23 @@ body.body--light {
     font-weight: normal;
     font-size: 12px;
     text-align: center;
+  }
+  .display-card-small-title {
+    font-family: "Segoe UI Regular", serif;
+    font-weight: normal;
+    font-size: 12px;
+  }
+  .amount-raised-text {
+    font-family: "Segoe UI Regular", serif;
+    font-weight: normal;
+    font-size: 14px;
+    text-align: left;
+  }
+  .amount-raised-number-text {
+    font-family: "Segoe UI Regular", serif;
+    font-weight: normal;
+    font-size: 22px;
+    text-align: left;
   }
   .display-card-duration-container {
     width: 100px;
@@ -96,7 +133,24 @@ body.body--light {
     font-size: 11px;
     text-align: center;
   }
+  .display-card-name-text {
+    font-family: "Segoe UI Bold", serif;
+    font-weight: 900;
+    font-size: 40px;
+  }
 }
+
+.progress-bar-style {
+  width: 100%;
+  height: 20px;
+  border-radius: 10px !important;
+  color: #acecf4 ;
+  background:  rgba(220, 220, 220, 0.89);;
+
+  //border: 1px solid rgba(112, 112, 112, 0.2);
+
+}
+
 
 
 .text-light {

@@ -4,13 +4,13 @@
 <!--      alt="Quasar logo"-->
 <!--      src="~assets/quasar-logo-full.svg"-->
 <!--    >-->
-    <div class="display-container row q-gutter-y-lg q-gutter-x-lg justify-center q-pt-lg q-mt-md">
+    <div class="display-container row q-gutter-y-lg q-gutter-x-lg justify-center q-py-lg q-my-md">
       <LiquidityOfferingDisplay class="display-card col-md-10 col-lg-5"  :liquidity-offering="listOfLiquidityOffering"/>
-      <LiquidityOfferingDisplay class="display-card col-md-10 col-lg-5"  :liquidity-offering="listOfLiquidityOffering"/>
-      <LiquidityOfferingDisplay class="display-card col-md-10 col-lg-5"  :liquidity-offering="listOfLiquidityOffering"/>
-      <LiquidityOfferingDisplay class="display-card col-md-10 col-lg-5"  :liquidity-offering="listOfLiquidityOffering"/>
-      <LiquidityOfferingDisplay class="display-card col-md-10 col-lg-5"  :liquidity-offering="listOfLiquidityOffering"/>
-      <LiquidityOfferingDisplay class="display-card col-md-10 col-lg-5"  :liquidity-offering="listOfLiquidityOffering"/>
+<!--      <LiquidityOfferingDisplay class="display-card col-md-10 col-lg-5"  :liquidity-offering="listOfLiquidityOffering"/>-->
+<!--      <LiquidityOfferingDisplay class="display-card col-md-10 col-lg-5"  :liquidity-offering="listOfLiquidityOffering"/>-->
+<!--      <LiquidityOfferingDisplay class="display-card col-md-10 col-lg-5"  :liquidity-offering="listOfLiquidityOffering"/>-->
+<!--      <LiquidityOfferingDisplay class="display-card col-md-10 col-lg-5"  :liquidity-offering="listOfLiquidityOffering"/>-->
+<!--      <LiquidityOfferingDisplay class="display-card col-md-10 col-lg-5"  :liquidity-offering="listOfLiquidityOffering"/>-->
 <!--      <LiquidityOfferingDisplay class="display-card col-md-10 col-lg-5"  :liquidity-offering="listOfLiquidityOffering"/>-->
     </div>
 
@@ -30,8 +30,8 @@ export default defineComponent({
   computed: {
     listOfLiquidityOffering() {
       return  {
-        startDate: '1620530069',
-        endDate: '1620616469',
+        startDate: '1621048469',
+        endDate: '1621307669',
         logo_url: '/xstarter_blue2.jpg'
       }
     }
