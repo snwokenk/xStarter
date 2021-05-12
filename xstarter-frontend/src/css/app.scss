@@ -1,12 +1,39 @@
 // app global css in SCSS form
 // https://colorhunt.co/palette/167893
 body.body--dark {
-  background: #0f4c75
+  background: #0f4c75;
+  .display-card {
+    border-color: #ace5e3;
+    .display-card-date-text {
+      color: #bababa !important;
+    }
+  }
 }
 
 body.body--light {
-  background: #f5f8f8
+  background: #f5f8f8;
+  .display-card {
+    border-color: rgba(49, 187, 182, 0.56) !important;
+    .display-card-date-text {
+      color: #707070 !important;
+    }
+
+  }
 }
+
+.display-card {
+  min-width: 320px;
+  height: 300px;
+  min-height: 300px !important;
+  border-radius: 25px !important;
+  .display-card-date-text {
+    font-family: "Segoe UI", serif;
+    font-weight: normal;
+    font-size: 12px;
+    text-align: center;
+  }
+}
+
 
 .text-light {
   color: $light;
@@ -19,3 +46,4 @@ body.body--light {
   width: 10%;
   min-width: 100px;
 }
+
