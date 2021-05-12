@@ -1,5 +1,5 @@
 <template>
-<q-card flat square class="q-py-md q-px-lg q-gutter-y-sm cursor-pointer" clickable>
+<q-card flat square class="q-py-md q-mb-lg q-px-lg q-gutter-y-sm" clickable>
   <div class="display-card-date-text" v-html="startLiveOrEndDisplay" />
   <q-card-section horizontal class="justify-between">
     <div>
@@ -7,10 +7,7 @@
         <img :src="liquidityOffering.logo_url">
       </q-avatar>
     </div>
-    <div class="q-gutter-y-md">
-      <div class="display-card-duration-container display-card-duration-text"> Duration 2 days</div>
-      <div class="display-card-duration-container display-card-duration-text"> Starts in 21 days</div>
-    </div>
+    <LiquidityDisplayDuration  :end-time="endTimestamp" :start-time="startTimestamp" :offering-status="ILOStatus"  :succeeded="false"/>
   </q-card-section>
   <q-card-section horizontal>
     <div class="text-weight-bolder display-card-name-text">
@@ -60,13 +57,18 @@
       </div>
     </q-linear-progress>
   </q-card-section>
+  <q-card-actions>
+    <q-btn rounded class="full-width" outline label="View more"/>
+  </q-card-actions>
 </q-card>
 </template>
 
 <script>
 import { defineComponent } from 'vue'
+import LiquidityDisplayDuration from "components/CardDisplays/LiquidityDisplayDuration";
 export default defineComponent( {
   name: "LiquidityOfferingDisplay",
+  components: {LiquidityDisplayDuration},
   props: {
     liquidityOffering: {
       type: Object,
@@ -83,12 +85,21 @@ export default defineComponent( {
     endTimestamp() {
       return parseInt(this.liquidityOffering.endDate) * 1000
     },
-    startLiveOrEndDisplay() {
+    ILOStatus() {
       const now = Date.now()
-      const endDate = new Date(this.endTimestamp)
       if (now >= this.startTimestamp && now < this.endTimestamp) {
-        return `Ends on ${endDate}`
+        return `live`
       }else if (now < this.startTimestamp) {
+        return `starting`
+      }else {
+        return `ended`
+      }
+    },
+    startLiveOrEndDisplay() {
+      const endDate = new Date(this.endTimestamp)
+      if (this.ILOStatus === 'live') {
+        return `Ends on ${endDate}`
+      }else if (this.ILOStatus === 'starting') {
         return `Starts on  ${new Date(this.startTimestamp)}`
       }else {
         return `Ended on ${endDate}`

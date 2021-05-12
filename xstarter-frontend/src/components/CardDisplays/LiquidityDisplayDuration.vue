@@ -1,0 +1,61 @@
+<template>
+  <div  v-if="offeringStatus === 'starting'" class="q-gutter-y-md">
+    <div class="display-card-duration-container display-card-duration-container__ended display-card-duration-text"> Duration 2 days</div>
+    <div class="display-card-duration-container display-card-duration-text"> Starts in 21 days</div>
+  </div>
+  <div v-else-if="offeringStatus === 'live'" class="q-gutter-y-sm">
+    <div class="display-card-duration-container display-card-duration-container__succeed display-card-duration-text display-card-duration-text__succeed row">
+      <div class="col-4 row justify-end content-center"><div class="circle circle__succeed col-auto"/></div><div class="col-1" /><div class="col-7 text-left">Live</div>
+    </div>
+    <div class="display-card-duration-container display-card-duration-container__succeed display-card-duration-text display-card-duration-text__succeed"> Ends In 2 Days</div>
+  </div>
+  <div v-else class="q-gutter-y-md">
+    <div v-if="succeeded" class="display-card-duration-container display-card-duration-container__succeed display-card-duration-text display-card-duration-text__succeed row">
+      <div class="col-3 row justify-end content-center"><q-icon name="done" size="16px"/></div><div class="col-1" /><div class="col-8 text-left">Success</div>
+    </div>
+    <div v-else class="display-card-duration-container display-card-duration-container__failed display-card-duration-text display-card-duration-text__failed row">
+      <div class="col-4 row justify-end content-center"><q-icon name="clear" size="16px"/></div><div class="col-1" /><div class="col-7 text-left">Failed</div>
+    </div>
+  </div>
+</template>
+
+<script>
+import { defineComponent } from 'vue'
+export default defineComponent({
+  name: "LiquidityDisplayDuration",
+  props: {
+    offeringStatus: {
+      type: String,
+      required: true
+    },
+    succeeded: {
+      type: Boolean,
+      required: true
+    },
+    startTime: {
+      type: Number,
+      required: true
+    },
+    endTime: {
+      type: Number,
+      required: true
+    }
+  },
+})
+</script>
+
+<style scoped lang="scss">
+.circle{
+  width: 7px !important;
+  height: 7px !important;
+  border-radius: 7px;
+  &__succeed {
+    background: #0DBF00;
+    //border: 1px solid #bf0000;
+  }
+  &__failed {
+    background: #bf0000;
+    //border: 1px solid #bf0000;
+  }
+}
+</style>

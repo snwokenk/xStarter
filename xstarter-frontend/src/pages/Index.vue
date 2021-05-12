@@ -19,7 +19,7 @@
 
 <script>
 import { defineComponent } from 'vue';
-import LiquidityOfferingDisplay from "components/LiquidityOfferingDisplay";
+import LiquidityOfferingDisplay from "components/CardDisplays/LiquidityOfferingDisplay";
 
 export default defineComponent({
   name: 'PageIndex',
@@ -30,8 +30,8 @@ export default defineComponent({
   computed: {
     listOfLiquidityOffering() {
       return  {
-        startDate: '1621048469',
-        endDate: '1621307669',
+        startDate: '1620530069',
+        endDate: '1621221269',
         logo_url: '/xstarter_blue2.jpg'
       }
     }
