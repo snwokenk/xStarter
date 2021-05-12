@@ -1,9 +1,11 @@
 // app global css in SCSS form
 // https://colorhunt.co/palette/167893
 body.body--dark {
-  background: #0f4c75;
+  //background: #0f4c75;
+  background: #161f4f;
   .display-card {
     border-color: #ace5e3;
+    background: #000A48 !important;
     .display-card-date-text {
       color: #bababa !important;
     }
