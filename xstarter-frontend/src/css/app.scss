@@ -7,6 +7,15 @@ body.body--dark {
     .display-card-date-text {
       color: #bababa !important;
     }
+    .display-card-duration-container {
+      background: rgba(172, 236, 244, 0.4);
+      border: 1px solid #45648f;
+    }
+
+    .display-card-duration-text {
+      color: #fff;
+
+    }
   }
 }
 
@@ -17,19 +26,39 @@ body.body--light {
     .display-card-date-text {
       color: #707070 !important;
     }
+    .display-card-duration-container {
+      background: rgba(172, 236, 244, 0.35);
+      border: 1px solid #fff;
+    }
+    .display-card-duration-text {
+      color: #343434;
+    }
 
   }
 }
 
 .display-card {
   min-width: 320px;
-  height: 300px;
-  min-height: 300px !important;
+  max-width: 500px !important;
+  height: 350px;
+  min-height: 350px !important;
   border-radius: 25px !important;
+  border: 2px solid;
   .display-card-date-text {
     font-family: "Segoe UI", serif;
     font-weight: normal;
     font-size: 12px;
+    text-align: center;
+  }
+  .display-card-duration-container {
+    width: 100px;
+    height: 20px;
+    border-radius: 7.5px;
+  }
+  .display-card-duration-text {
+    font-family: "Segoe UI";
+    font-weight: normal;
+    font-size: 11px;
     text-align: center;
   }
 }

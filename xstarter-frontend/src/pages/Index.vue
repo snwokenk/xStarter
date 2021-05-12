@@ -4,7 +4,7 @@
 <!--      alt="Quasar logo"-->
 <!--      src="~assets/quasar-logo-full.svg"-->
 <!--    >-->
-    <div class="display-container row q-gutter-md justify-center q-pt-md">
+    <div class="display-container row q-gutter-y-lg q-gutter-x-md justify-center q-pt-md">
       <LiquidityOfferingDisplay class="display-card col-md-10 col-lg-5"  :liquidity-offering="listOfLiquidityOffering"/>
       <LiquidityOfferingDisplay class="display-card col-md-10 col-lg-5"  :liquidity-offering="listOfLiquidityOffering"/>
 <!--      <LiquidityOfferingDisplay class="display-card col-md-10 col-lg-5"  :liquidity-offering="listOfLiquidityOffering"/>-->
@@ -26,8 +26,9 @@ export default defineComponent({
   computed: {
     listOfLiquidityOffering() {
       return  {
-        startDate: '1620702869',
-        endDate: '1621221269'
+        startDate: '1620530069',
+        endDate: '1620616469',
+        logo_url: '/xstarter_blue2.jpg'
       }
     }
   }
