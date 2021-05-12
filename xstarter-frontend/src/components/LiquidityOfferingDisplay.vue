@@ -1,5 +1,5 @@
 <template>
-<q-card flat square class="q-py-md q-px-lg q-gutter-y-md">
+<q-card flat square class="q-py-md q-px-lg q-gutter-y-md cursor-pointer" clickable>
   <div class="display-card-date-text" v-html="startLiveOrEndDisplay" />
   <q-card-section horizontal class="justify-between">
     <div>
