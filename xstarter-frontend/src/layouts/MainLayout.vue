@@ -12,7 +12,7 @@
         </q-toolbar-title>
         <div class="q-gutter-x-sm">
           <q-btn rounded outline size="md" :label="connectBtnLabel"  :icon="metamaskInstalled.value ? undefined : 'error_outline'" :color="metamaskInstalled.value ? darkLightText: 'negative'" :disable="!metamaskInstalled.value" @click="connectEthereum"/>
-<!--          <q-btn outline :color="darkLightText" label="sign"  @click="signTx"/>-->
+          <q-btn outline :color="darkLightText" label="sign"  @click="callContract"/>
           <q-btn round flat :color="darkLightText" :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'" @click="setDarkMode"/>
         </div>
       </q-toolbar>
@@ -56,6 +56,8 @@ import { defineComponent, ref, watch, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { ethers } from 'boot/ethers'
 import detectEthereumProvider from '@metamask/detect-provider';
+import {ILO_ADDRESS} from "src/constants";
+import data from 'src/artifacts/contracts/xStarterPoolPairB.sol/xStarterPoolPairB.json';
 
 
 export default defineComponent({
@@ -74,6 +76,8 @@ export default defineComponent({
 
     let provider = undefined
     let signer = undefined
+    let ILOContract = undefined
+
     const ethereumProvider = ref(undefined)
     const metamaskInstalled = ref(false)
     const connectedAccounts = ref([])
@@ -97,6 +101,7 @@ export default defineComponent({
       if (connectedAndPermissioned.value) {
         provider = new ethers.providers.Web3Provider(ethereumProvider.value)
         signer = provider.getSigner()
+        ILOContract = await new ethers.Contract(ILO_ADDRESS, data.abi, signer)
         console.log('is permssioned 1', connectedAndPermissioned.value, await provider.getBlockNumber())
       }
       // checks to see if any account has permission
@@ -136,16 +141,21 @@ export default defineComponent({
     const getSigner = () => {
       return signer
     }
+    const getILOContract = () => {
+      return  ILOContract
+    }
     return {
       setDarkMode,
       connectEthereum,
       checkExisting,
       getProvider,
       getSigner,
+      getILOContract,
       metamaskInstalled,
       ethereumProvider,
       connectedAccounts,
-      connectedAndPermissioned
+      connectedAndPermissioned,
+      ILOContract
     }
   },
   computed: {
@@ -175,6 +185,21 @@ export default defineComponent({
       // });
       // const resp = await this.provider.getBlockNumber()
       console.log('response is', resp, this.$ethers.utils.formatEther(resp), resp._isBigNumber)
+    },
+    async callContract() {
+      const ILOContract = this.getILOContract()
+      const addressOfDex = await ILOContract.addressOfDex()
+      console.log(ILOContract.filters)
+
+      // listen to contract events
+      const filter = {
+        address: ILOContract.address,
+        topic: Object.values(ILOContract.filters)
+      }
+      ILOContract.on(filter, (result) => {
+        console.log('result in event is', result)
+      })
+      console.log('ilo contract', ILOContract, addressOfDex)
     }
   },
   mounted() {
