@@ -308,6 +308,18 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     function availLPTokens() public view returns(uint) {
         return _availLPTokens;
     }
+    function softcap() public view returns(uint) {
+        return _minFundingTokenRequired;
+    }
+    function hardcap() public view returns(uint) {
+        return _maxFundingToken;
+    }
+    function minSpend() public view returns(uint) {
+        return _minFundPerAddr;
+    }
+    function maxSpend() public view returns(uint) {
+        return _maxFundPerAddr;
+    }
     function liquidityPairAddress() public view returns(address) {
         return _liquidityPairAddress;
     }
@@ -626,7 +638,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         return _approvedForLP;
     }
     
-    
+    event liquidityPairCreated(address indexed lpAddress_, address dexAddress_, uint lpTokenAmount_);
     // step 6
     function createLiquidityPool() external returns(bool success) {
         // liquidity will be _fundingTokenAvail to _tokensForLiquidity ratio
@@ -645,21 +657,25 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         }
         _totalLPTokens = liquidityAmount;
         _availLPTokens = liquidityAmount;
+        _liquidityPairAddress = _getLiquidityPairAddress();
+        
+        emit liquidityPairCreated(_liquidityPairAddress, addressOfDex(), liquidityAmount);
         
         return true;
         
     }
     
+    event ILOFinalized(address caller_);
     // step 7
     function finalizeILO() external returns(bool success) {
         require(_liquidityPairCreated, "liquidity pair must be created first");
         // set liquidity pair address 
-        _liquidityPairAddress = _setLiquidityPairAddress();
         success = _setTimeLocks();
+        emit ILOFinalized(_msgSender());
     }
     
     
-    event WithdrawnProjectToken(address funder_, uint amount_);
+    event WithdrawnProjectToken(address indexed funder_, uint indexed amount_);
     
     function withdraw() external allowedToWithdraw returns(bool success) {
          _disallowWithdraw();
@@ -727,7 +743,8 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         
         proportionalRewardTokens = amtPer * reducedFunderFundingAmount;
     }
-
+    
+    event WithdrawnOnFailure(address indexed funder_, address indexed TokenAddr_, uint indexed amount_,  bool isAdmin);
     function withdrawOnFailure() external allowedToWithdraw returns(bool success) {
         require(ILOFailed(), "ILO not failed");
         _disallowWithdraw();
@@ -740,6 +757,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
             uint amount_ = _totalTokensSupplyControlled;
             _totalTokensSupplyControlled = 0;
             success = IERC20AndOwnable(_projectToken).approve(_msgSender(), amount_);
+            emit WithdrawnOnFailure(_msgSender(), _projectToken, amount_, true);
             
         }else{
             // if not admin send back funding token (nativ token like eth or ERC20 token)
@@ -753,10 +771,12 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
             if(_fundingToken == address(0)) {
                 // send native token to funder
                 (success, ) = _msgSender().call{value: amount_}('');
+                emit WithdrawnOnFailure(_msgSender(), address(0), amount_, false);
                 
             }else {
                 // or if funding token wasn't native, send ERC20 token
                 success = IERC20AndOwnable(_fundingToken).approve(_msgSender(), amount_);
+                emit WithdrawnOnFailure(_msgSender(), _fundingToken, amount_, false);
             }
         }
         
@@ -793,7 +813,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         _allowWithdraw();
     }
     
-    function _setLiquidityPairAddress() internal view returns(address liquidPair_) {
+    function _getLiquidityPairAddress() internal view returns(address liquidPair_) {
         
         if(address(0) == _fundingToken) {
             address WETH_ = IUniswapRouter(_addressOfDex).WETH();
@@ -805,6 +825,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         }
     }
     
+    event TimeLockSet(uint indexed projTokenLock_, uint indexed contribTokenLock_, uint indexed liquidityTokenLock_);
     function _setTimeLocks() internal returns(bool)  {
         require(!isTimeLockSet(), "Time lock already set");
         uint timeLockLengthX2 = _contribTimeLock * 2;
@@ -817,6 +838,8 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         _contribBlockLock = block.number + uint(_contribTimeLock / MINE_LEN);
         _liqPairTimeLock = block.timestamp + _liqPairLockLen;
         _liqPairBlockLock = block.number + uint(_liqPairLockLen / MINE_LEN);
+        
+        emit TimeLockSet(_projBlockLock, _contribBlockLock, _liqPairBlockLock);
         
         return true;
     

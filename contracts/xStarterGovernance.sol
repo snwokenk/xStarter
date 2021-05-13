@@ -190,6 +190,7 @@ contract xStarterGovernance is Context, Interaction {
         return true;
     }
     
+    event VoteCleaned(address indexed voter_)
     // cleans votes and unlocks any locked balance
     function cleanVotes(address voter_) public allowedToInteract returns (bool) {
         _disallowInteraction();
@@ -209,6 +210,7 @@ contract xStarterGovernance is Context, Interaction {
              }
          }
          _allowInteraction();
+         emit VoteCleaned(voter_);
          return true;
         
     }

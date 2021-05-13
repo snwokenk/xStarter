@@ -23,6 +23,7 @@ struct ILOProposal {
     address fundingToken;
     string tokenName;
     string tokenSymbol;
+    string infoURL;
     uint totalSupply;
     uint8 decimals; // set at 18
     uint8 percentOfTokensForILO; // (minimum 50%)
@@ -40,12 +41,12 @@ struct ILOProposal {
 // launched by user, directly deploying from launchpad increases the code size
 contract xStarterDeployer {
     bool initialized;
-    address LaunchPad = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
+    address allowedCaller = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266; // address of deployer
     
     function initialize(address launchPad_) external returns(bool) {
-        require(msg.sender == LaunchPad, 'Not authorized');
         require(!initialized, "already initialized");
-        LaunchPad = launchPad_;
+        require(msg.sender == allowedCaller, 'Not authorized');
+        allowedCaller = launchPad_;
         return true;
     }
     
@@ -109,6 +110,7 @@ contract xStarterLaunchPad is Ownable, Interaction{
     
     bool initialized;
     bool deploying;
+    address allowedCaller = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266; // address of deployer
     
     // min amount of tokens to have deposited 
     uint _depositPerProposal;
@@ -128,12 +130,16 @@ contract xStarterLaunchPad is Ownable, Interaction{
     
     ILOProposal[] private _ILOProposalArray;
 
-    function initialize(address xStarterToken_, address xStarterGovernance_, uint depositPerProposal_) external returns(bool) {
+    function initialize(address xStarterToken_, address xStarterGovernance_, address xStarterNFT_, uint depositPerProposal_) external returns(bool) {
         require(!initialized, "contract has already been initialized");
+         require(allowedCaller != address(0) && _msgSender() == allowedCaller, 'Not authorized');
         initialized = true;
+        allowedCaller = address(0);
+        
         
         _xStarterToken = xStarterToken_;
         _xStarterGovernance = xStarterGovernance_;
+        _xStarterNFT = xStarterNFT_;
         _depositPerProposal = depositPerProposal_;
         return true;
         
@@ -174,7 +180,7 @@ contract xStarterLaunchPad is Ownable, Interaction{
         
     }
     
-    
+    event TokensDeposited(address indexed caller_, uint indexed amount_);
     function depositApprovedToken() external allowedToInteract returns(bool success) {
         _disallowInteraction();
         uint approvedAmount = IERC20(_xStarterToken).allowance(_msgSender(), address(this));
@@ -183,9 +189,12 @@ contract xStarterLaunchPad is Ownable, Interaction{
         require(success,'not able to transfer approved tokens');
         _tokenDeposits[_msgSender()] = _tokenDeposits[_msgSender()].add(approvedAmount);
         _allowInteraction();
+        emit TokensDeposited(_msgSender(), approvedAmount);
         
         
     }
+    
+    event TokensWithdrawn(address indexed caller_, uint indexed amount_);
     function withdrawTokens(uint amount_) external allowedToInteract returns(bool success) {
         require(depositBalance(_msgSender()) >= amount_, 'Not enough funds');
         require(_canWithdraw(amount_), 'Must maintain a minimum deposit until proposal is completed');
@@ -197,17 +206,18 @@ contract xStarterLaunchPad is Ownable, Interaction{
         
         success = IERC20(_xStarterToken).approve(_msgSender(), amount_);
         _allowInteraction();
+        emit TokensWithdrawn(_msgSender(), amount_);
     }
     
     
-
-    
-    function createILOProposal(string memory tokenName_, string memory tokenSymbol_, uint totalSupply_, uint8 percentOfTokensForILO_, address fundingToken_) external onlyEnoughDeposits returns(bool success) {
-        
-        success = _createILOProposal(tokenName_, tokenSymbol_, totalSupply_, percentOfTokensForILO_, fundingToken_);
+    event ILOProposalCreated(address indexed proposer, string indexed tokenSymbol_, string indexed tokenName_, uint totalSupply_);
+    function createILOProposal(string memory tokenName_, string memory tokenSymbol_, string memory infoURL_, uint totalSupply_, uint8 percentOfTokensForILO_, address fundingToken_) external onlyEnoughDeposits returns(bool success) {
+        success = _createILOProposal(tokenName_, tokenSymbol_, infoURL_, totalSupply_, percentOfTokensForILO_, fundingToken_);
+        emit ILOProposalCreated(_msgSender(), tokenSymbol_, tokenName_, totalSupply_);
         
     }
     
+    event ILODeployed(string indexed tokenSymbol_, address indexed caller_, address indexed ILO);
     function deployILOContract(string memory tokenSymbol_, address ILOAdmin_) external allowedToInteract returns(bool success) {
         // anyone can deploy an ILO, but if ILOAdmin_ != ILO proposer then, then the msg.sender must be the ILO proposer
         // ILO proposer also gets the NFT rewards, so it makes no sense for anyone but the 
@@ -217,11 +227,12 @@ contract xStarterLaunchPad is Ownable, Interaction{
         
         bool isApproved = iXstarterGovernance(_xStarterGovernance).ILOApproved(tokenSymbol_);
         require(isApproved, "ILO has not been approved in the governance contract");
-        
-        success = _deployILO(tokenSymbol_, ILOAdmin_);
+        address ILO;
+        (success, ILO) = _deployILO(tokenSymbol_, ILOAdmin_);
         require(success, "Not able to deploy ILO");
         
         _allowInteraction();
+        emit ILODeployed(tokenSymbol_, _msgSender(), ILO);
         
     }
     
@@ -236,7 +247,7 @@ contract xStarterLaunchPad is Ownable, Interaction{
         return _tokenDeposits[_msgSender()].sub(amount_) >= _depositPerProposal * _numOfProposals[_msgSender()];
     }
     
-    function _deployILO(string memory tokenSymbol_, address ILOAdmin_) internal returns (bool){
+    function _deployILO(string memory tokenSymbol_, address ILOAdmin_) internal returns (bool, address){
         
         ILOProposal storage proposal = _ILOProposals[tokenSymbol_];
         proposal.isOpen = false;
@@ -264,12 +275,12 @@ contract xStarterLaunchPad is Ownable, Interaction{
         );
         proposal.ILOAddress = ILO;
         
-        return true;
+        return (true, ILO);
         
     }
     
-    event ILOProposalCreated(address indexed proposer, string indexed tokenSymbol_, string indexed tokenName_, uint totalSupply_);
-    function _createILOProposal(string memory tokenName_, string memory tokenSymbol_, uint totalSupply_, uint8 percentOfTokensForILO_, address fundingToken_) internal returns(bool) {
+    
+    function _createILOProposal(string memory tokenName_, string memory tokenSymbol_, string memory infoURL_, uint totalSupply_, uint8 percentOfTokensForILO_, address fundingToken_) internal returns(bool) {
         
         
         // bytes32 memory proposalHash = keccak256(abi.encode(tokenName_, tokenSymbol_, totalSupply_, percentOfTokensForILO_, _msgSender()));
@@ -280,6 +291,7 @@ contract xStarterLaunchPad is Ownable, Interaction{
             fundingToken_,
             tokenName_, 
             tokenSymbol_, 
+            infoURL_,
             totalSupply_, 
             18, 
             percentOfTokensForILO_, 
@@ -292,8 +304,6 @@ contract xStarterLaunchPad is Ownable, Interaction{
             false,
             address(0)
         );
-        
-        emit ILOProposalCreated(_msgSender(), tokenSymbol_, tokenName_, totalSupply_);
         
         return true;
         
