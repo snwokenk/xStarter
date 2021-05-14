@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 
 
-contract XStarterToken is Ownable, ERC777, ERC777NoReceiveRecipient, ERC777NoSendSender {
+contract xStarterToken is Ownable, ERC777, ERC777NoReceiveRecipient, ERC777NoSendSender {
     constructor(
         uint256 initialSupply,
         address[] memory defaultOperators

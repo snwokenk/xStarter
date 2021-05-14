@@ -10,12 +10,14 @@ function sleep(ms) {
 // this will test out the xStarter ILO reg
 describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process', function() {
     this.slow(240000);
+    const zeroAddress = "0x0000000000000000000000000000000000000000";
     let xStarterLaunchPadFactory;
     let xStarterLaunchPadInst;
     let xStarterGovernanceFactory;
     let xStarterGovernanceInst;
     let xStarterTokenFactory;
     let xStarterTokenInst;
+
     let owner;
     let addr1;
     let addr2;
@@ -24,11 +26,18 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
     beforeEach(async function() {
         // deploy xStarterToken
         if(!xStarterTokenInst){
-            xStarterTokenFactory = await ethers.getContractFactory("contracts/xStarterToken.sol:XStarterToken")
+            xStarterTokenFactory = await ethers.getContractFactory("contracts/xStarterToken.sol:xStarterToken")
             xStarterTokenInst = await xStarterTokenFactory.deploy(
                 BigNumber.from('500000000'),
                 []
             )
+            // deploy governance
+            xStarterGovernanceFactory = await ethers.getContractFactory("xStarterGovernance")
+            xStarterGovernanceInst = await xStarterGovernanceFactory.deploy()
+
+            // deploy governance
+            xStarterLaunchPadFactory = await ethers.getContractFactory("xStarterLaunchPad")
+            xStarterLaunchPadInst = await xStarterLaunchPadFactory.deploy()
         }   
     })
 
