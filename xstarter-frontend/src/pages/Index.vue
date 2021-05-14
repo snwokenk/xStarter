@@ -4,6 +4,7 @@
 <!--      alt="Quasar logo"-->
 <!--      src="~assets/quasar-logo-full.svg"-->
 <!--    >-->
+    <q-btn label="Sam" @click="checkIt" />
     <div class="display-container row q-gutter-y-lg q-gutter-x-lg justify-center q-py-lg q-my-md">
       <LiquidityOfferingDisplay class="display-card col-md-10 col-lg-5"  :liquidity-offering="listOfLiquidityOffering"/>
 <!--      <LiquidityOfferingDisplay class="display-card col-md-10 col-lg-5"  :liquidity-offering="listOfLiquidityOffering"/>-->
@@ -18,14 +19,19 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue';
+import {defineComponent, inject, provide} from 'vue';
 import LiquidityOfferingDisplay from "components/CardDisplays/LiquidityOfferingDisplay";
 
 export default defineComponent({
   name: 'PageIndex',
   components: {LiquidityOfferingDisplay},
   setup() {
-    return {}
+    const getProvider = inject('$getProvider')
+    const getSigner = inject('$getSigner')
+    const getILOContract = inject('$getILOContract')
+    const getConnectedAndPermissioned = inject('$getConnectedAndPermissioned')
+    console.log('provider is ', getProvider())
+    return {getProvider, getSigner, getILOContract, getConnectedAndPermissioned}
   },
   computed: {
     listOfLiquidityOffering() {
@@ -34,6 +40,11 @@ export default defineComponent({
         endDate: '1621221269',
         logo_url: '/xstarter_blue2.jpg'
       }
+    }
+  },
+  methods: {
+    checkIt() {
+      console.log('provider', this.getProvider())
     }
   }
 })

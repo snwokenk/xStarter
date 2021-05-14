@@ -1,7 +1,7 @@
-import { store } from 'quasar/wrappers'
-import { createStore } from 'vuex'
+import {store} from 'quasar/wrappers'
+import {createStore} from 'vuex'
 
-// import example from './module-example'
+import blockchain from './blockchain.module'
 
 /*
  * If not building with SSR mode, you can
@@ -13,15 +13,13 @@ import { createStore } from 'vuex'
  */
 
 export default store(function (/* { ssrContext } */) {
-  const Store = createStore({
+  return createStore({
     modules: {
-      // example
+      blockchain
     },
 
     // enable strict mode (adds overhead!)
     // for dev mode and --debug builds only
     strict: process.env.DEBUGGING
   })
-
-  return Store
 })

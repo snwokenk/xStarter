@@ -12,7 +12,7 @@
         </q-toolbar-title>
         <div class="q-gutter-x-sm">
           <q-btn rounded outline size="md" :label="connectBtnLabel"  :icon="metamaskInstalled.value ? undefined : 'error_outline'" :color="metamaskInstalled.value ? darkLightText: 'negative'" :disable="!metamaskInstalled.value" @click="connectEthereum"/>
-          <q-btn outline :color="darkLightText" label="sign"  @click="callContract"/>
+          <q-btn outline :color="darkLightText" label="sign"  @click="signTx"/>
           <q-btn round flat :color="darkLightText" :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'" @click="setDarkMode"/>
         </div>
       </q-toolbar>
@@ -52,7 +52,7 @@
 // https://docs.metamask.io/guide/ethereum-provider.html#methods
 // https://ethereum.stackexchange.com/questions/97693/what-is-the-correct-way-to-deploy-a-react-app-that-uses-metamask
 
-import { defineComponent, ref, watch, onMounted } from 'vue'
+import { defineComponent, ref, watch, onMounted, provide } from 'vue'
 import { useQuasar } from 'quasar'
 import { ethers } from 'boot/ethers'
 import detectEthereumProvider from '@metamask/detect-provider';
@@ -75,6 +75,7 @@ export default defineComponent({
 
 
     let provider = undefined
+
     let signer = undefined
     let ILOContract = undefined
 
@@ -103,6 +104,10 @@ export default defineComponent({
         signer = provider.getSigner()
         ILOContract = await new ethers.Contract(ILO_ADDRESS, data.abi, signer)
         console.log('is permssioned 1', connectedAndPermissioned.value, await provider.getBlockNumber())
+      }else {
+        provider = undefined
+        signer = undefined
+        ILOContract = undefined
       }
       // checks to see if any account has permission
       ethereumProvider.value.on('accountsChanged', checkExisting)
@@ -138,12 +143,24 @@ export default defineComponent({
     const getProvider = () => {
       return provider
     }
+    provide('$getProvider', getProvider)
+
     const getSigner = () => {
       return signer
     }
+    provide('$getSigner', getSigner)
+
     const getILOContract = () => {
       return  ILOContract
     }
+    provide('$getILOContract', getILOContract)
+
+    const getConnectedAndPermissioned = () => {
+      return connectedAndPermissioned
+    }
+    provide('$getConnectedAndPermissioned', getConnectedAndPermissioned)
+
+
     return {
       setDarkMode,
       connectEthereum,
@@ -176,7 +193,7 @@ export default defineComponent({
   },
   methods: {
     async signTx() {
-      console.log('this signer', this.getSigner(), this.ethereumProvider.selectedAddress)
+      console.log('this signer', this.getSigner(), this.getProvider(), this.ethereumProvider.selectedAddress)
       console.log('connected accounts', this.connectedAccounts)
       const resp = await this.getProvider().getBalance('0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc');
       // const resp = await this.getSigner().sendTransaction({
@@ -203,7 +220,7 @@ export default defineComponent({
     }
   },
   mounted() {
-
+    console.log('get provider', this.getProvider())
   }
 })
 </script>
