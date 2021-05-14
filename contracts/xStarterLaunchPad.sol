@@ -107,10 +107,10 @@ contract xStarterLaunchPad is Ownable, Interaction{
         _;
     }
     
-    
-    bool initialized;
-    bool deploying;
-    address allowedCaller = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266; // address of deployer
+    bool private _isProd;
+    bool _initialized;
+    bool _deploying;
+    address _allowedCaller = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266; // address of deployer
     
     // min amount of tokens to have deposited 
     uint _depositPerProposal;
@@ -130,11 +130,12 @@ contract xStarterLaunchPad is Ownable, Interaction{
     
     ILOProposal[] private _ILOProposalArray;
 
-    function initialize(address xStarterToken_, address xStarterGovernance_, address xStarterNFT_, uint depositPerProposal_) external returns(bool) {
-        require(!initialized, "contract has already been initialized");
-         require(allowedCaller != address(0) && _msgSender() == allowedCaller, 'Not authorized');
-        initialized = true;
-        allowedCaller = address(0);
+    function initialize(address xStarterToken_, address xStarterGovernance_, address xStarterNFT_, uint depositPerProposal_, bool isProd_) external returns(bool) {
+        require(!_initialized, "contract has already been initialized");
+        require(_allowedCaller != address(0) && _msgSender() == _allowedCaller, 'Not authorized');
+        _initialized = true;
+        _allowedCaller = address(0);
+        _isProd = isProd_;
         
         
         _xStarterToken = xStarterToken_;
@@ -224,8 +225,12 @@ contract xStarterLaunchPad is Ownable, Interaction{
         _disallowInteraction();
         
         require(!_ILOProposals[tokenSymbol_].isDeployed, "ILO already deployed or being deployed");
-        
-        bool isApproved = iXstarterGovernance(_xStarterGovernance).ILOApproved(tokenSymbol_);
+        bool isApproved;
+        if(_isProd) {
+            isApproved = iXstarterGovernance(_xStarterGovernance).ILOApproved(tokenSymbol_);
+        }else {
+            isApproved = true;
+        }
         require(isApproved, "ILO has not been approved in the governance contract");
         address ILO;
         (success, ILO) = _deployILO(tokenSymbol_, ILOAdmin_);
