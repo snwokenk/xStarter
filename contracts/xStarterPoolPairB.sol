@@ -68,7 +68,20 @@ interface IUniswapFactory {
   function getPair(address tokenA, address tokenB) external view returns (address pair);
 }
 
-
+struct Info {
+        uint8 _percentOfTokensForILO;
+        uint24 _dexDeadlineLength;
+        uint48 _contribTimeLock;
+        uint _minPerSwap;
+        
+        uint _minFundPerAddr;
+        uint _maxFundPerAddr;
+        uint _minFundingTokenRequired;
+        uint _maxFundingToken;
+        address _fundingToken;
+        address _addressOfDex;
+        address _addressOfDexFactory;
+}
 
 
 contract ProjectBaseToken is Context, ERC777, ERC777NoReceiveRecipient, ERC777NoSendSender {
@@ -154,9 +167,9 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     
     event TokenCreatedByXStarterPoolPair(address indexed TokenAddr_, address indexed PoolPairAddr_, address indexed Admin_, uint timestamp_);
     event TokenSwapped(address indexed funder_, uint indexed tokensDesired, uint indexed tokensReceived_, uint tokensForLiq_);
-    address private _addressOfDex;
-    address private _addressOfDexFactory;
-    uint24 private _dexDeadlineLength;
+    Info private i;
+    // address private _addressOfDex;
+    // address private _addressOfDexFactory;
     uint _decimals = 18;
     
     // stores address of the project's token
@@ -174,8 +187,8 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     
     // this is set up by the launchpad, it enforces what the project told the community
     // if the project said 70% of tokens will be offered in the ILO. This will be set in the constructor.
-    address _fundingToken; // if 0 then use nativeTokenSwap
-    uint8 _fundingTokenDecimals; 
+    // address _fundingToken; // if 0 then use nativeTokenSwap
+    // uint8 _fundingTokenDecimals; 
     // address of  dex liquidity token pair, this is the pair that issues liquidity tokens from uniswap or deriivatives
     address _liquidityPairAddress; 
     uint private _totalLPTokens; // amount of liquidity
@@ -200,16 +213,14 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     // the length in seconds of between block timestamp till timestamp when contributors can receive their tokens 
     //Minimum is 14 days equivalent or 1,209,600 seconds
     // also project owners tokens are timelocked for either double the timelock of contributors or an additional 2 months
-    uint private _contribTimeLock;
     uint private _contribBlockLock;
     
     
-    uint private _minFundingTokenRequired;
-    uint private _maxFundingToken;
-    uint private _minFundPerAddr = 1000000000000 wei;
-    uint private _maxFundPerAddr;
+    // uint private _minFundingTokenRequired;
+    // uint private _maxFundingToken;
+    // uint private _minFundPerAddr = 1000000000000 wei;
+    // uint private _maxFundPerAddr;
     // Minimum is 1 gwei, this is a really small amount and should only be overriden by a larger amount
-    uint private _minPerSwap = 1000000000 wei;
     SwapInfo private _swapRatio;
     
     
@@ -230,7 +241,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     
     // total funding tokens
     uint _fundingTokenTotal;
-    // total funding tokens available. For non capital raising will be the same as _fundingTokenTotal until liquidity pool is created
+    // total funding tokens available. For non capital raising will be the same as i._fundingTokenTotal until liquidity pool is created
     uint _fundingTokenAvail;
     
     // utc timestamp
@@ -277,30 +288,36 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
             // require(percentOfTokensForILO_ > 0 && percentOfTokensForILO_ <= 100, "percent of tokens must be between 1 and 100");
             // require(projectTokenGive_ > 0 && fundTokenReceive_ > 0, "swap ratio is zero ");
             // require(minFundingTokenRequired_ > 0, "No softcap set");
+            i._minPerSwap = 1000000000 wei;
+            i._minFundPerAddr = 1000000000000 wei;
             _percentOfTotalTokensForILO = percentOfTokensForILO_;
-            _fundingToken = fundingToken_;
-            _dexDeadlineLength = dexDeadlineLength_;
+            i._fundingToken = fundingToken_;
+            i._dexDeadlineLength = dexDeadlineLength_;
             // todo; in final production contract should be not less than 1209600 seconds or 14 days
-            _contribTimeLock = contribTimeLock_ < 60 ? 60 : contribTimeLock_;
-            _addressOfDex = addressOfDex_;
-            _addressOfDexFactory = addressOfDexFactory_;
+            i._contribTimeLock = contribTimeLock_ < 60 ? 60 : contribTimeLock_;
+            i._addressOfDex = addressOfDex_;
+            i._addressOfDexFactory = addressOfDexFactory_;
             // if provided is less than default take default
-            _minPerSwap = _minPerSwap > minPerSwap_ ? _minPerSwap : minPerSwap_;
+            i._minPerSwap = i._minPerSwap > minPerSwap_ ? i._minPerSwap : minPerSwap_;
             // todo require a minimum fund per address possible 1000 gwei or 1000000000000 wei
-            _minFundPerAddr = minFundPerAddr_ < _minFundPerAddr ? _minFundPerAddr : minFundPerAddr_;
+            i._minFundPerAddr = minFundPerAddr_ < i._minFundPerAddr ? i._minFundPerAddr : minFundPerAddr_;
             // 0 means not max set
-            _maxFundPerAddr = maxFundPerAddr_ < _minFundPerAddr ? 0 : maxFundPerAddr_;
-            //_contribTimeLock = contribTimeLock_ < 1209600 ? 1209600 : contribTimeLock_;
+            i._maxFundPerAddr = maxFundPerAddr_ < i._minFundPerAddr ? 0 : maxFundPerAddr_;
+            //i._contribTimeLock = contribTimeLock_ < 1209600 ? 1209600 : contribTimeLock_;
             
-            _minFundingTokenRequired = minFundingTokenRequired_;
-            _maxFundingToken = maxFundingToken_;
+            i._minFundingTokenRequired = minFundingTokenRequired_;
+            i._maxFundingToken = maxFundingToken_;
             
         }
+    
+    function getFullInfo() external view returns(Info memory) {
+        return i;
+    }
     function addressOfDex() public view returns(address) {
-        return _addressOfDex;
+        return i._addressOfDex;
     }
     function addressOfDexFactory() public view returns(address) {
-        return _addressOfDexFactory;
+        return i._addressOfDexFactory;
     }
     function amountRaised() public view returns(uint) {
         return _fundingTokenTotal;
@@ -309,16 +326,16 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         return _availLPTokens;
     }
     function softcap() public view returns(uint) {
-        return _minFundingTokenRequired;
+        return i._minFundingTokenRequired;
     }
     function hardcap() public view returns(uint) {
-        return _maxFundingToken;
+        return i._maxFundingToken;
     }
     function minSpend() public view returns(uint) {
-        return _minFundPerAddr;
+        return i._minFundPerAddr;
     }
     function maxSpend() public view returns(uint) {
-        return _maxFundPerAddr;
+        return i._maxFundPerAddr;
     }
     function liquidityPairAddress() public view returns(address) {
         return _liquidityPairAddress;
@@ -410,14 +427,14 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     }
     
     function fundingToken() public view returns (address) {
-        return _fundingToken;
+        return i._fundingToken;
     }
     
     // different
     function isEventOpen() public view returns (bool isOpen_) {
         uint48 currentTime = uint48(block.timestamp);
         
-        if(currentTime >= startTime() && currentTime < endTime() && amountRaised() < _maxFundingToken && _isSetup) {
+        if(currentTime >= startTime() && currentTime < endTime() && amountRaised() < i._maxFundingToken && _isSetup) {
             isOpen_ = true;
         }
         
@@ -427,7 +444,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     function isEventDone() public view returns (bool isOpen_) {
         uint48 currentTime = uint48(block.timestamp);
         
-        if(_isSetup && ( currentTime >= endTime() )|| ( _maxFundingToken > 0 && amountRaised() == _maxFundingToken )) {
+        if(_isSetup && ( currentTime >= endTime() )|| ( i._maxFundingToken > 0 && amountRaised() == i._maxFundingToken )) {
             isOpen_ = true;
         }
         
@@ -535,8 +552,8 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     
     // functions for taking part in ILO
     function contributeNativeToken() payable notCurrentlyFunding onlyOpen external returns(bool){
-        require(_fundingToken == address(0), "please use contributeFundingToken");
-        require(msg.value > _minPerSwap, "No value Sent");
+        require(i._fundingToken == address(0), "please use contributeFundingToken");
+        require(msg.value > i._minPerSwap, "No value Sent");
         _disallowFunding();
         _contribute(msg.value, _msgSender());
         _allowFunding();
@@ -547,7 +564,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     
     // should be called after approving amount of token
     function contributeFundingToken() notCurrentlyFunding  onlyOpen external returns(bool) {
-        require(_fundingToken != address(0), "please use nativeTokenSwap.");
+        require(i._fundingToken != address(0), "please use nativeTokenSwap.");
         _disallowFunding();
         uint amount_ = _retrieveApprovedToken();
         _contribute(amount_, _msgSender());
@@ -559,26 +576,26 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     function _contribute(uint fundingTokenAmount_, address funder_) internal {
         _fundingTokenTotal = _fundingTokenTotal.add(fundingTokenAmount_);
         _fundingTokenAvail = _fundingTokenAvail.add(fundingTokenAmount_);
-        require(_fundingTokenTotal <= _maxFundingToken, "exceeds hard carp");
+        require(_fundingTokenTotal <= i._maxFundingToken, "exceeds hard carp");
          // add to msg.sender token funder balance
         FunderInfo storage funder = _funders[funder_];
         funder.fundingTokenAmount = funder.fundingTokenAmount.add(fundingTokenAmount_);
         
         // funding can be less than Minimum if max - total < minimum
-        uint amountLeft = _maxFundingToken - _fundingTokenTotal;
+        uint amountLeft = i._maxFundingToken - _fundingTokenTotal;
         
         // funding amount should be greater or equal to Minimum OR if not then available amount should be less than Minimum and fundingTokenAmount equals to amount left
-        require((funder.fundingTokenAmount >= _minFundPerAddr) || (amountLeft < _minFundPerAddr && fundingTokenAmount_ == amountLeft ) , "Minimum amount not met");
+        require((funder.fundingTokenAmount >= i._minFundPerAddr) || (amountLeft < i._minFundPerAddr && fundingTokenAmount_ == amountLeft ) , "Minimum amount not met");
         // if max is set then make sure not contributing max
-        require(funder.fundingTokenAmount <= _maxFundPerAddr || _maxFundPerAddr == 0, "maximum exceeded");
+        require(funder.fundingTokenAmount <= i._maxFundPerAddr || i._maxFundPerAddr == 0, "maximum exceeded");
     }
     
     
     function _retrieveApprovedToken() internal returns(uint allowedAmount_) {
         address ownAddress = address(this);
-        IERC20AndOwnable existingToken = IERC20AndOwnable(_fundingToken);
+        IERC20AndOwnable existingToken = IERC20AndOwnable(i._fundingToken);
         allowedAmount_ = existingToken.allowance(_msgSender(), ownAddress);
-        require(allowedAmount_ > _minPerSwap, "Amount must be greater than 0");
+        require(allowedAmount_ > i._minPerSwap, "Amount must be greater than 0");
         bool success = existingToken.transferFrom(_msgSender(), ownAddress, allowedAmount_);
         require(success, "not able to retrieve approved tokens of funding token");
         return allowedAmount_;
@@ -606,7 +623,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     function validateILO() external returns(bool) {
         require(isEventDone() && !_ILOValidated, "ILO not yet done OR already validated");
         // uint minNeeded = uint(_totalTokensILO * _percentRequiredTokenPurchase / 100);
-        _ILOSuccess = amountRaised() >= _minFundingTokenRequired;
+        _ILOSuccess = amountRaised() >= i._minFundingTokenRequired;
         _ILOValidated = true;
         emit ILOValidated(_msgSender(), amountRaised(),  _ILOSuccess,  _totalTokensILO);
         
@@ -621,15 +638,15 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     function approveTokensForLiquidityPair() external returns(bool) {
         
         require(_ILOValidated && !ILOFailed(), "You must first validate ILO"); 
-        require(address(0) != _addressOfDex, "dex zero addr");
+        require(address(0) != i._addressOfDex, "dex zero addr");
         require(!_approvedForLP, "approved tokens for liquidity already called");
         uint amountProjectToken = _tokensForLiquidity;
         
-        if(address(0) == _fundingToken) {
-            _approvedForLP = _callApproveOnProjectToken(_addressOfDex, amountProjectToken);
+        if(address(0) == i._fundingToken) {
+            _approvedForLP = _callApproveOnProjectToken(i._addressOfDex, amountProjectToken);
         } else {
             uint amountERC20 = _fundingTokenAvail;
-            _approvedForLP =  _callApproveOnProjectToken(_addressOfDex, amountProjectToken) && _callApproveOnFundingToken(_addressOfDex, amountERC20);
+            _approvedForLP =  _callApproveOnProjectToken(i._addressOfDex, amountProjectToken) && _callApproveOnFundingToken(i._addressOfDex, amountERC20);
         }
         
         // approve project token to be sent to dex. Spender is dex IUniswapRouter address (honeyswap, uniswap etc)
@@ -641,7 +658,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     event liquidityPairCreated(address indexed lpAddress_, address dexAddress_, uint lpTokenAmount_);
     // step 6
     function createLiquidityPool() external returns(bool success) {
-        // liquidity will be _fundingTokenAvail to _tokensForLiquidity ratio
+        // liquidity will be i._fundingTokenAvail to _tokensForLiquidity ratio
         require(_ILOValidated && !ILOFailed(), "You must first validate ILO");
         require(_approvedForLP, "xStarterPair: TokenApprovalFail");
         require(!_liquidityPairCreated, "Liquidity pair already created");
@@ -650,7 +667,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         uint liquidityAmount;
         // save current amount to be used later to calculate each individual contributors share of project tokens
         _amountForProjTokenCalc = _tokensForLiquidity;
-        if(address(0) == _fundingToken) {
+        if(address(0) == i._fundingToken) {
             liquidityAmount = _createLiquidityPairETH();
         } else {
             liquidityAmount = _createLiquidityPairERC20();
@@ -702,15 +719,15 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         uint tokensForContributors = _totalTokensILO - _amountForProjTokenCalc;
         balance = _getProportionAmt(tokensForContributors, _fundingTokenTotal, _funders[funder_].fundingTokenAmount);
         // avoid solidity rounding fractions to 0
-        // if(tokensForContributors > _fundingTokenTotal) {
+        // if(tokensForContributors > i._fundingTokenTotal) {
             
-        //     amtPer = tokensForContributors / _fundingTokenTotal;
+        //     amtPer = tokensForContributors / i._fundingTokenTotal;
         //     balance  = _funders[funder_].fundingTokenAmount * amtPer;
         // }else {
-        //     amtPer = _fundingTokenTotal / tokensForContributors;
+        //     amtPer = i._fundingTokenTotal / tokensForContributors;
         //     balance  = _funders[funder_].fundingTokenAmount / amtPer;
         // }
-        // uint amtPer = _fundingTokenTotal.div(10 ** 18);
+        // uint amtPer = i._fundingTokenTotal.div(10 ** 18);
        
         // lpPer * fundingTokenAmount to get lp tokens to send
        
@@ -724,11 +741,11 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         balance = _getProportionAmt(_totalLPTokens, _fundingTokenTotal, _funders[funder_].fundingTokenAmount);
         // uint amtPer;
         // // avoid solidity rounding fractions to 0
-        // if(_totalLPTokens > _fundingTokenTotal) {
-        //     amtPer = _totalLPTokens / _fundingTokenTotal;
+        // if(_totalLPTokens > i._fundingTokenTotal) {
+        //     amtPer = _totalLPTokens / i._fundingTokenTotal;
         //     balance  = _funders[funder_].fundingTokenAmount * amtPer;
         // }else {
-        //     amtPer = _fundingTokenTotal / _totalLPTokens;
+        //     amtPer = i._fundingTokenTotal / _totalLPTokens;
         //     balance  = _funders[funder_].fundingTokenAmount / amtPer;
         // }
         
@@ -768,15 +785,15 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
             funder.fundingTokenAmount = 0;
             funder.projectTokenAmount = 0;
             _fundingTokenAvail = _fundingTokenAvail.sub(amount_);
-            if(_fundingToken == address(0)) {
+            if(i._fundingToken == address(0)) {
                 // send native token to funder
                 (success, ) = _msgSender().call{value: amount_}('');
                 emit WithdrawnOnFailure(_msgSender(), address(0), amount_, false);
                 
             }else {
                 // or if funding token wasn't native, send ERC20 token
-                success = IERC20AndOwnable(_fundingToken).approve(_msgSender(), amount_);
-                emit WithdrawnOnFailure(_msgSender(), _fundingToken, amount_, false);
+                success = IERC20AndOwnable(i._fundingToken).approve(_msgSender(), amount_);
+                emit WithdrawnOnFailure(_msgSender(), i._fundingToken, amount_, false);
             }
         }
         
@@ -815,12 +832,12 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     
     function _getLiquidityPairAddress() internal view returns(address liquidPair_) {
         
-        if(address(0) == _fundingToken) {
-            address WETH_ = IUniswapRouter(_addressOfDex).WETH();
-            liquidPair_ = IUniswapFactory(_addressOfDexFactory).getPair(WETH_, _projectToken);
+        if(address(0) == i._fundingToken) {
+            address WETH_ = IUniswapRouter(i._addressOfDex).WETH();
+            liquidPair_ = IUniswapFactory(i._addressOfDexFactory).getPair(WETH_, _projectToken);
             require(address(0) != liquidPair_, "Liquidity Pair Should Be Created But Hasn't");
         } else {
-            liquidPair_ = IUniswapFactory(_addressOfDexFactory).getPair(_fundingToken, _projectToken);
+            liquidPair_ = IUniswapFactory(i._addressOfDexFactory).getPair(i._fundingToken, _projectToken);
             require(address(0) != liquidPair_, "Liquidity Pair Should Be Created But Not Created");
         }
     }
@@ -828,14 +845,14 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     event TimeLockSet(uint indexed projTokenLock_, uint indexed contribTokenLock_, uint indexed liquidityTokenLock_);
     function _setTimeLocks() internal returns(bool)  {
         require(!isTimeLockSet(), "Time lock already set");
-        uint timeLockLengthX2 = _contribTimeLock * 2;
+        uint timeLockLengthX2 = i._contribTimeLock * 2;
         // if timelock greater than 60 days in seconds, set to length of contributor timelock + 30 days
-        uint timeLen = timeLockLengthX2 > 5184000 ? _contribTimeLock + 2592000 : timeLockLengthX2;
+        uint timeLen = timeLockLengthX2 > 5184000 ? i._contribTimeLock + 2592000 : timeLockLengthX2;
         
         _projTimeLock = block.timestamp + timeLen;
         _projBlockLock = block.number + uint(timeLen / MINE_LEN);
-        _contribTimeStampLock = block.timestamp + _contribTimeLock;
-        _contribBlockLock = block.number + uint(_contribTimeLock / MINE_LEN);
+        _contribTimeStampLock = block.timestamp + i._contribTimeLock;
+        _contribBlockLock = block.number + uint(i._contribTimeLock / MINE_LEN);
         _liqPairTimeLock = block.timestamp + _liqPairLockLen;
         _liqPairBlockLock = block.number + uint(_liqPairLockLen / MINE_LEN);
         
@@ -850,22 +867,22 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     // step 6a
     function _createLiquidityPairETH() internal returns(uint liquidityTokens_) {
         
-        //require(address(0) == _fundingToken, "xStarterPair: FundingTokenError");
+        //require(address(0) == i._fundingToken, "xStarterPair: FundingTokenError");
         uint amountETH = _fundingTokenAvail;
         uint amountProjectToken = _tokensForLiquidity;
         
         
         // approve project token to be sent to dex. Spender is dex IUniswapRouter address (honeyswap, uniswap etc)
-        //bool approved_ = _callApproveOnProjectToken(_addressOfDex, amountProjectToken);
+        //bool approved_ = _callApproveOnProjectToken(i._addressOfDex, amountProjectToken);
        
         
-        (uint amountTokenInPool, uint amountETHInPool, uint amountliquidityToken) = IUniswapRouter(_addressOfDex).addLiquidityETH{value: amountETH}(
+        (uint amountTokenInPool, uint amountETHInPool, uint amountliquidityToken) = IUniswapRouter(i._addressOfDex).addLiquidityETH{value: amountETH}(
             _projectToken,
             amountProjectToken,
             amountProjectToken,
             amountETH,
             address(this),
-            block.timestamp + _dexDeadlineLength
+            block.timestamp + i._dexDeadlineLength
             );
         
         liquidityTokens_ = amountliquidityToken;
@@ -881,7 +898,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     // step 6b
     function _createLiquidityPairERC20() internal returns(uint liquidityTokens_) {
         
-        require(address(0) != _fundingToken, "xStarterPair: FundingTokenError");
+        require(address(0) != i._fundingToken, "xStarterPair: FundingTokenError");
         //require(_approvedForLP, "xStarterPair: TokenApprovalFail, call syncBalances before calling again");
         
         uint amountERC20 = _fundingTokenAvail;
@@ -889,21 +906,21 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         
         
         // approve project token to be sent to dex. Spender is dex IUniswapRouter address (honeyswap, uniswap etc)
-        // bool approvedA_ = _callApproveOnProjectToken(_addressOfDex, amountProjectToken);
-        // bool approvedB_ = _callApproveOnFundingToken(_addressOfDex, amountERC20);
+        // bool approvedA_ = _callApproveOnProjectToken(i._addressOfDex, amountProjectToken);
+        // bool approvedB_ = _callApproveOnFundingToken(i._addressOfDex, amountERC20);
         
         
         //require(approvedA_ && approvedB_, "xStarterPair: TokenApprovalFail, call syncBalances before calling again");
         
-        (uint amountTokenInPool, uint amountETHInPool, uint amountliquidityToken) = IUniswapRouter(_addressOfDex).addLiquidity(
+        (uint amountTokenInPool, uint amountETHInPool, uint amountliquidityToken) = IUniswapRouter(i._addressOfDex).addLiquidity(
             _projectToken,
-            _fundingToken,
+            i._fundingToken,
             amountProjectToken,
             amountERC20,
             amountProjectToken,
             amountERC20,
             address(this),
-            block.timestamp + _dexDeadlineLength
+            block.timestamp + i._dexDeadlineLength
             );
         
         _fundingTokenAvail = 0;
@@ -923,7 +940,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     }
     
     function _callApproveOnFundingToken(address spender_, uint amount_) internal returns(bool success) {
-        success = IERC20(_fundingToken).approve(spender_, amount_);
+        success = IERC20(i._fundingToken).approve(spender_, amount_);
         
     }
     // IERC777Recipient implementation
