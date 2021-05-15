@@ -41,7 +41,7 @@ struct ILOProposal {
 // launched by user, directly deploying from launchpad increases the code size
 contract xStarterDeployer {
     bool initialized;
-    address allowedCaller = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266; // address of deployer
+    address public allowedCaller = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266; // address of deployer
     
     function initialize(address launchPad_) external returns(bool) {
         require(!initialized, "already initialized");
@@ -130,7 +130,7 @@ contract xStarterLaunchPad is Ownable, Interaction{
     
     ILOProposal[] private _ILOProposalArray;
 
-    function initialize(address xStarterGovernance_, address xStarterToken_, address xStarterNFT_, address _xStarterDeployer, uint depositPerProposal_, bool isProd_) external returns(bool) {
+    function initialize(address xStarterGovernance_, address xStarterToken_, address xStarterNFT_, address xStarterDeployer_, uint depositPerProposal_, bool isProd_) external returns(bool) {
         require(!_initialized, "contract has already been initialized");
         require(_allowedCaller != address(0) && _msgSender() == _allowedCaller, 'Not authorized');
         _initialized = true;
@@ -141,9 +141,13 @@ contract xStarterLaunchPad is Ownable, Interaction{
         _xStarterToken = xStarterToken_;
         _xStarterGovernance = xStarterGovernance_;
         _xStarterNFT = xStarterNFT_;
+        _xStarterDeployer = xStarterDeployer_;
         _depositPerProposal = depositPerProposal_;
         return true;
         
+    }
+    function xStarterContracts() public view returns(address[4] memory) {
+        return [_xStarterGovernance, _xStarterToken, _xStarterNFT, _xStarterDeployer];
     }
     function getProposal(string memory tokenSymbol_) public view returns(ILOProposal memory proposal) {
         proposal = _ILOProposals[tokenSymbol_];

@@ -29,6 +29,7 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
     let addrs;
     beforeEach(async function() {
         // deploy xStarterToken
+        this.timeout(60000);
         if(!xStarterTokenInst){
             xStarterTokenFactory = await ethers.getContractFactory("xStarterToken")
             xStarterTokenInst = await xStarterTokenFactory.deploy(
@@ -52,29 +53,31 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
             xStarterDeployerInst = await xStarterDeployerFactory.deploy()
 
             // initialize
-            await xStarterNFTInst.initialize(
-                xStarterGovernanceInst.address, 
+            await (await xStarterNFTInst.initialize(
+                xStarterGovernanceInst.address,
+                xStarterTokenInst.address, 
                 xStarterLaunchPadInst.address, 
                 false
-            )
-            await xStarterGovernanceInst.initialize(
+            )).wait()
+            await (await xStarterGovernanceInst.initialize(
                 xStarterTokenInst.address, 
                 xStarterLaunchPadInst.address,
                 xStarterNFTInst.address,
                 false
-            )
-            await xStarterLaunchPadInst.initialize(
+            )).wait()
+
+            await (await xStarterLaunchPadInst.initialize(
                 xStarterGovernanceInst.address,
                 xStarterTokenInst.address, 
                 xStarterNFTInst.address, 
                 xStarterDeployerInst.address, // xstarter deployer
                 utils.parseEther('500'),
                 false
-            )
+            )).wait()
 
-            await xStarterDeployerInst.initialize(
+            await (await xStarterDeployerInst.initialize(
                 xStarterLaunchPadInst.address
-            )
+            )).wait()
 
         }   
     })
@@ -84,6 +87,37 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
             let amount = await xStarterTokenInst.totalSupply();
             console.log('amount is ', amount.toString());
             expect(amount).to.equal(utils.parseEther('500000000'));
+        })
+
+        it('xStartDeployer has correct Values', async function(){
+            let value = await xStarterDeployerInst.allowedCaller();
+            console.log('value is ', value);
+            expect(value).to.equal(xStarterLaunchPadInst.address);
+        })
+
+        it('xStartLaunchpad has correct Values', async function(){
+            let value = await xStarterLaunchPadInst.xStarterContracts();
+            console.log('value is ', value);
+            expect(value[0]).to.equal(xStarterGovernanceInst.address);
+            expect(value[1]).to.equal(xStarterTokenInst.address);
+            expect(value[2]).to.equal(xStarterNFTInst.address);
+            expect(value[3]).to.equal(xStarterDeployerInst.address);
+        })
+
+        it('xStarterGovernance has correct Values', async function(){
+            let value = await xStarterGovernanceInst.xStarterContracts();
+            console.log('value is ', value);
+            expect(value[0]).to.equal(xStarterTokenInst.address);
+            expect(value[1]).to.equal(xStarterLaunchPadInst.address);
+            expect(value[2]).to.equal(xStarterNFTInst.address);
+        })
+
+        it('xStarterNFT has correct Values', async function(){
+            let value = await xStarterNFTInst.xStarterContracts();
+            console.log('value is ', value);
+            expect(value[0]).to.equal(xStarterTokenInst.address);
+            expect(value[1]).to.equal(xStarterGovernanceInst.address);
+            expect(value[2]).to.equal(xStarterLaunchPadInst.address);
         })
     })
 })

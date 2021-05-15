@@ -121,6 +121,9 @@ contract xStarterGovernance is Context, Interaction {
         return true;
         
     }
+    function xStarterContracts() public view returns(address[3] memory) {
+        return [_xStarterToken, _xStarterLaunchPad, _xStarterNFT];
+    }
     
     function ILOVoteOpen(string memory symbol_) public view returns(bool) {
         return block.number >= _ILOProposals[symbol_].startBlock && block.number < _ILOProposals[symbol_].endBlock;
