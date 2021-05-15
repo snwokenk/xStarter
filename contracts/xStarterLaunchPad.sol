@@ -114,9 +114,9 @@ contract xStarterLaunchPad is Ownable, Interaction{
     
     // min amount of tokens to have deposited 
     uint _depositPerProposal;
-    address _xStarterToken;
-    address _xStarterGovernance;
-    address _xStarterNFT;
+    address public _xStarterToken;
+    address public _xStarterGovernance;
+    address public _xStarterNFT;
     address _xStarterDeployer;
     
     // todo: let mapping be string and uint in which index is the position of ILOproposal in array
@@ -130,7 +130,7 @@ contract xStarterLaunchPad is Ownable, Interaction{
     
     ILOProposal[] private _ILOProposalArray;
 
-    function initialize(address xStarterToken_, address xStarterGovernance_, address xStarterNFT_, uint depositPerProposal_, bool isProd_) external returns(bool) {
+    function initialize(address xStarterGovernance_, address xStarterToken_, address xStarterNFT_, address _xStarterDeployer, uint depositPerProposal_, bool isProd_) external returns(bool) {
         require(!_initialized, "contract has already been initialized");
         require(_allowedCaller != address(0) && _msgSender() == _allowedCaller, 'Not authorized');
         _initialized = true;

@@ -1,4 +1,4 @@
-const { expect } = require("chai");
+const { expect, util } = require("chai");
 const { BigNumber, utils } = require("ethers");
 const { ethers } = require("hardhat");
 
@@ -17,6 +17,10 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
     let xStarterGovernanceInst;
     let xStarterTokenFactory;
     let xStarterTokenInst;
+    let xStarterNFTFactory;
+    let xStarterNFTInst;
+    let xStarterDeployerFactory;
+    let xStarterDeployerInst;
 
     let owner;
     let addr1;
@@ -26,7 +30,7 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
     beforeEach(async function() {
         // deploy xStarterToken
         if(!xStarterTokenInst){
-            xStarterTokenFactory = await ethers.getContractFactory("contracts/xStarterToken.sol:xStarterToken")
+            xStarterTokenFactory = await ethers.getContractFactory("xStarterToken")
             xStarterTokenInst = await xStarterTokenFactory.deploy(
                 BigNumber.from('500000000'),
                 []
@@ -35,9 +39,43 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
             xStarterGovernanceFactory = await ethers.getContractFactory("xStarterGovernance")
             xStarterGovernanceInst = await xStarterGovernanceFactory.deploy()
 
-            // deploy governance
+            // deploy launchpad
             xStarterLaunchPadFactory = await ethers.getContractFactory("xStarterLaunchPad")
             xStarterLaunchPadInst = await xStarterLaunchPadFactory.deploy()
+
+            // deploy NFT
+            xStarterNFTFactory = await ethers.getContractFactory("xStarterNFT")
+            xStarterNFTInst = await xStarterNFTFactory.deploy()
+
+            // deploy deployer
+            xStarterDeployerFactory = await ethers.getContractFactory("contracts/xStarterLaunchPad.sol:xStarterDeployer")
+            xStarterDeployerInst = await xStarterDeployerFactory.deploy()
+
+            // initialize
+            await xStarterNFTInst.initialize(
+                xStarterGovernanceInst.address, 
+                xStarterLaunchPadInst.address, 
+                false
+            )
+            await xStarterGovernanceInst.initialize(
+                xStarterTokenInst.address, 
+                xStarterLaunchPadInst.address,
+                xStarterNFTInst.address,
+                false
+            )
+            await xStarterLaunchPadInst.initialize(
+                xStarterGovernanceInst.address,
+                xStarterTokenInst.address, 
+                xStarterNFTInst.address, 
+                xStarterDeployerInst.address, // xstarter deployer
+                utils.parseEther('500'),
+                false
+            )
+
+            await xStarterDeployerInst.initialize(
+                xStarterLaunchPadInst.address
+            )
+
         }   
     })
 

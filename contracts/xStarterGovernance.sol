@@ -85,9 +85,9 @@ contract xStarterGovernance is Context, Interaction {
     bool private _isProd;
     bool _initialized;
     address _allowedCaller = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266; // address of deployer
-    address _xStarterToken;
-    address _xStarterLaunchPad;
-    address _xStarterNFT;
+    address public _xStarterToken;
+    address public _xStarterLaunchPad;
+    address public _xStarterNFT;
     uint _minVoteCount; // yes+no >= minVoteCount minVoteCount == minimum number of tokens use to vote on the proposal
     
     mapping (string => ILOProposal) _ILOProposals;
@@ -105,10 +105,6 @@ contract xStarterGovernance is Context, Interaction {
     modifier onlyGOVVoteOpen(string memory name_) {
         require(GOVVoteOpen(name_), "ILO has not been set up");
         _;
-    }
-    
-    constructor(address xStarterToken_) {
-        _xStarterToken = xStarterToken_;
     }
     
     function initialize(address xStarterToken_, address xStarterLaunchPad_, address xStarterNFT_, bool isProd_) external returns(bool) {

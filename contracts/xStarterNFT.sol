@@ -5,8 +5,8 @@ import "@openzeppelin/contracts/utils/Context.sol";
 
 contract xStarterNFT is Context {
     
-    address _xStarterLaunchPad;
-    address _xStarterGovernance;
+    address public _xStarterLaunchPad;
+    address public _xStarterGovernance;
     bool _isProd;
     bool _initialized;
     address _allowedCaller = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266; // address of deployer
