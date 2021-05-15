@@ -107,7 +107,7 @@ contract xStarterLaunchPad is Ownable, Interaction{
         _;
     }
     
-    bool private _isProd;
+    bool private _initialILODeployed;
     bool _initialized;
     bool _deploying;
     address _allowedCaller = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266; // address of deployer
@@ -130,12 +130,12 @@ contract xStarterLaunchPad is Ownable, Interaction{
     
     ILOProposal[] private _ILOProposalArray;
 
-    function initialize(address xStarterGovernance_, address xStarterToken_, address xStarterNFT_, address xStarterDeployer_, uint depositPerProposal_, bool isProd_) external returns(bool) {
+    function initialize(address xStarterGovernance_, address xStarterToken_, address xStarterNFT_, address xStarterDeployer_, uint depositPerProposal_, bool initialILODeployed_) external returns(bool) {
         require(!_initialized, "contract has already been initialized");
         require(_allowedCaller != address(0) && _msgSender() == _allowedCaller, 'Not authorized');
         _initialized = true;
         _allowedCaller = address(0);
-        _isProd = isProd_;
+        _initialILODeployed = initialILODeployed_;
         
         
         _xStarterToken = xStarterToken_;
@@ -221,6 +221,17 @@ contract xStarterLaunchPad is Ownable, Interaction{
         emit ILOProposalCreated(_msgSender(), tokenSymbol_, tokenName_, totalSupply_);
         
     }
+    function deployXstarterILO(address fundingToken_, string memory infoURL_) external returns(bool success){
+        require(_msgSender() == _allowedCaller && !_initialILODeployed, "Not authorized");
+        require(!_initialILODeployed, "xStarter ILO already deployed");
+        _initialILODeployed = true;
+        success = _createILOProposal("xStarter", "XST", infoURL_, 500000000 ether, 70, fundingToken_);
+        require(success, 'Not able to create initial ILO proposal');
+        (success, ) = _deployILO("XST", _msgSender());
+        require(success, 'Not able to deploy initial ILO');
+        _allowedCaller = address(0);
+        
+    }
     
     event ILODeployed(string indexed tokenSymbol_, address indexed caller_, address indexed ILO);
     function deployILOContract(string memory tokenSymbol_, address ILOAdmin_) external allowedToInteract returns(bool success) {
@@ -228,13 +239,11 @@ contract xStarterLaunchPad is Ownable, Interaction{
         // ILO proposer also gets the NFT rewards, so it makes no sense for anyone but the 
         _disallowInteraction();
         
-        require(!_ILOProposals[tokenSymbol_].isDeployed, "ILO already deployed or being deployed");
+        require(_initialILODeployed && !_ILOProposals[tokenSymbol_].isDeployed, "ILO already deployed or being deployed");
         bool isApproved;
-        if(_isProd) {
-            isApproved = iXstarterGovernance(_xStarterGovernance).ILOApproved(tokenSymbol_);
-        }else {
-            isApproved = true;
-        }
+        
+
+        isApproved = iXstarterGovernance(_xStarterGovernance).ILOApproved(tokenSymbol_);
         require(isApproved, "ILO has not been approved in the governance contract");
         address ILO;
         (success, ILO) = _deployILO(tokenSymbol_, ILOAdmin_);

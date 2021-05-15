@@ -111,6 +111,7 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
             expect(value[1]).to.equal(xStarterLaunchPadInst.address);
             expect(value[2]).to.equal(xStarterNFTInst.address);
         })
+        // [owner, addr1, addr2, addr3, ...addrs] = await ethers.getSigners();
 
         it('xStarterNFT has correct Values', async function(){
             let value = await xStarterNFTInst.xStarterContracts();
@@ -119,5 +120,17 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
             expect(value[1]).to.equal(xStarterGovernanceInst.address);
             expect(value[2]).to.equal(xStarterLaunchPadInst.address);
         })
+    })
+
+    describe('Create xStarter ILO', function() {
+
+        it('xStarter distribu', async function(){
+            let value = await xStarterNFTInst.xStarterContracts();
+            console.log('value is ', value);
+            expect(value[0]).to.equal(xStarterTokenInst.address);
+            expect(value[1]).to.equal(xStarterGovernanceInst.address);
+            expect(value[2]).to.equal(xStarterLaunchPadInst.address);
+        })
+
     })
 })

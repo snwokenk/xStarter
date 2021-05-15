@@ -139,6 +139,7 @@ contract xStarterGovernance is Context, Interaction {
         
     }
     function ILOApproved(string memory symbol_) public view returns(bool) {
+        if(symbol_ === 'XST')
         require(block.number > _ILOProposals[symbol_].endBlock, "Voting on ILO not complete");
         ILOProposal storage proposal = _ILOProposals[symbol_];
         return proposal.yesCount + proposal.noCount > _minVoteCount && _ILOProposals[symbol_].yesCount > _ILOProposals[symbol_].noCount;  
