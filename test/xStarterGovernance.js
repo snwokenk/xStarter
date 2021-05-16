@@ -21,6 +21,8 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
     let xStarterNFTInst;
     let xStarterDeployerFactory;
     let xStarterDeployerInst;
+    let xStarterProposalFactory;
+    let xStarterProposalInst;
 
     let owner;
     let addr1;
@@ -31,6 +33,7 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
         // deploy xStarterToken
         this.timeout(60000);
         if(!xStarterTokenInst){
+            xStarterNFTFactory = await ethers.getContractFactory("xStarterNFT")
             xStarterTokenFactory = await ethers.getContractFactory("xStarterToken")
             xStarterTokenInst = await xStarterTokenFactory.deploy(
                 BigNumber.from('500000000'),
@@ -47,6 +50,9 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
             // deploy NFT
             xStarterNFTFactory = await ethers.getContractFactory("xStarterNFT")
             xStarterNFTInst = await xStarterNFTFactory.deploy()
+
+            xStarterProposalFactory = await ethers.getContractFactory("xStarterProposal")
+
 
             // deploy deployer
             xStarterDeployerFactory = await ethers.getContractFactory("contracts/xStarterLaunchPad.sol:xStarterDeployer")
@@ -124,12 +130,23 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
 
     describe('Create xStarter ILO', function() {
 
-        it('xStarter distribu', async function(){
-            let value = await xStarterNFTInst.xStarterContracts();
+        it('deploy ILOProposal Contract', async function(){
+            xStarterProposalInst = await xStarterProposalFactory.deploy(
+                "xStarter", 
+                "XSTN", 
+                "https://", 
+                utils.parseEther('500000000'),
+                70,
+                zeroAddress,
+                xStarterLaunchPadInst.address 
+            );
+
+            let value = await xStarterProposalInst.getILOInfo();
             console.log('value is ', value);
-            expect(value[0]).to.equal(xStarterTokenInst.address);
-            expect(value[1]).to.equal(xStarterGovernanceInst.address);
-            expect(value[2]).to.equal(xStarterLaunchPadInst.address);
+            console.log('token name is ', value.tokenName, typeof value);
+            // expect(value[0]).to.equal(xStarterTokenInst.address);
+            // expect(value[1]).to.equal(xStarterGovernanceInst.address);
+            // expect(value[2]).to.equal(xStarterLaunchPadInst.address);
         })
 
     })

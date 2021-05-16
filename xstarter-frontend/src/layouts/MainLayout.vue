@@ -12,7 +12,7 @@
         </q-toolbar-title>
         <div class="q-gutter-x-sm">
           <q-btn rounded outline size="md" :label="connectBtnLabel"  :icon="metamaskInstalled.value ? undefined : 'error_outline'" :color="metamaskInstalled.value ? darkLightText: 'negative'" :disable="!metamaskInstalled.value" @click="connectEthereum"/>
-          <q-btn outline :color="darkLightText" label="sign"  @click="signTx"/>
+          <q-btn outline :color="darkLightText" label="sign"  @click="callContract"/>
           <q-btn round flat :color="darkLightText" :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'" @click="setDarkMode"/>
         </div>
       </q-toolbar>
@@ -205,8 +205,10 @@ export default defineComponent({
     },
     async callContract() {
       const ILOContract = this.getILOContract()
-      const addressOfDex = await ILOContract.addressOfDex()
-      console.log(ILOContract.filters)
+      const getValue = await ILOContract.getFullInfo()
+      // console.log(ILOContract.filters)
+      console.log('get full info value is', getValue)
+      console.log('_minFundPerAddr', getValue._minFundPerAddr.toString())
 
       // listen to contract events
       const filter = {
@@ -216,7 +218,7 @@ export default defineComponent({
       ILOContract.on(filter, (result) => {
         console.log('result in event is', result)
       })
-      console.log('ilo contract', ILOContract, addressOfDex)
+      console.log('ilo contract', ILOContract, getValue)
     }
   },
   mounted() {

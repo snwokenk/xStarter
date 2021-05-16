@@ -27,7 +27,7 @@ interface iXstarterProposal {
     function getMainInfo() external view returns(string memory tokenName, string memory tokenSymbol, string memory infoURL, uint totalSupply, uint8 percentOfTokensForILO, address fundingToken);
 }
 
-contract xStarterProposalV1 {
+contract xStarterProposal {
     ILOProposal _i;
     address _xStarterLaunchpad;
     address admin;

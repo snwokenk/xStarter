@@ -227,7 +227,7 @@ contract xStarterLaunchPad is Ownable, Interaction{
         require(_msgSender() == _allowedCaller && !_initialILODeployed, "Not authorized");
         require(!_initialILODeployed, "xStarter ILO already deployed");
         _initialILODeployed = true;
-        success = registerILOProposal(proposalAddr_, "xStarter", "XST", infoURL_, 500000000 ether, 70, fundingToken_);
+        success = registerILOProposal(proposalAddr_, "xStarter", "XSTN", infoURL_, 500000000 ether, 70, fundingToken_);
         require(success, 'Not able to create initial ILO proposal');
         (success, ) = _deployILO(proposalAddr_, _msgSender());
         require(success, 'Not able to deploy initial ILO');
