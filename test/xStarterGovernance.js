@@ -33,6 +33,7 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
         // deploy xStarterToken
         this.timeout(60000);
         if(!xStarterTokenInst){
+            [owner, addr1, addr2, addr3, ...addrs] = await ethers.getSigners();
             xStarterNFTFactory = await ethers.getContractFactory("xStarterNFT")
             xStarterTokenFactory = await ethers.getContractFactory("xStarterToken")
             xStarterTokenInst = await xStarterTokenFactory.deploy(
@@ -85,6 +86,9 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
                 xStarterLaunchPadInst.address
             )).wait()
 
+            console.log('launchpad is', xStarterLaunchPadInst.address)
+            console.log('governance is', xStarterGovernanceInst.address)
+
         }   
     })
 
@@ -97,13 +101,13 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
 
         it('xStartDeployer has correct Values', async function(){
             let value = await xStarterDeployerInst.allowedCaller();
-            console.log('value is ', value);
+            console.log('allowedCaller is ', value);
             expect(value).to.equal(xStarterLaunchPadInst.address);
         })
 
         it('xStartLaunchpad has correct Values', async function(){
             let value = await xStarterLaunchPadInst.xStarterContracts();
-            console.log('value is ', value);
+            console.log('xStarterContracts from launchpad is ', value);
             expect(value[0]).to.equal(xStarterGovernanceInst.address);
             expect(value[1]).to.equal(xStarterTokenInst.address);
             expect(value[2]).to.equal(xStarterNFTInst.address);
@@ -112,12 +116,12 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
 
         it('xStarterGovernance has correct Values', async function(){
             let value = await xStarterGovernanceInst.xStarterContracts();
-            console.log('value is ', value);
+            console.log('xStarterContracts from governance is ', value);
             expect(value[0]).to.equal(xStarterTokenInst.address);
             expect(value[1]).to.equal(xStarterLaunchPadInst.address);
             expect(value[2]).to.equal(xStarterNFTInst.address);
         })
-        // [owner, addr1, addr2, addr3, ...addrs] = await ethers.getSigners();
+        
 
         it('xStarterNFT has correct Values', async function(){
             let value = await xStarterNFTInst.xStarterContracts();
@@ -143,11 +147,75 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
 
             let value = await xStarterProposalInst.getILOInfo();
             console.log('value is ', value);
+            console.log('xStarter ILO addr', xStarterProposalInst.address)
             console.log('token name is ', value.tokenName, typeof value);
-            // expect(value[0]).to.equal(xStarterTokenInst.address);
+            expect(value.tokenName).to.equal("xStarter");
+            expect(value.tokenSymbol).to.equal("XSTN");
+            expect(value.totalSupply).to.equal(utils.parseEther('500000000'));
+            expect(value.percentOfTokensForILO).to.equal(70);
+            expect(value.fundingToken).to.equal(zeroAddress);
+            expect(await xStarterProposalInst.getLaunchpadAddress()).to.equal(xStarterLaunchPadInst.address );
             // expect(value[1]).to.equal(xStarterGovernanceInst.address);
             // expect(value[2]).to.equal(xStarterLaunchPadInst.address);
         })
+
+    })
+
+    describe('deploy initial xStarter ILO to launchpad', function() {
+        // using the same info, but this should revert since deployXstarterILO hasn't been called by creator
+        it('deployment of another ILO before initial should revert', async function(){
+            await expect(xStarterLaunchPadInst.registerILOProposal(
+                xStarterProposalInst.address,
+                "xStarter", 
+                "XSTN", 
+                "https://", 
+                utils.parseEther('500000000'),
+                70,
+                zeroAddress,
+            )).to.be.revertedWith("revert Initial xStarter ILO not deployed")
+        })
+
+        it('deploying of initial ILO should revert if not called by allowedCaller', async function(){
+            await expect(xStarterLaunchPadInst.connect(addr1).deployXstarterILO(
+                xStarterProposalInst.address,
+                zeroAddress,
+                "https://"
+                
+            )).to.be.revertedWith("revert Not authorized")
+        })
+
+        it('deploying of initial ILO should succeed with allowedCaller', async function(){
+            await expect(xStarterLaunchPadInst.deployXstarterILO(
+                xStarterProposalInst.address,
+                zeroAddress,
+                "https://"
+                
+            )).to.be.revertedWith("revert Not authorized")
+
+        })
+        // it('register ILOProposal Contract', async function(){
+        //     xStarterProposalInst = await xStarterProposalFactory.deploy(
+        //         "xStarter", 
+        //         "XSTN", 
+        //         "https://", 
+        //         utils.parseEther('500000000'),
+        //         70,
+        //         zeroAddress,
+        //         xStarterLaunchPadInst.address 
+        //     );
+
+        //     let value = await xStarterProposalInst.getILOInfo();
+        //     console.log('value is ', value);
+        //     console.log('token name is ', value.tokenName, typeof value);
+        //     expect(value.tokenName).to.equal("xStarter");
+        //     expect(value.tokenSymbol).to.equal("XSTN");
+        //     expect(value.totalSupply).to.equal(utils.parseEther('500000000'));
+        //     expect(value.percentOfTokensForILO).to.equal(70);
+        //     expect(value.fundingToken).to.equal(zeroAddress);
+        //     expect(await xStarterProposalInst.getLaunchpadAddress()).to.equal(xStarterLaunchPadInst.address );
+        //     // expect(value[1]).to.equal(xStarterGovernanceInst.address);
+        //     // expect(value[2]).to.equal(xStarterLaunchPadInst.address);
+        // })
 
     })
 })
