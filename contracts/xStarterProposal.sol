@@ -1,27 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
+import "./xStarterStructs.sol";
 
-struct ILOProposal {
-    address proposer;
-    address admin;
-    address fundingToken;
-    string tokenName;
-    string tokenSymbol;
-    string infoURL;
-    uint totalSupply;
-    uint8 decimals; // set at 18
-    uint8 percentOfTokensForILO; // (minimum 50%)
-    uint blockNumber;
-    uint timestamp;
-    bool isApproved;
-    bool isOpen;
-    uint deployedBlockNumber;
-    uint deployedTimestamp;
-    bool isDeployed;
-    address ILOAddress;
-}
+
+
+        
+        
 interface iXstarterProposal {
-    function getILOInfo() external view returns(ILOProposal memory);
+    function getILOProposal() external view returns(ILOProposal memory);
     function addILOAddress(address ILOAddr) external returns(bool);
     function getLaunchpadAddress() external  view returns(address);
     function getMainInfo() external view returns(string memory tokenName, string memory tokenSymbol, string memory infoURL, uint totalSupply, uint8 percentOfTokensForILO, address fundingToken);
@@ -29,6 +15,8 @@ interface iXstarterProposal {
 
 contract xStarterProposal {
     ILOProposal _i;
+    ILOAdditionalInfo _a;
+    bool locked;
     address _xStarterLaunchpad;
     address admin;
     mapping(address => bool) public allowedCallers;
@@ -42,20 +30,66 @@ contract xStarterProposal {
         uint8 percentOfTokensForILO_, 
         address fundingToken_, 
         address xStarterLaunchpad_
+        // uint48 contribTimeLock_,
+        // uint minPerSwap_,
+        // uint minFundPerAddr_,
+        // uint maxFundPerAddr_,
+        // uint minFundingTokenRequired_,
+        // uint maxFundingToken_
+        // address addressOfDex_,
+        // address addressOfDexFactory_
     ) {
-       bool success =  _createILOProposal(tokenName_, tokenSymbol_, infoURL_, totalSupply_, percentOfTokensForILO_, fundingToken_);
+       bool success =  _createILOProposal(
+           
+           tokenName_, 
+           tokenSymbol_, 
+           infoURL_, 
+           totalSupply_, 
+           percentOfTokensForILO_, 
+           fundingToken_
+        //   contribTimeLock_,
+        //   minPerSwap_,
+        //   minFundPerAddr_,
+        //   maxFundPerAddr_,
+        //   minFundingTokenRequired_,
+        //   maxFundingToken_
+        //   addressOfDex_,
+        //   addressOfDexFactory_
+           );
        require(success, "Not able to deploy");
-       _xStarterLaunchpad = xStarterLaunchpad_;
-       admin = msg.sender;
-       allowedCallers[msg.sender] = true;
-       emit ILOProposalCreated(msg.sender, address(this), infoURL_, tokenName_, totalSupply_);
+      _xStarterLaunchpad = xStarterLaunchpad_;
+      admin = msg.sender;
+      allowedCallers[msg.sender] = true;
+      emit ILOProposalCreated(msg.sender, address(this), infoURL_, tokenName_, totalSupply_);
         
+    }
+    function isLocked() public view returns(bool) {
+        return locked;
+    }
+    function addMoreInfo(
+        uint48 contribTimeLock_,
+        uint minPerSwap_,
+        uint minFundPerAddr_,
+        uint maxFundPerAddr_,
+        uint minFundingTokenRequired_,
+        uint maxFundingToken_
+        ) external returns(bool) {
+            require(!locked, 'additional info already set, can not change after setting');
+            locked = true;
+            
+            _a.contribTimeLock = contribTimeLock_;
+            _a.minPerSwap = minPerSwap_;
+            _a.minFundPerAddr = minFundPerAddr_;
+            _a.maxFundPerAddr = maxFundPerAddr_;
+            _a.minFundingTokenRequired = minFundingTokenRequired_;
+            _a.maxFundingToken = maxFundingToken_;
+            return true;
     }
     function getLaunchpadAddress() external  view returns(address) {
         return _xStarterLaunchpad;
     }
-    function getILOInfo() external view returns(ILOProposal memory) {
-        return _i;
+    function getILOProposal() external view returns(ILOProposal memory, ILOAdditionalInfo memory) {
+        return (_i, _a);
     }
     function getMainInfo() external view returns(string memory tokenName, string memory tokenSymbol, string memory infoURL, uint totalSupply, uint8 percentOfTokensForILO, address fundingToken){
         
@@ -80,7 +114,22 @@ contract xStarterProposal {
         return true;
     }
     
-    function _createILOProposal(string memory tokenName_, string memory tokenSymbol_, string memory infoURL_, uint totalSupply_, uint8 percentOfTokensForILO_, address fundingToken_) internal returns(bool) {
+    function _createILOProposal(
+        string memory tokenName_, 
+        string memory tokenSymbol_,
+        string memory infoURL_, 
+        uint totalSupply_, 
+        uint8 percentOfTokensForILO_, 
+        address fundingToken_
+        // uint48 contribTimeLock_,
+        // uint minPerSwap_,
+        // uint minFundPerAddr_,
+        // uint maxFundPerAddr_,
+        // uint minFundingTokenRequired_,
+        // uint maxFundingToken_
+        // address addressOfDex_,
+        // address addressOfDexFactory_
+        ) internal returns(bool) {
         
         
         // bytes32 memory proposalHash = keccak256(abi.encode(tokenName_, tokenSymbol_, totalSupply_, percentOfTokensForILO_, _msgSender()));
@@ -102,6 +151,14 @@ contract xStarterProposal {
             0,
             false,
             address(0)
+            // contribTimeLock_,
+            // minPerSwap_,
+            // minFundPerAddr_,
+            // maxFundPerAddr_,
+            // minFundingTokenRequired_,
+            // maxFundingToken_
+            // addressOfDex_,
+            // addressOfDexFactory_
         );
         
         return true;

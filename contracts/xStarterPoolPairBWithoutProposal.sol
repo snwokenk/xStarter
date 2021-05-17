@@ -13,7 +13,6 @@ import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./Administration.sol";
 import "./ERC777ReceiveSend.sol";
-import "./xStarterStructs.sol";
 //import "./UniswapInterface.sol";
 
 
@@ -26,12 +25,6 @@ import "./xStarterStructs.sol";
 // transaction showing how to add liquidity for ETH to token pair
 
 // xStarterPoolPairB: project tokens are swapped after total funding is raised. As Long as a Minimum funding amount is reached.
-interface iXstarterProposal {
-    function getILOProposal() external view returns(ILOProposal memory, ILOAdditionalInfo memory);
-    function addILOAddress(address ILOAddr) external returns(bool);
-    function getLaunchpadAddress() external  view returns(address);
-    function getMainInfo() external view returns(string memory tokenName, string memory tokenSymbol, string memory infoURL, uint totalSupply, uint8 percentOfTokensForILO, address fundingToken);
-}
 
 interface IERC20AndOwnable {
     function totalSupply() external view returns (uint256);
@@ -277,7 +270,17 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     // todo: remove some of the unused parameters on the constructor 
     constructor(
         address adminAddress,
-        address proposalAddr_,
+        uint8 percentOfTokensForILO_,
+        // uint24 fundTokenReceive_,
+        // uint24 projectTokenGive_,
+        uint24 dexDeadlineLength_,
+        uint48 contribTimeLock_,
+        uint minPerSwap_,
+        uint minFundPerAddr_,
+        uint maxFundPerAddr_,
+        uint minFundingTokenRequired_,
+        uint maxFundingToken_,
+        address fundingToken_,
         address addressOfDex_,
         address addressOfDexFactory_
         
@@ -285,27 +288,25 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
             // require(percentOfTokensForILO_ > 0 && percentOfTokensForILO_ <= 100, "percent of tokens must be between 1 and 100");
             // require(projectTokenGive_ > 0 && fundTokenReceive_ > 0, "swap ratio is zero ");
             // require(minFundingTokenRequired_ > 0, "No softcap set");
-            
-            (ILOProposal memory i_, ILOAdditionalInfo memory a_) = iXstarterProposal(proposalAddr_).getILOProposal();
-            
-            
-            i._minPerSwap = a_.minPerSwap;
-            i._minFundPerAddr = a_.minFundPerAddr;
-            _percentOfTotalTokensForILO = i_.percentOfTokensForILO;
-            i._fundingToken = i_.fundingToken;
-            i._dexDeadlineLength = 1800;
+            i._minPerSwap = 1000000000 wei;
+            i._minFundPerAddr = 1000000000000 wei;
+            _percentOfTotalTokensForILO = percentOfTokensForILO_;
+            i._fundingToken = fundingToken_;
+            i._dexDeadlineLength = dexDeadlineLength_;
             // todo; in final production contract should be not less than 1209600 seconds or 14 days
-            i._contribTimeLock = a_.contribTimeLock;
+            i._contribTimeLock = contribTimeLock_ < 60 ? 60 : contribTimeLock_;
             i._addressOfDex = addressOfDex_;
             i._addressOfDexFactory = addressOfDexFactory_;
             // if provided is less than default take default
+            i._minPerSwap = i._minPerSwap > minPerSwap_ ? i._minPerSwap : minPerSwap_;
             // todo require a minimum fund per address possible 1000 gwei or 1000000000000 wei
-            i._minFundPerAddr = a_.minFundPerAddr;
+            i._minFundPerAddr = minFundPerAddr_ < i._minFundPerAddr ? i._minFundPerAddr : minFundPerAddr_;
             // 0 means not max set
-            i._maxFundPerAddr = a_.maxFundPerAddr;
+            i._maxFundPerAddr = maxFundPerAddr_ < i._minFundPerAddr ? 0 : maxFundPerAddr_;
+            //i._contribTimeLock = contribTimeLock_ < 1209600 ? 1209600 : contribTimeLock_;
             
-            i._minFundingTokenRequired = a_.minFundingTokenRequired;
-            i._maxFundingToken = a_.maxFundingToken;
+            i._minFundingTokenRequired = minFundingTokenRequired_;
+            i._maxFundingToken = maxFundingToken_;
             
         }
     

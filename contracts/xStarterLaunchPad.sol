@@ -11,33 +11,13 @@ import "@openzeppelin/contracts/utils/Context.sol";
 import "./Administration.sol";
 import "./xStarterPoolPairB.sol";
 import "./Interaction.sol";
-import "./xStarterProposal.sol";
+import "./xStarterStructs.sol";
 
 interface iXstarterGovernance {
     function ILOApproved(address proposalAddr_) external returns(bool);
 }
 
 
-// struct ILOProposal {
-//     address proposer;
-//     address admin;
-//     address fundingToken;
-//     string tokenName;
-//     string tokenSymbol;
-//     string infoURL;
-//     uint totalSupply;
-//     uint8 decimals; // set at 18
-//     uint8 percentOfTokensForILO; // (minimum 50%)
-//     uint blockNumber;
-//     uint timestamp;
-//     bool isApproved;
-//     bool isOpen;
-//     uint deployedBlockNumber;
-//     uint deployedTimestamp;
-//     bool isDeployed;
-//     address ILOAddress;
-    
-// }
 
 // launched by user, directly deploying from launchpad increases the code size
 contract xStarterDeployer {
@@ -51,30 +31,17 @@ contract xStarterDeployer {
         return true;
     }
     
-    function deployILO(address adminAddress,
-        uint8 percentOfTokensForILO_,
-        uint24 dexDeadlineLength_,
-        uint48 contribTimeLock_,
-        uint minPerSwap_,
-        uint minFundPerAddr_,
-        uint maxFundPerAddr_,
-        uint minFundingTokenRequired_,
-        uint maxFundingToken_,
-        address fundingToken_,
+    function deployILO(
+        address adminAddress_,
+        address proposalAddr_,
         address addressOfDex_,
-        address addressOfDexFactory_) external returns(address ILO_) {
+        address addressOfDexFactory_
+        ) external returns(address ILO_) {
+            require(msg.sender == allowedCaller, "Only launchpad can deploy ILO");
             
             xStarterPoolPairB ILO = new xStarterPoolPairB(
-                 adminAddress,
-                 percentOfTokensForILO_,
-                 dexDeadlineLength_,
-                 contribTimeLock_,
-                 minPerSwap_,
-                 minFundPerAddr_,
-                 maxFundPerAddr_,
-                 minFundingTokenRequired_,
-                 maxFundingToken_,
-                 fundingToken_,
+                 adminAddress_,
+                 proposalAddr_,
                  addressOfDex_,
                  addressOfDexFactory_
                 );
@@ -84,18 +51,12 @@ contract xStarterDeployer {
 }
 
 interface iXstarterDeployer {
-    function deployILO(address adminAddress,
-        uint8 percentOfTokensForILO_,
-        uint24 dexDeadlineLength_,
-        uint48 contribTimeLock_,
-        uint minPerSwap_,
-        uint minFundPerAddr_,
-        uint maxFundPerAddr_,
-        uint minFundingTokenRequired_,
-        uint maxFundingToken_,
-        address fundingToken_,
+    function deployILO(
+        address adminAddress_,
+        address proposalAddr_,
         address addressOfDex_,
-        address addressOfDexFactory_) external returns(address ILO_);
+        address addressOfDexFactory_
+        ) external returns(address ILO_);
 }
 
 // contract launches xStarterPoolPairB contracts for approved ILO proposals and enforces
@@ -115,10 +76,12 @@ contract xStarterLaunchPad is Ownable, Interaction{
     
     // min amount of tokens to have deposited 
     uint _depositPerProposal;
-    address public _xStarterToken;
-    address public _xStarterGovernance;
-    address public _xStarterNFT;
-    address _xStarterDeployer;
+    address  _xStarterToken;
+    address  _xStarterGovernance;
+    address  _xStarterNFT;
+    address public _addressOfDex;
+    address public _addressOfDexFactory;
+    address  _xStarterDeployer;
     
     // todo: let mapping be string and uint in which index is the position of ILOproposal in array
     mapping(address => uint) private _ILOProposals;
@@ -132,7 +95,15 @@ contract xStarterLaunchPad is Ownable, Interaction{
     
     
 
-    function initialize(address xStarterGovernance_, address xStarterToken_, address xStarterNFT_, address xStarterDeployer_, uint depositPerProposal_) external returns(bool) {
+    function initialize(
+        address xStarterGovernance_, 
+        address xStarterToken_, 
+        address xStarterNFT_, 
+        address xStarterDeployer_, 
+        uint depositPerProposal_,
+        address addressOfDex_,
+        address addressOfDexFactory_
+        ) external returns(bool) {
         require(!_initialized, "contract has already been initialized");
         require(_allowedCaller != address(0) && _msgSender() == _allowedCaller, 'Not authorized');
         _initialized = true;
@@ -144,8 +115,13 @@ contract xStarterLaunchPad is Ownable, Interaction{
         _xStarterNFT = xStarterNFT_;
         _xStarterDeployer = xStarterDeployer_;
         _depositPerProposal = depositPerProposal_;
+        _addressOfDex = addressOfDex_;
+        _addressOfDexFactory = addressOfDexFactory_;
         return true;
         
+    }
+    function xStarterDEXUsed() public view returns(address dexAddress, address dexFactoryAddress) {
+        return (_addressOfDex, _addressOfDexFactory);
     }
     function xStarterContracts() public view returns(address[4] memory) {
         return [_xStarterGovernance, _xStarterToken, _xStarterNFT, _xStarterDeployer];
@@ -295,18 +271,9 @@ contract xStarterLaunchPad is Ownable, Interaction{
         // todo: some of these parameters should be included in ILOProposal struct
         address ILO = iXstarterDeployer(_xStarterDeployer).deployILO(
             ILOAdmin_,
-            proposal.percentOfTokensForILO,
-            1800,
-            60, // contrib lock
-            1, // minPerswap
-            1, // minFundPerAddr_
-            1 ether, // maxfund
-            1 ether, // min amount of funding tokens required (softcap)
-            2 ether, // max amount of funding (hardcap),
-            address(0), //fundong token address, address 0 means use native token (ether for ethereum main net, xDai for xDai sidechain, etc)
-            address(0),
-            address(0)
-            
+            proposalAddr_,
+            _addressOfDex,
+            _addressOfDexFactory // contrib lock
         );
         proposal.ILOAddress = ILO;
         success = iXstarterProposal(proposalAddr_).addILOAddress(ILO);
