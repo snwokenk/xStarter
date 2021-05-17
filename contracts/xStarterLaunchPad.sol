@@ -121,7 +121,8 @@ contract xStarterLaunchPad is Ownable, Interaction{
     address _xStarterDeployer;
     
     // todo: let mapping be string and uint in which index is the position of ILOproposal in array
-    mapping(address => ILOProposal) private _ILOProposals;
+    mapping(address => uint) private _ILOProposals;
+    ILOProposal[] private _ILOProposalArray;
     // mapping(string => DeployedILO) private _deployedILOs;
     // mapping(string => GovernanceProposal) private _govProposals;
     mapping(address => uint16) _numOfProposals;
@@ -129,14 +130,13 @@ contract xStarterLaunchPad is Ownable, Interaction{
     mapping(address => bool) private _currentlyFunding;
     mapping(string => address) private supportedDex;
     
-    ILOProposal[] private _ILOProposalArray;
+    
 
-    function initialize(address xStarterGovernance_, address xStarterToken_, address xStarterNFT_, address xStarterDeployer_, uint depositPerProposal_, bool initialILODeployed_) external returns(bool) {
+    function initialize(address xStarterGovernance_, address xStarterToken_, address xStarterNFT_, address xStarterDeployer_, uint depositPerProposal_) external returns(bool) {
         require(!_initialized, "contract has already been initialized");
         require(_allowedCaller != address(0) && _msgSender() == _allowedCaller, 'Not authorized');
         _initialized = true;
-        _allowedCaller = address(0);
-        _initialILODeployed = initialILODeployed_;
+        // _initialILODeployed = initialILODeployed_;
         
         
         _xStarterToken = xStarterToken_;
@@ -151,22 +151,31 @@ contract xStarterLaunchPad is Ownable, Interaction{
         return [_xStarterGovernance, _xStarterToken, _xStarterNFT, _xStarterDeployer];
     }
     function getProposal(address proposalAddr_) public view returns(ILOProposal memory proposal) {
-        proposal = _ILOProposals[proposalAddr_];
+        uint lenOfArrayAtTimeOfAdd = _ILOProposals[proposalAddr_];
+        // proposalAddr does not exist return empty proposal
+        if(lenOfArrayAtTimeOfAdd == 0) {
+            return proposal;
+        }
+        proposal = _ILOProposalArray[lenOfArrayAtTimeOfAdd - 1];
+        return proposal;
     }
     
     // gets ILOProposals 5 at a time
-    function getProposals(uint16 round_) public view returns(ILOProposal[] memory proposals, bool endOfArray) {
+    function getProposals(uint round_) public view returns(ILOProposal[] memory, bool ) {
         uint len = _ILOProposalArray.length;
         require(len > 0, "No Proposals Yet");
         // uint start = round_ * 5
-        uint end = (round_ * 5) + 4;
-        endOfArray =  end > len - 1;
-        end = !endOfArray ? end : len - 1;
-        uint start = end - 4;
+        uint end = (round_ * 5) + 5;
+        bool endOfArray =  end >= len;
+        end = endOfArray ? len : end;
+        uint start = end <= 5 ? 0 : end - 5;
+        ILOProposal[] memory proposals = new ILOProposal[](end - start);
         
-        for (uint i=start ; i <= end; i++) {
+        for (uint i=start ; i < end; i++) {
             proposals[i] = _ILOProposalArray[i];
         }
+        
+        return (proposals, endOfArray);
         
     }
     
@@ -176,7 +185,8 @@ contract xStarterLaunchPad is Ownable, Interaction{
     // }
     
     function IsProposerOrAdmin(address msgSender_, address proposalAddr_) public view returns(bool) {
-        return _ILOProposals[proposalAddr_].proposer != address(0) && (_ILOProposals[proposalAddr_].proposer == msgSender_ || _ILOProposals[proposalAddr_].admin == msgSender_);
+        ILOProposal memory proposal = getProposal(proposalAddr_);
+        return proposal.proposer != address(0) && (proposal.proposer == msgSender_ || proposal.admin == msgSender_);
     }
     
     function depositBalance(address addr_) public view returns(uint) {
@@ -184,7 +194,7 @@ contract xStarterLaunchPad is Ownable, Interaction{
     }
     function isDeployed(address proposalAddr_) public view returns(bool) {
         
-        return _ILOProposals[proposalAddr_].isDeployed;
+        return getProposal(proposalAddr_).isDeployed;
         
     }
     
@@ -227,8 +237,9 @@ contract xStarterLaunchPad is Ownable, Interaction{
         
     }
     function deployXstarterILO(address proposalAddr_, address fundingToken_, string memory infoURL_) external returns(bool success){
-        require(_msgSender() == _allowedCaller && !_initialILODeployed, "Not authorized");
+        require(_msgSender() == _allowedCaller, "Not authorized");
         require(!_initialILODeployed, "xStarter ILO already deployed");
+        _allowedCaller = address(0);
         _initialILODeployed = true;
         success = registerILOProposal(proposalAddr_, "xStarter", "XSTN", infoURL_, 500000000 ether, 70, fundingToken_);
         require(success, 'Not able to create initial ILO proposal');
@@ -246,7 +257,7 @@ contract xStarterLaunchPad is Ownable, Interaction{
         // ILO proposer also gets the NFT rewards, so it makes no sense for anyone but the 
         _disallowInteraction();
         require(_initialILODeployed, "initial xStarter ILO not deployed");
-        require(!_ILOProposals[proposalAddr_].isDeployed, "ILO already deployed or being deployed");
+        require(!getProposal(proposalAddr_).isDeployed, "ILO already deployed or being deployed");
         bool isApproved;
         
 
@@ -273,8 +284,7 @@ contract xStarterLaunchPad is Ownable, Interaction{
     }
     
     function _deployILO(address proposalAddr_, address ILOAdmin_) internal returns (bool success, address){
-        
-        ILOProposal storage proposal = _ILOProposals[proposalAddr_];
+        ILOProposal storage proposal = _ILOProposalArray[_ILOProposals[proposalAddr_] - 1];
         proposal.isOpen = false;
         proposal.isApproved = true;
         proposal.isDeployed = true;
@@ -314,7 +324,7 @@ contract xStarterLaunchPad is Ownable, Interaction{
         // require(!_ILOProposals[proposalAddr_].isOpen && !_ILOProposals[proposalAddr_].isApproved, "proposal with token symbol is either in the process of voting or already approved");
         success = _verifyILO(proposalAddr_, tokenName_, tokenSymbol_, infoURL_, totalSupply_, percentOfTokensForILO_, fundingToken_);
         // _ILOProposals[proposalAddr_].proposer = _msgSender();
-        _ILOProposals[proposalAddr_] = ILOProposal(
+        _ILOProposalArray.push(ILOProposal(
             _msgSender(),
             _msgSender(),
             fundingToken_,
@@ -332,14 +342,16 @@ contract xStarterLaunchPad is Ownable, Interaction{
             0,
             false,
             address(0)
-        );
+        ));
+        _ILOProposals[proposalAddr_] = _ILOProposalArray.length;
         
         return true;
         
     }
     
     function _verifyILO(address proposalAddr_, string memory tokenName_, string memory tokenSymbol_, string memory infoURL_, uint totalSupply_, uint8 percentOfTokensForILO_, address fundingToken_) internal view returns(bool) {
-        require(!_ILOProposals[proposalAddr_].isOpen && !_ILOProposals[proposalAddr_].isApproved, "proposal with token symbol is either in the process of voting or already approved");
+        ILOProposal memory proposal = getProposal(proposalAddr_);
+        require(!proposal.isOpen && !proposal.isApproved, "proposal with token symbol is either in the process of voting or already approved");
         (string memory tokenName, string memory tokenSymbol, string memory infoURL, uint totalSupply, uint8 percentOfTokensForILO, address fundingToken) = iXstarterProposal(proposalAddr_).getMainInfo();
         
         require(

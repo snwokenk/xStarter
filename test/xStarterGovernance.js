@@ -78,8 +78,7 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
                 xStarterTokenInst.address, 
                 xStarterNFTInst.address, 
                 xStarterDeployerInst.address, // xstarter deployer
-                utils.parseEther('500'),
-                false
+                utils.parseEther('500')
             )).wait()
 
             await (await xStarterDeployerInst.initialize(
@@ -147,7 +146,7 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
 
             let value = await xStarterProposalInst.getILOInfo();
             console.log('value is ', value);
-            console.log('xStarter ILO addr', xStarterProposalInst.address)
+            console.log('xStarter ILO Proposal addr', xStarterProposalInst.address)
             console.log('token name is ', value.tokenName, typeof value);
             expect(value.tokenName).to.equal("xStarter");
             expect(value.tokenSymbol).to.equal("XSTN");
@@ -185,12 +184,14 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
         })
 
         it('deploying of initial ILO should succeed with allowedCaller', async function(){
-            await expect(xStarterLaunchPadInst.deployXstarterILO(
+            console.log('owner addr', owner.address)
+            await (await xStarterLaunchPadInst.connect(owner).deployXstarterILO(
                 xStarterProposalInst.address,
                 zeroAddress,
                 "https://"
                 
-            )).to.be.revertedWith("revert Not authorized")
+            )).wait()
+            // await expect().to.be.revertedWith("revert Not authorized")
 
         })
         // it('register ILOProposal Contract', async function(){

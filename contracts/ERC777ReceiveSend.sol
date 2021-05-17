@@ -14,7 +14,7 @@ abstract contract ERC777NoReceiveRecipient is IERC777Recipient {
         uint256 amount,
         bytes calldata userData,
         bytes calldata operatorData
-    ) external override{
+    ) external pure override{
         // this contract shouldn't receive tokens
         revert();
     }
@@ -28,7 +28,7 @@ abstract contract ERC777NoSendSender is IERC777Sender {
         uint256 amount,
         bytes calldata userData,
         bytes calldata operatorData
-    ) external  override {
+    ) external pure  override {
         revert();
     }
 }
