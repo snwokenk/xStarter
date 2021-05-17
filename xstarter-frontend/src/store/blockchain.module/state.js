@@ -6,7 +6,7 @@ export default function () {
     connectedAccounts: [],
     connectedAndPermissioned: false,
     contracts: {
-      ILOContract: undefined
+      launchPad: undefined
     }
   }
 }

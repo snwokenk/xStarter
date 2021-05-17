@@ -19,6 +19,3 @@ export function mutateConnectedAndPermissioned(state, value) {
   return state.connectedAndPermissioned = value
 }
 
-export function mutateILOContract(state, value) {
-  return state.contracts.ILOContract = value
-}

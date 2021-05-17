@@ -20,6 +20,3 @@ export function getConnectedAndPermissioned(state) {
   return state.connectedAndPermissioned
 }
 
-export function getILOContract(state) {
-  return state.contracts.ILOContract
-}

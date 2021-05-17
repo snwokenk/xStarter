@@ -56,8 +56,9 @@ import { defineComponent, ref, watch, onMounted, provide } from 'vue'
 import { useQuasar } from 'quasar'
 import { ethers } from 'boot/ethers'
 import detectEthereumProvider from '@metamask/detect-provider';
-import {ILO_ADDRESS} from "src/constants";
-import data from 'src/artifacts/contracts/xStarterPoolPairB.sol/xStarterPoolPairB.json';
+import {ILO_ADDRESS, LAUNCHPAD_ADDRESS} from "src/constants";
+// import data from 'src/artifacts/contracts/xStarterPoolPairB.sol/xStarterPoolPairB.json';
+import launchpadCode from 'src/artifacts/contracts/xStarterLaunchPad.sol/xStarterLaunchPad.json';
 
 
 export default defineComponent({
@@ -77,7 +78,7 @@ export default defineComponent({
     let provider = undefined
 
     let signer = undefined
-    let ILOContract = undefined
+    let launchPadContract = undefined
 
     const ethereumProvider = ref(undefined)
     const metamaskInstalled = ref(false)
@@ -102,12 +103,12 @@ export default defineComponent({
       if (connectedAndPermissioned.value) {
         provider = new ethers.providers.Web3Provider(ethereumProvider.value)
         signer = provider.getSigner()
-        ILOContract = await new ethers.Contract(ILO_ADDRESS, data.abi, signer)
+        launchPadContract = await  new ethers.Contract(LAUNCHPAD_ADDRESS, launchpadCode.abi, signer)
         console.log('is permssioned 1', connectedAndPermissioned.value, await provider.getBlockNumber())
       }else {
         provider = undefined
         signer = undefined
-        ILOContract = undefined
+        launchPadContract = undefined
       }
       // checks to see if any account has permission
       ethereumProvider.value.on('accountsChanged', checkExisting)
@@ -150,15 +151,16 @@ export default defineComponent({
     }
     provide('$getSigner', getSigner)
 
-    const getILOContract = () => {
-      return  ILOContract
-    }
-    provide('$getILOContract', getILOContract)
 
     const getConnectedAndPermissioned = () => {
       return connectedAndPermissioned
     }
     provide('$getConnectedAndPermissioned', getConnectedAndPermissioned)
+
+    const getLaunchPadContract = () => {
+      return  launchPadContract
+    }
+    provide('$getLaunchPadContract', getLaunchPadContract)
 
 
     return {
@@ -167,12 +169,12 @@ export default defineComponent({
       checkExisting,
       getProvider,
       getSigner,
-      getILOContract,
+      getLaunchPadContract,
       metamaskInstalled,
       ethereumProvider,
       connectedAccounts,
       connectedAndPermissioned,
-      ILOContract
+      launchPadContract
     }
   },
   computed: {
@@ -204,21 +206,20 @@ export default defineComponent({
       console.log('response is', resp, this.$ethers.utils.formatEther(resp), resp._isBigNumber)
     },
     async callContract() {
-      const ILOContract = this.getILOContract()
-      const getValue = await ILOContract.getFullInfo()
-      // console.log(ILOContract.filters)
-      console.log('get full info value is', getValue)
-      console.log('_minFundPerAddr', getValue._minFundPerAddr.toString())
+      const launchpad = this.getLaunchPadContract()
+      const getValue = await launchpad.getProposals('0')
+      console.log('get proposals', getValue)
+      // console.log('_minFundPerAddr', getValue._minFundPerAddr.toString())
 
       // listen to contract events
       const filter = {
-        address: ILOContract.address,
-        topic: Object.values(ILOContract.filters)
+        address: launchpad.address,
+        topic: Object.values(launchpad.filters)
       }
-      ILOContract.on(filter, (result) => {
+      launchpad.on(filter, (result) => {
         console.log('result in event is', result)
       })
-      console.log('ilo contract', ILOContract, getValue)
+      console.log('ilo contract', launchpad, getValue)
     }
   },
   mounted() {

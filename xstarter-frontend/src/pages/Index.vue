@@ -28,10 +28,10 @@ export default defineComponent({
   setup() {
     const getProvider = inject('$getProvider')
     const getSigner = inject('$getSigner')
-    const getILOContract = inject('$getILOContract')
+    const getLaunchPadContract = inject('$getLaunchPadContract')
     const getConnectedAndPermissioned = inject('$getConnectedAndPermissioned')
     console.log('provider is ', getProvider())
-    return {getProvider, getSigner, getILOContract, getConnectedAndPermissioned}
+    return {getProvider, getSigner, getLaunchPadContract, getConnectedAndPermissioned}
   },
   computed: {
     listOfLiquidityOffering() {
