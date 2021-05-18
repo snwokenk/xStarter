@@ -212,17 +212,16 @@ contract xStarterLaunchPad is Ownable, Interaction{
         emit ILOProposalRegistered(_msgSender(), proposalAddr_, infoURL_, tokenName_, totalSupply_);
         
     }
-    function deployXstarterILO(address proposalAddr_, address fundingToken_, string memory infoURL_) external returns(bool success){
+    function deployXstarterILO(address proposalAddr_, address fundingToken_, string memory infoURL_) external returns(address ILO){
         require(_msgSender() == _allowedCaller, "Not authorized");
         require(!_initialILODeployed, "xStarter ILO already deployed");
         _allowedCaller = address(0);
         _initialILODeployed = true;
-        success = registerILOProposal(proposalAddr_, "xStarter", "XSTN", infoURL_, 500000000 ether, 70, fundingToken_);
+        bool success = registerILOProposal(proposalAddr_, "xStarter", "XSTN", infoURL_, 500000000 ether, 70, fundingToken_);
         require(success, 'Not able to create initial ILO proposal');
-        (success, ) = _deployILO(proposalAddr_, _msgSender());
+        (success, ILO) = _deployILO(proposalAddr_, _msgSender());
         require(success, 'Not able to deploy initial ILO');
         _allowedCaller = address(0);
-        address ILO;
         emit ILODeployed(proposalAddr_, _msgSender(), ILO);
         
     }
@@ -259,7 +258,7 @@ contract xStarterLaunchPad is Ownable, Interaction{
         return _tokenDeposits[_msgSender()].sub(amount_) >= _depositPerProposal * _numOfProposals[_msgSender()];
     }
     
-    function _deployILO(address proposalAddr_, address ILOAdmin_) internal returns (bool success, address){
+    function _deployILO(address proposalAddr_, address ILOAdmin_) internal returns (bool success, address ILO){
         ILOProposal storage proposal = _ILOProposalArray[_ILOProposals[proposalAddr_] - 1];
         proposal.isOpen = false;
         proposal.isApproved = true;
@@ -269,7 +268,7 @@ contract xStarterLaunchPad is Ownable, Interaction{
         proposal.admin = ILOAdmin_;
         
         // todo: some of these parameters should be included in ILOProposal struct
-        address ILO = iXstarterDeployer(_xStarterDeployer).deployILO(
+        ILO = iXstarterDeployer(_xStarterDeployer).deployILO(
             ILOAdmin_,
             proposalAddr_,
             _addressOfDex,
@@ -279,7 +278,7 @@ contract xStarterLaunchPad is Ownable, Interaction{
         success = iXstarterProposal(proposalAddr_).addILOAddress(ILO);
         
         
-        return (success, ILO);
+        // return (success, ILO);
         
     }
     

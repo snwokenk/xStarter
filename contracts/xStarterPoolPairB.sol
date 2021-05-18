@@ -27,7 +27,7 @@ import "./xStarterStructs.sol";
 
 // xStarterPoolPairB: project tokens are swapped after total funding is raised. As Long as a Minimum funding amount is reached.
 interface iXstarterProposal {
-    function getILOProposal() external view returns(ILOProposal memory, ILOAdditionalInfo memory);
+    function getILOInfo() external view returns(ILOProposal memory, ILOAdditionalInfo memory);
     function addILOAddress(address ILOAddr) external returns(bool);
     function getLaunchpadAddress() external  view returns(address);
     function getMainInfo() external view returns(string memory tokenName, string memory tokenSymbol, string memory infoURL, uint totalSupply, uint8 percentOfTokensForILO, address fundingToken);
@@ -286,7 +286,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
             // require(projectTokenGive_ > 0 && fundTokenReceive_ > 0, "swap ratio is zero ");
             // require(minFundingTokenRequired_ > 0, "No softcap set");
             
-            (ILOProposal memory i_, ILOAdditionalInfo memory a_) = iXstarterProposal(proposalAddr_).getILOProposal();
+            (ILOProposal memory i_, ILOAdditionalInfo memory a_) = iXstarterProposal(proposalAddr_).getILOInfo();
             
             
             i._minPerSwap = a_.minPerSwap;
@@ -296,6 +296,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
             i._dexDeadlineLength = 1800;
             // todo; in final production contract should be not less than 1209600 seconds or 14 days
             i._contribTimeLock = a_.contribTimeLock;
+            // i._addressOfDex = addressOfDex_;
             i._addressOfDex = addressOfDex_;
             i._addressOfDexFactory = addressOfDexFactory_;
             // if provided is less than default take default

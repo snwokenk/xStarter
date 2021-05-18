@@ -7,7 +7,7 @@ import "./xStarterStructs.sol";
         
         
 interface iXstarterProposal {
-    function getILOProposal() external view returns(ILOProposal memory);
+    function getILOInfo() external view returns(ILOProposal memory, ILOAdditionalInfo memory);
     function addILOAddress(address ILOAddr) external returns(bool);
     function getLaunchpadAddress() external  view returns(address);
     function getMainInfo() external view returns(string memory tokenName, string memory tokenSymbol, string memory infoURL, uint totalSupply, uint8 percentOfTokensForILO, address fundingToken);
@@ -88,7 +88,7 @@ contract xStarterProposal {
     function getLaunchpadAddress() external  view returns(address) {
         return _xStarterLaunchpad;
     }
-    function getILOProposal() external view returns(ILOProposal memory, ILOAdditionalInfo memory) {
+    function getILOInfo() external view returns(ILOProposal memory, ILOAdditionalInfo memory) {
         return (_i, _a);
     }
     function getMainInfo() external view returns(string memory tokenName, string memory tokenSymbol, string memory infoURL, uint totalSupply, uint8 percentOfTokensForILO, address fundingToken){

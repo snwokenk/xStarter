@@ -10,9 +10,9 @@ abstract contract Administration is Context {
 
     constructor (address adminAddress)  {
         require(adminAddress != address(0), "Administration: new admin is the zero address");
-        address msgSender = _msgSender();
-        _admin = msgSender;
-        emit AdministrationTransferred(address(0), msgSender);
+        // address msgSender = _msgSender();
+        _admin = adminAddress;
+        emit AdministrationTransferred(address(0), adminAddress);
     }
 
     function admin() public view virtual returns (address) {

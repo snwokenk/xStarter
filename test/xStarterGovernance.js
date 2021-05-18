@@ -23,6 +23,9 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
     let xStarterDeployerInst;
     let xStarterProposalFactory;
     let xStarterProposalInst;
+    const uniswapRouter = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
+    const uniswapFactory = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
+    const WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
 
     let owner;
     let addr1;
@@ -78,7 +81,9 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
                 xStarterTokenInst.address, 
                 xStarterNFTInst.address, 
                 xStarterDeployerInst.address, // xstarter deployer
-                utils.parseEther('500')
+                utils.parseEther('500'),
+                uniswapRouter,
+                uniswapFactory
             )).wait()
 
             await (await xStarterDeployerInst.initialize(
@@ -144,18 +149,29 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
                 xStarterLaunchPadInst.address 
             );
 
+            await (await xStarterProposalInst.addMoreInfo(
+                60,
+                utils.parseEther('0.001'),
+                utils.parseEther('0.10'),
+                utils.parseEther('1'),
+                utils.parseEther('1'),
+                utils.parseEther('2')
+                )).wait()
+
             let value = await xStarterProposalInst.getILOInfo();
-            console.log('value is ', value);
-            console.log('xStarter ILO Proposal addr', xStarterProposalInst.address)
-            console.log('token name is ', value.tokenName, typeof value);
-            expect(value.tokenName).to.equal("xStarter");
-            expect(value.tokenSymbol).to.equal("XSTN");
-            expect(value.totalSupply).to.equal(utils.parseEther('500000000'));
-            expect(value.percentOfTokensForILO).to.equal(70);
-            expect(value.fundingToken).to.equal(zeroAddress);
+            let ILOInfo = value[0]
+            let ILOAdditional = value[1]
+            console.log('ilo proposal is ', ILOInfo);
+            console.log('ilo additional is ', ILOAdditional);
+            // console.log('xStarter ILO Proposal addr', xStarterProposalInst.address)
+            // console.log('token name is ', value.tokenName, typeof value);
+            expect(ILOInfo.tokenName).to.equal("xStarter");
+            expect(ILOInfo.tokenSymbol).to.equal("XSTN");
+            expect(ILOInfo.totalSupply).to.equal(utils.parseEther('500000000'));
+            expect(ILOInfo.percentOfTokensForILO).to.equal(70);
+            expect(ILOInfo.fundingToken).to.equal(zeroAddress);
+            expect(ILOAdditional.minFundingTokenRequired).to.equal(utils.parseEther('1'));
             expect(await xStarterProposalInst.getLaunchpadAddress()).to.equal(xStarterLaunchPadInst.address );
-            // expect(value[1]).to.equal(xStarterGovernanceInst.address);
-            // expect(value[2]).to.equal(xStarterLaunchPadInst.address);
         })
 
     })
@@ -185,12 +201,17 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
 
         it('deploying of initial ILO should succeed with allowedCaller', async function(){
             console.log('owner addr', owner.address)
-            await (await xStarterLaunchPadInst.connect(owner).deployXstarterILO(
+            // address of xStarterPoolPair for the xStarter ILO
+            let xStarterILOAddr = await (await xStarterLaunchPadInst.connect(owner).deployXstarterILO(
                 xStarterProposalInst.address,
                 zeroAddress,
                 "https://"
                 
             )).wait()
+
+            let proposalInfo = await xStarterLaunchPadInst.getProposal(xStarterProposalInst.address)
+            console.log('address of pool pair is', proposalInfo.ILOAddress)
+            console.log('adddress of xstarter ILo', xStarterProposalInst.address)
             // await expect().to.be.revertedWith("revert Not authorized")
 
         })
