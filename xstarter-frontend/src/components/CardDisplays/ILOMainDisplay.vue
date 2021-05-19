@@ -1,23 +1,16 @@
 <template>
-  <q-page class="flex flex-center">
-    <ILOMainDisplay v-if="currentView === 'ilo'" />
-
-  </q-page>
+  <div class="display-container row q-gutter-y-lg q-gutter-x-lg justify-center q-py-lg q-my-md">
+    <LiquidityOfferingDisplay class="display-card col-md-10 col-lg-5"  :liquidity-offering="listOfLiquidityOffering"/>
+  </div>
 </template>
 
 <script>
-import {defineComponent, inject, provide} from 'vue';
+import {defineComponent, inject} from "vue";
 import LiquidityOfferingDisplay from "components/CardDisplays/LiquidityOfferingDisplay";
-import ILOMainDisplay from "components/CardDisplays/ILOMainDisplay";
 
-export default defineComponent({
-  name: 'PageIndex',
-  components: {ILOMainDisplay},
-  data() {
-    return {
-      currentView: 'ilo',
-    }
-  },
+export default defineComponent( {
+  name: "ILOMainDisplay",
+  components: {LiquidityOfferingDisplay},
   setup() {
     const getProvider = inject('$getProvider')
     const getSigner = inject('$getSigner')
@@ -43,10 +36,7 @@ export default defineComponent({
   }
 })
 </script>
-<style scoped lang="scss">
-.display-container{
-  width: 80%;
-  min-height: 300px;
 
-}
+<style scoped>
+
 </style>

@@ -23,6 +23,7 @@ struct ILOProposal {
 }
 struct ILOAdditionalInfo {
     uint48 contribTimeLock;
+    uint48 liqPairLockLen;
     uint minPerSwap;
     uint minFundPerAddr;
     uint maxFundPerAddr;

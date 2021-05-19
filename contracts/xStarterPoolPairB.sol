@@ -79,6 +79,9 @@ struct Info {
         uint8 _percentOfTokensForILO;
         uint24 _dexDeadlineLength;
         uint48 _contribTimeLock;
+        
+        // length of lock for Liquidity tokens Minimum 365.25 days or 31557600 seconds
+        uint48 _liqPairLockLen;
         uint _minPerSwap;
         
         uint _minFundPerAddr;
@@ -203,9 +206,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     // timestamp when contributors can start withdrawing their their Liquidity pool tokens
     uint private _liqPairTimeLock;
     uint private _liqPairBlockLock;
-    // length of lock for Liquidity tokens Minimum 365.25 days or 31557600 seconds
-    // todo: set this in constructor or initialize (if we're to use the upgradeable part)
-    uint private _liqPairLockLen = 60;
+    
     
     uint8 private _percentOfTotalTokensForILO;
     uint8 private _percentOfILOTokensForLiquidity = 50;
@@ -296,6 +297,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
             i._dexDeadlineLength = 1800;
             // todo; in final production contract should be not less than 1209600 seconds or 14 days
             i._contribTimeLock = a_.contribTimeLock;
+            i._liqPairLockLen = a_.liqPairLockLen;
             // i._addressOfDex = addressOfDex_;
             i._addressOfDex = addressOfDex_;
             i._addressOfDexFactory = addressOfDexFactory_;
@@ -307,6 +309,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
             
             i._minFundingTokenRequired = a_.minFundingTokenRequired;
             i._maxFundingToken = a_.maxFundingToken;
+            _totalTokensSupply = i_.totalSupply;
             
         }
     
@@ -464,6 +467,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
             require(!_isSetup,"initial setup already done");
             require(startTime_ > block.timestamp && endTime_ > startTime_, "ILO dates not correct");
             totalTokenSupply_ =  totalTokenSupply_ * 10 ** _decimals;
+            require(_totalTokensSupply == totalTokenSupply_, "Total token supply not equal to provided information");
             
             // if address of project token is 0 address deploy token for it
             if(address(0) == addressOfProjectToken) {
@@ -482,7 +486,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
                 require(expDecimals == _decimals, "decimals do not match");
                 
                 _projectToken = addressOfProjectToken;
-                _totalTokensSupply = _totalTokensSupply.add(totalTokenSupply_);
+                // _totalTokensSupply = _totalTokensSupply.add(totalTokenSupply_);
                 // _totalTokensSupplyControlled = _totalTokensSupplyControlled.add(totalTokenSupply_);
                 
             }
@@ -853,8 +857,8 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         _projBlockLock = block.number + uint(timeLen / MINE_LEN);
         _contribTimeStampLock = block.timestamp + i._contribTimeLock;
         _contribBlockLock = block.number + uint(i._contribTimeLock / MINE_LEN);
-        _liqPairTimeLock = block.timestamp + _liqPairLockLen;
-        _liqPairBlockLock = block.number + uint(_liqPairLockLen / MINE_LEN);
+        _liqPairTimeLock = block.timestamp + i._liqPairLockLen;
+        _liqPairBlockLock = block.number + uint(i._liqPairLockLen / MINE_LEN);
         
         emit TimeLockSet(_projBlockLock, _contribBlockLock, _liqPairBlockLock);
         

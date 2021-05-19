@@ -86,6 +86,14 @@ export default defineComponent({
     const connectedAndPermissioned = ref(Boolean(metamaskInstalled.value && connectedAccounts.value.length > 0))
     // check if you already have connection and permission
     // can be called when account or network changes
+
+    let selectedTab = 'ilo'
+    const changeExistingTab =  (value) => {
+      selectedTab = value
+    }
+    const getExistingTab = () => {
+      return selectedTab
+    }
     const checkExisting = async () => {
       ethereumProvider.value = await detectEthereumProvider();
       metamaskInstalled.value = ref(Boolean(ethereumProvider.value))

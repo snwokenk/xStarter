@@ -68,6 +68,7 @@ contract xStarterProposal {
     }
     function addMoreInfo(
         uint48 contribTimeLock_,
+        uint48 liqPairLockLen_,
         uint minPerSwap_,
         uint minFundPerAddr_,
         uint maxFundPerAddr_,
@@ -78,6 +79,7 @@ contract xStarterProposal {
             locked = true;
             
             _a.contribTimeLock = contribTimeLock_;
+            _a.liqPairLockLen = liqPairLockLen_;
             _a.minPerSwap = minPerSwap_;
             _a.minFundPerAddr = minFundPerAddr_;
             _a.maxFundPerAddr = maxFundPerAddr_;
@@ -111,6 +113,11 @@ contract xStarterProposal {
     function addILOAddress(address ILOAddr_) external returns(bool) {
         require(msg.sender == _xStarterLaunchpad, 'not authorized');
         _i.ILOAddress = ILOAddr_;
+        _i.deployedBlockNumber = block.number;
+        _i.deployedTimestamp = block.timestamp;
+        _i.isDeployed = true;
+        _i.isApproved = true;
+        _i.isOpen = false;
         return true;
     }
     

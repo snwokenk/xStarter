@@ -23,6 +23,7 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
     let xStarterDeployerInst;
     let xStarterProposalFactory;
     let xStarterProposalInst;
+    let xStarterPoolPairInst;
     const uniswapRouter = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
     const uniswapFactory = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
     const WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
@@ -56,6 +57,7 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
             xStarterNFTInst = await xStarterNFTFactory.deploy()
 
             xStarterProposalFactory = await ethers.getContractFactory("xStarterProposal")
+            poolPairFactory = await ethers.getContractFactory("contracts/xStarterPoolPairB.sol:xStarterPoolPairB");
 
 
             // deploy deployer
@@ -151,6 +153,7 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
 
             await (await xStarterProposalInst.addMoreInfo(
                 60,
+                180,
                 utils.parseEther('0.001'),
                 utils.parseEther('0.10'),
                 utils.parseEther('1'),
@@ -202,7 +205,7 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
         it('deploying of initial ILO should succeed with allowedCaller', async function(){
             console.log('owner addr', owner.address)
             // address of xStarterPoolPair for the xStarter ILO
-            let xStarterILOAddr = await (await xStarterLaunchPadInst.connect(owner).deployXstarterILO(
+            await (await xStarterLaunchPadInst.connect(owner).deployXstarterILO(
                 xStarterProposalInst.address,
                 zeroAddress,
                 "https://"
@@ -215,6 +218,53 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
             // await expect().to.be.revertedWith("revert Not authorized")
 
         })
+
+        it("setUpPoolPair Should Revert If Called By Non Admin", async function () {
+            // Expect receives a value, and wraps it in an Assertion object. These
+            // objects have a lot of utility methods to assert values.
+              
+              let startTime = parseInt(Date.now() / 1000) + 60;
+              let endTime = parseInt(Date.now() / 1000) + 120;
+              let proposalInfo = await xStarterLaunchPadInst.getProposal(xStarterProposalInst.address)
+              xStarterPoolPairInst = poolPairFactory.attach(proposalInfo.ILOAddress)
+            //   const poolPairFromOther = poolPair.connect(addr2);
+              await expect(xStarterPoolPairInst.connect(addr2).setUpPoolPair(
+                xStarterTokenInst.address,
+                "xStarter", 
+                "XSTN", 
+                500000000,
+                startTime,
+                endTime,
+            )).to.be.revertedWith("Administration: caller is not the admin");
+              
+          })
+          it("setUpPoolPair Should succeed Admin", async function () {
+            // Expect receives a value, and wraps it in an Assertion object. These
+            // objects have a lot of utility methods to assert values.
+              
+              let startTime = parseInt(Date.now() / 1000) + 60;
+              let endTime = parseInt(Date.now() / 1000) + 120;
+              let proposalInfo = await xStarterLaunchPadInst.getProposal(xStarterProposalInst.address)
+              xStarterPoolPairInst = poolPairFactory.attach(proposalInfo.ILOAddress)
+            //   const poolPairFromOther = poolPair.connect(addr2);
+              let response = await xStarterPoolPairInst.setUpPoolPair(
+                xStarterTokenInst.address,
+                "xStarter", 
+                "XSTN", 
+                500000000,
+                startTime,
+                endTime,
+            )
+
+            await expect(response.wait()).to.not.be.reverted
+            expect(await xStarterPoolPairInst.projectToken()).to.equal(xStarterTokenInst.address);
+            expect(await xStarterPoolPairInst.isSetup()).to.equal(true);
+            expect(await xStarterPoolPairInst.startTime()).to.equal(startTime);
+            expect(await xStarterPoolPairInst.endTime()).to.equal(endTime);
+            expect(await xStarterPoolPairInst.totalTokensSupply()).to.equal(utils.parseEther('500000000'));
+            // todo: add more checks, to make sure data from proposal contract was successfully added to ILO contract
+              
+          })
         // it('register ILOProposal Contract', async function(){
         //     xStarterProposalInst = await xStarterProposalFactory.deploy(
         //         "xStarter", 
