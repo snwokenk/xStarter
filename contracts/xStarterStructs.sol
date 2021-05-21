@@ -24,9 +24,14 @@ struct ILOProposal {
 struct ILOAdditionalInfo {
     uint48 contribTimeLock;
     uint48 liqPairLockLen;
+    uint48 startTime;
+    uint48 endTime;
     uint minPerSwap;
-    uint minFundPerAddr;
-    uint maxFundPerAddr;
-    uint minFundingTokenRequired;
-    uint maxFundingToken;
+    uint minPerAddr;
+    uint maxPerAddr;
+    uint softcap;
+    uint hardcap;
+    uint amountRaised;
+    bool pairCreated;
+    address liqPairAddr;
 }

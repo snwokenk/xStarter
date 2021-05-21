@@ -74,10 +74,10 @@ struct Info {
         uint48 _contribTimeLock;
         uint _minPerSwap;
         
-        uint _minFundPerAddr;
-        uint _maxFundPerAddr;
-        uint _minFundingTokenRequired;
-        uint _maxFundingToken;
+        uint _minPerAddr;
+        uint _maxPerAddr;
+        uint _softcap;
+        uint _hardcap;
         address _fundingToken;
         address _addressOfDex;
         address _addressOfDexFactory;
@@ -216,10 +216,10 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     uint private _contribBlockLock;
     
     
-    // uint private _minFundingTokenRequired;
-    // uint private _maxFundingToken;
-    // uint private _minFundPerAddr = 1000000000000 wei;
-    // uint private _maxFundPerAddr;
+    // uint private _softcap;
+    // uint private _hardcap;
+    // uint private _minPerAddr = 1000000000000 wei;
+    // uint private _maxPerAddr;
     // Minimum is 1 gwei, this is a really small amount and should only be overriden by a larger amount
     SwapInfo private _swapRatio;
     
@@ -276,10 +276,10 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         uint24 dexDeadlineLength_,
         uint48 contribTimeLock_,
         uint minPerSwap_,
-        uint minFundPerAddr_,
-        uint maxFundPerAddr_,
-        uint minFundingTokenRequired_,
-        uint maxFundingToken_,
+        uint minPerAddr_,
+        uint maxPerAddr_,
+        uint softcap_,
+        uint hardcap_,
         address fundingToken_,
         address addressOfDex_,
         address addressOfDexFactory_
@@ -287,9 +287,9 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         ) Administration(adminAddress) {
             // require(percentOfTokensForILO_ > 0 && percentOfTokensForILO_ <= 100, "percent of tokens must be between 1 and 100");
             // require(projectTokenGive_ > 0 && fundTokenReceive_ > 0, "swap ratio is zero ");
-            // require(minFundingTokenRequired_ > 0, "No softcap set");
+            // require(softcap_ > 0, "No softcap set");
             i._minPerSwap = 1000000000 wei;
-            i._minFundPerAddr = 1000000000000 wei;
+            i._minPerAddr = 1000000000000 wei;
             _percentOfTotalTokensForILO = percentOfTokensForILO_;
             i._fundingToken = fundingToken_;
             i._dexDeadlineLength = dexDeadlineLength_;
@@ -300,13 +300,13 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
             // if provided is less than default take default
             i._minPerSwap = i._minPerSwap > minPerSwap_ ? i._minPerSwap : minPerSwap_;
             // todo require a minimum fund per address possible 1000 gwei or 1000000000000 wei
-            i._minFundPerAddr = minFundPerAddr_ < i._minFundPerAddr ? i._minFundPerAddr : minFundPerAddr_;
+            i._minPerAddr = minPerAddr_ < i._minPerAddr ? i._minPerAddr : minPerAddr_;
             // 0 means not max set
-            i._maxFundPerAddr = maxFundPerAddr_ < i._minFundPerAddr ? 0 : maxFundPerAddr_;
+            i._maxPerAddr = maxPerAddr_ < i._minPerAddr ? 0 : maxPerAddr_;
             //i._contribTimeLock = contribTimeLock_ < 1209600 ? 1209600 : contribTimeLock_;
             
-            i._minFundingTokenRequired = minFundingTokenRequired_;
-            i._maxFundingToken = maxFundingToken_;
+            i._softcap = softcap_;
+            i._hardcap = hardcap_;
             
         }
     
@@ -326,16 +326,16 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         return _availLPTokens;
     }
     function softcap() public view returns(uint) {
-        return i._minFundingTokenRequired;
+        return i._softcap;
     }
     function hardcap() public view returns(uint) {
-        return i._maxFundingToken;
+        return i._hardcap;
     }
     function minSpend() public view returns(uint) {
-        return i._minFundPerAddr;
+        return i._minPerAddr;
     }
     function maxSpend() public view returns(uint) {
-        return i._maxFundPerAddr;
+        return i._maxPerAddr;
     }
     function liquidityPairAddress() public view returns(address) {
         return _liquidityPairAddress;
@@ -434,7 +434,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     function isEventOpen() public view returns (bool isOpen_) {
         uint48 currentTime = uint48(block.timestamp);
         
-        if(currentTime >= startTime() && currentTime < endTime() && amountRaised() < i._maxFundingToken && _isSetup) {
+        if(currentTime >= startTime() && currentTime < endTime() && amountRaised() < i._hardcap && _isSetup) {
             isOpen_ = true;
         }
         
@@ -444,7 +444,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     function isEventDone() public view returns (bool isOpen_) {
         uint48 currentTime = uint48(block.timestamp);
         
-        if(_isSetup && ( currentTime >= endTime() )|| ( i._maxFundingToken > 0 && amountRaised() == i._maxFundingToken )) {
+        if(_isSetup && ( currentTime >= endTime() )|| ( i._hardcap > 0 && amountRaised() == i._hardcap )) {
             isOpen_ = true;
         }
         
@@ -576,18 +576,18 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     function _contribute(uint fundingTokenAmount_, address funder_) internal {
         _fundingTokenTotal = _fundingTokenTotal.add(fundingTokenAmount_);
         _fundingTokenAvail = _fundingTokenAvail.add(fundingTokenAmount_);
-        require(_fundingTokenTotal <= i._maxFundingToken, "exceeds hard carp");
+        require(_fundingTokenTotal <= i._hardcap, "exceeds hard carp");
          // add to msg.sender token funder balance
         FunderInfo storage funder = _funders[funder_];
         funder.fundingTokenAmount = funder.fundingTokenAmount.add(fundingTokenAmount_);
         
         // funding can be less than Minimum if max - total < minimum
-        uint amountLeft = i._maxFundingToken - _fundingTokenTotal;
+        uint amountLeft = i._hardcap - _fundingTokenTotal;
         
         // funding amount should be greater or equal to Minimum OR if not then available amount should be less than Minimum and fundingTokenAmount equals to amount left
-        require((funder.fundingTokenAmount >= i._minFundPerAddr) || (amountLeft < i._minFundPerAddr && fundingTokenAmount_ == amountLeft ) , "Minimum amount not met");
+        require((funder.fundingTokenAmount >= i._minPerAddr) || (amountLeft < i._minPerAddr && fundingTokenAmount_ == amountLeft ) , "Minimum amount not met");
         // if max is set then make sure not contributing max
-        require(funder.fundingTokenAmount <= i._maxFundPerAddr || i._maxFundPerAddr == 0, "maximum exceeded");
+        require(funder.fundingTokenAmount <= i._maxPerAddr || i._maxPerAddr == 0, "maximum exceeded");
     }
     
     
@@ -623,7 +623,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     function validateILO() external returns(bool) {
         require(isEventDone() && !_ILOValidated, "ILO not yet done OR already validated");
         // uint minNeeded = uint(_totalTokensILO * _percentRequiredTokenPurchase / 100);
-        _ILOSuccess = amountRaised() >= i._minFundingTokenRequired;
+        _ILOSuccess = amountRaised() >= i._softcap;
         _ILOValidated = true;
         emit ILOValidated(_msgSender(), amountRaised(),  _ILOSuccess,  _totalTokensILO);
         

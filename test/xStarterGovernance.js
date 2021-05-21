@@ -173,7 +173,7 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
             expect(ILOInfo.totalSupply).to.equal(utils.parseEther('500000000'));
             expect(ILOInfo.percentOfTokensForILO).to.equal(70);
             expect(ILOInfo.fundingToken).to.equal(zeroAddress);
-            expect(ILOAdditional.minFundingTokenRequired).to.equal(utils.parseEther('1'));
+            expect(ILOAdditional.softcap).to.equal(utils.parseEther('1'));
             expect(await xStarterProposalInst.getLaunchpadAddress()).to.equal(xStarterLaunchPadInst.address );
         })
 

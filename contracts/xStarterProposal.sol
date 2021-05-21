@@ -18,6 +18,7 @@ contract xStarterProposal {
     ILOAdditionalInfo _a;
     bool locked;
     address _xStarterLaunchpad;
+    address _ILOAddress;
     address admin;
     mapping(address => bool) public allowedCallers;
     
@@ -32,10 +33,10 @@ contract xStarterProposal {
         address xStarterLaunchpad_
         // uint48 contribTimeLock_,
         // uint minPerSwap_,
-        // uint minFundPerAddr_,
-        // uint maxFundPerAddr_,
-        // uint minFundingTokenRequired_,
-        // uint maxFundingToken_
+        // uint minPerAddr_,
+        // uint maxPerAddr_,
+        // uint softcap_,
+        // uint hardcap_
         // address addressOfDex_,
         // address addressOfDexFactory_
     ) {
@@ -49,10 +50,10 @@ contract xStarterProposal {
            fundingToken_
         //   contribTimeLock_,
         //   minPerSwap_,
-        //   minFundPerAddr_,
-        //   maxFundPerAddr_,
-        //   minFundingTokenRequired_,
-        //   maxFundingToken_
+        //   minPerAddr_,
+        //   maxPerAddr_,
+        //   softcap_,
+        //   hardcap_
         //   addressOfDex_,
         //   addressOfDexFactory_
            );
@@ -70,10 +71,10 @@ contract xStarterProposal {
         uint48 contribTimeLock_,
         uint48 liqPairLockLen_,
         uint minPerSwap_,
-        uint minFundPerAddr_,
-        uint maxFundPerAddr_,
-        uint minFundingTokenRequired_,
-        uint maxFundingToken_
+        uint minPerAddr_,
+        uint maxPerAddr_,
+        uint softcap_,
+        uint hardcap_
         ) external returns(bool) {
             require(!locked, 'additional info already set, can not change after setting');
             locked = true;
@@ -81,10 +82,10 @@ contract xStarterProposal {
             _a.contribTimeLock = contribTimeLock_;
             _a.liqPairLockLen = liqPairLockLen_;
             _a.minPerSwap = minPerSwap_;
-            _a.minFundPerAddr = minFundPerAddr_;
-            _a.maxFundPerAddr = maxFundPerAddr_;
-            _a.minFundingTokenRequired = minFundingTokenRequired_;
-            _a.maxFundingToken = maxFundingToken_;
+            _a.minPerAddr = minPerAddr_;
+            _a.maxPerAddr = maxPerAddr_;
+            _a.softcap = softcap_;
+            _a.hardcap = hardcap_;
             return true;
     }
     function getLaunchpadAddress() external  view returns(address) {
@@ -110,7 +111,7 @@ contract xStarterProposal {
         
     }
     
-    function addILOAddress(address ILOAddr_) external returns(bool) {
+    function callAfterILODeployment(address ILOAddr_) external returns(bool) {
         require(msg.sender == _xStarterLaunchpad, 'not authorized');
         _i.ILOAddress = ILOAddr_;
         _i.deployedBlockNumber = block.number;
@@ -130,10 +131,10 @@ contract xStarterProposal {
         address fundingToken_
         // uint48 contribTimeLock_,
         // uint minPerSwap_,
-        // uint minFundPerAddr_,
-        // uint maxFundPerAddr_,
-        // uint minFundingTokenRequired_,
-        // uint maxFundingToken_
+        // uint minPerAddr_,
+        // uint maxPerAddr_,
+        // uint softcap_,
+        // uint hardcap_
         // address addressOfDex_,
         // address addressOfDexFactory_
         ) internal returns(bool) {
@@ -160,10 +161,10 @@ contract xStarterProposal {
             address(0)
             // contribTimeLock_,
             // minPerSwap_,
-            // minFundPerAddr_,
-            // maxFundPerAddr_,
-            // minFundingTokenRequired_,
-            // maxFundingToken_
+            // minPerAddr_,
+            // maxPerAddr_,
+            // softcap_,
+            // hardcap_
             // addressOfDex_,
             // addressOfDexFactory_
         );

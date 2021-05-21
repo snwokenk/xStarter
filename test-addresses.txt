@@ -37,13 +37,13 @@ uint48 contribTimeLock_ =
     so locks are when block.time > timelock && block.number = blockLock
 uint minPerSwap_ = 
     the minimum allowed funding token per swap when calling NativeTokenSwap or FundingTokenSwap
-uint minFundPerAddr_ =
+uint minPerAddr_ =
     min funding tokens allowed to contribute per wallet address
-uint maxFundPerAddr_ = 
+uint maxPerAddr_ = 
     max funding tokens allowed to contribute per wallet address
-uint minFundingTokenRequired_ ONLY FOR xStarterPoolPairB,
+uint softcap_ ONLY FOR xStarterPoolPairB,
     min funding token amount to raise to be considered successfull
-uint maxFundingToken_n ONLY FOR xStarterPoolPairB,
+uint hardcap_n ONLY FOR xStarterPoolPairB,
     max funding token  amount to raise, if 0 then no maximum
 address fundingToken_ =
     the fundingToken_ to use. if trying to accept native tokens (ie ETH on ethereum network or xDai on xDai network) use zero_address

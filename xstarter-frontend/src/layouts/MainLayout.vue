@@ -217,7 +217,7 @@ export default defineComponent({
       const launchpad = this.getLaunchPadContract()
       const getValue = await launchpad.getProposals('0')
       console.log('get proposals', getValue)
-      // console.log('_minFundPerAddr', getValue._minFundPerAddr.toString())
+      // console.log('_minPerAddr', getValue._minPerAddr.toString())
 
       // listen to contract events
       const filter = {

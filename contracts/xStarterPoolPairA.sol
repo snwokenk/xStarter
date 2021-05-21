@@ -206,8 +206,8 @@ contract xStarterPoolPairA is Ownable, Administration, IERC777Recipient, IERC777
     // the number of tokens to sell to be considered a success ie:  1 - (_availTokensILO / _totalTokensILO) >= _percentRequiredTokenPurchase
     // todo: the final percent is 50%
     uint8 private _percentRequiredTokenPurchase = 3;
-    uint private _minFundPerAddr = 1000000000000 wei;
-    uint private _maxFundPerAddr;
+    uint private _minPerAddr = 1000000000000 wei;
+    uint private _maxPerAddr;
     // Minimum is 1 gwei, this is a really small amount and should only be overriden by a larger amount
     uint private _minPerSwap = 1000000000 wei;
     SwapInfo private _swapRatio;
@@ -261,8 +261,8 @@ contract xStarterPoolPairA is Ownable, Administration, IERC777Recipient, IERC777
         uint24 dexDeadlineLength_,
         uint48 contribTimeLock_,
         uint minPerSwap_,
-        uint minFundPerAddr_,
-        uint maxFundPerAddr_,
+        uint minPerAddr_,
+        uint maxPerAddr_,
         address fundingToken_,
         address addressOfDex_,
         address addressOfDexFactory_
@@ -281,9 +281,9 @@ contract xStarterPoolPairA is Ownable, Administration, IERC777Recipient, IERC777
             // if provided is less than default take default
             _minPerSwap = _minPerSwap > minPerSwap_ ? _minPerSwap : minPerSwap_;
             // todo require a minimum fund per address possible 1000 gwei or 1000000000000 wei
-            _minFundPerAddr = minFundPerAddr_ < _minFundPerAddr ? _minFundPerAddr : minFundPerAddr_;
+            _minPerAddr = minPerAddr_ < _minPerAddr ? _minPerAddr : minPerAddr_;
             // 0 means not max set
-            _maxFundPerAddr = maxFundPerAddr_ < _minFundPerAddr ? 0 : maxFundPerAddr_;
+            _maxPerAddr = maxPerAddr_ < _minPerAddr ? 0 : maxPerAddr_;
             //_contribTimeLock = contribTimeLock_ < 1209600 ? 1209600 : contribTimeLock_;
             
         }
@@ -515,9 +515,9 @@ contract xStarterPoolPairA is Ownable, Administration, IERC777Recipient, IERC777
         // add to msg.sender token funder balance
         FunderInfo storage funder = _funders[funder_];
         funder.fundingTokenAmount = funder.fundingTokenAmount.add(fundingTokenAmount_);
-        require(funder.fundingTokenAmount >= _minFundPerAddr , "Minimum not met");
+        require(funder.fundingTokenAmount >= _minPerAddr , "Minimum not met");
         // if max is set then make sure not contributing max
-        require(funder.fundingTokenAmount <= _maxFundPerAddr || _maxFundPerAddr == 0, "maximum exceeded");
+        require(funder.fundingTokenAmount <= _maxPerAddr || _maxPerAddr == 0, "maximum exceeded");
         funder.projectTokenAmount = funder.projectTokenAmount.add(projectTokenReceived);
         
         // make state changes
