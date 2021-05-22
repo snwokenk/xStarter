@@ -15,6 +15,7 @@ struct ILOProposal {
     uint blockNumber;
     uint timestamp;
     bool isApproved;
+    bool isRegistered;
     bool isOpen;
     uint deployedBlockNumber;
     uint deployedTimestamp;
@@ -34,4 +35,9 @@ struct ILOAdditionalInfo {
     uint amountRaised;
     bool pairCreated;
     address liqPairAddr;
+}
+
+struct CompactInfo {
+    ILOProposal info;
+    ILOAdditionalInfo moreInfo;
 }

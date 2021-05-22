@@ -13,7 +13,7 @@ import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./Administration.sol";
 import "./ERC777ReceiveSend.sol";
-import "./xStarterStructs.sol";
+import "./xStarterInterfaces.sol";
 //import "./UniswapInterface.sol";
 
 
@@ -26,12 +26,6 @@ import "./xStarterStructs.sol";
 // transaction showing how to add liquidity for ETH to token pair
 
 // xStarterPoolPairB: project tokens are swapped after total funding is raised. As Long as a Minimum funding amount is reached.
-interface iXstarterProposal {
-    function getILOInfo() external view returns(ILOProposal memory, ILOAdditionalInfo memory);
-    function addILOAddress(address ILOAddr) external returns(bool);
-    function getLaunchpadAddress() external  view returns(address);
-    function getMainInfo() external view returns(string memory tokenName, string memory tokenSymbol, string memory infoURL, uint totalSupply, uint8 percentOfTokensForILO, address fundingToken);
-}
 
 interface IERC20AndOwnable {
     function totalSupply() external view returns (uint256);

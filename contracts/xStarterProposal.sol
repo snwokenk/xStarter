@@ -3,21 +3,12 @@ pragma solidity ^0.8.0;
 import "./xStarterStructs.sol";
 
 
-
-        
-        
-interface iXstarterProposal {
-    function getILOInfo() external view returns(ILOProposal memory, ILOAdditionalInfo memory);
-    function addILOAddress(address ILOAddr) external returns(bool);
-    function getLaunchpadAddress() external  view returns(address);
-    function getMainInfo() external view returns(string memory tokenName, string memory tokenSymbol, string memory infoURL, uint totalSupply, uint8 percentOfTokensForILO, address fundingToken);
-}
-
 contract xStarterProposal {
     ILOProposal _i;
     ILOAdditionalInfo _a;
     bool locked;
     address _xStarterLaunchpad;
+    address _xStarterGov;
     address _ILOAddress;
     address admin;
     mapping(address => bool) public allowedCallers;
@@ -94,6 +85,9 @@ contract xStarterProposal {
     function getILOInfo() external view returns(ILOProposal memory, ILOAdditionalInfo memory) {
         return (_i, _a);
     }
+    function getCompactInfo() external view returns(CompactInfo memory) {
+        return CompactInfo(_i, _a);
+    }
     function getMainInfo() external view returns(string memory tokenName, string memory tokenSymbol, string memory infoURL, uint totalSupply, uint8 percentOfTokensForILO, address fundingToken){
         
         tokenName = _i.tokenName;
@@ -110,15 +104,38 @@ contract xStarterProposal {
         return true;
         
     }
+    function isDeployed() public view returns(bool) {
+        
+        return _i.isDeployed;
+        
+    }
     
-    function callAfterILODeployment(address ILOAddr_) external returns(bool) {
+    function deploy(address ILOAddr_) external returns(bool) {
         require(msg.sender == _xStarterLaunchpad, 'not authorized');
         _i.ILOAddress = ILOAddr_;
         _i.deployedBlockNumber = block.number;
         _i.deployedTimestamp = block.timestamp;
         _i.isDeployed = true;
-        _i.isApproved = true;
         _i.isOpen = false;
+        _i.ILOAddress = ILOAddr_;
+        _i.isApproved = true;
+        return true;
+        
+    }
+    
+    function register(address xStarterGov_) external returns(bool) {
+        require(msg.sender == _xStarterLaunchpad, 'not authorized');
+        _xStarterGov = xStarterGov_;
+        _i.isRegistered = true;
+        return true;
+    }
+    function approved() external view returns(bool) {
+        return _i.isApproved;
+    }
+    
+    function approve() external returns(bool) {
+        require(msg.sender == _xStarterGov, 'not authorized');
+        _i.isApproved = true;
         return true;
     }
     
@@ -153,7 +170,8 @@ contract xStarterProposal {
             percentOfTokensForILO_, 
             block.number, 
             block.timestamp, 
-            false, 
+            false,
+            false,
             true,
             0,
             0,
