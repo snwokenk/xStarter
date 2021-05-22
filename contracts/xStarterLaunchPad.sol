@@ -163,9 +163,10 @@ contract xStarterLaunchPad is Ownable, Interaction{
         end = endOfArray ? len : end;
         uint start = end <= 5 ? 0 : end - 5;
         CompactInfo[] memory compactInfos = new CompactInfo[](end - start);
-        
+        uint ind = 0;
         for (uint i=start ; i < end; i++) {
-            compactInfos[i] = iXstarterProposal(_ILOProposalArray[i]).getCompactInfo();
+            compactInfos[ind] = iXstarterProposal(_ILOProposalArray[i]).getCompactInfo();
+            ind++;
         }
         
         return (compactInfos, endOfArray);

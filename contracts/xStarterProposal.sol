@@ -55,6 +55,10 @@ contract xStarterProposal {
       emit ILOProposalCreated(msg.sender, address(this), infoURL_, tokenName_, totalSupply_);
         
     }
+    
+    function isALlowedCaller(address caller_) public view returns(bool) {
+        return allowedCallers[caller_];
+    }
     function isLocked() public view returns(bool) {
         return locked;
     }
@@ -118,7 +122,7 @@ contract xStarterProposal {
         _i.isDeployed = true;
         _i.isOpen = false;
         _i.ILOAddress = ILOAddr_;
-        _i.isApproved = true;
+        // _i.isApproved = true;
         return true;
         
     }

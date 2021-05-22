@@ -41,3 +41,67 @@ struct CompactInfo {
     ILOProposal info;
     ILOAdditionalInfo moreInfo;
 }
+
+// GOVERNANCE STRUCT
+
+enum ProposalType{ ILO, GOV }
+enum VoteChoice{ YES, NO }
+
+struct Voter {
+    uint balance; // token balance
+    uint lockedBalance; // balance locked in
+    ILOVoteInfo[] votes; // only allowed to have 3 active votes
+    GOVVoteInfo[] gVotes;
+    bool isVoter;
+    // available balance is balance - lockedBalance
+}
+
+struct ILOVoteInfo {
+    address proposalAddr_; // symbol of ILO proposal
+    uint index; 
+    uint amount;
+    bool amtLocked; // if amount is part of locked balance, cleanVotes, should unlock any amount that current block > endBlock
+    uint endBlock;
+}
+
+struct GOVVoteInfo {
+    address proposalAddr_; // symbol of ILO proposal
+    uint index; 
+    uint amount;
+    bool amtLocked; // if amount is part of locked balance, cleanVotes, should unlock any amount that current block > endBlock
+    uint endBlock;
+}
+struct Vote {
+    ProposalType proposalType;
+    // string symbol;
+    address proposalAddr;
+    uint amount; // amount stake
+    address voter;
+    VoteChoice choice;
+    
+}
+
+struct ILOPoll {
+    uint yesCount;
+    uint noCount;
+    Vote[] votes;
+    bool validated; // vote was individually validated onchain, this is not necessary, unless someone decides to validate, proposal votes 
+    // bool isApproved;
+    uint startBlock;
+    uint endBlock;
+    address validator; // who validated the ILO,
+    bool approved;
+    
+}
+
+struct GovPoll {
+    uint yesCount;
+    uint noCount;
+    Vote[] votes;
+    bool isValidated; // validating 
+    bool isApproved;
+    uint startBlock;
+    uint endBlock;
+    address validator; // who validated the ILO,
+    
+}
