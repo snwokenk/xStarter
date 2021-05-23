@@ -71,6 +71,7 @@ interface IUniswapFactory {
 
 struct Info {
         uint8 _percentOfTokensForILO;
+        uint8 _percentTokensForTeam; 
         uint24 _dexDeadlineLength;
         uint48 _contribTimeLock;
         
@@ -245,6 +246,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     uint _fundingTokenTotal;
     // total funding tokens available. For non capital raising will be the same as i._fundingTokenTotal until liquidity pool is created
     uint _fundingTokenAvail;
+    uint _fundingTokenForTeam;
     
     // utc timestamp
     uint48 private _startTime;
@@ -303,6 +305,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
             
             i._softcap = a_.softcap;
             i._hardcap = a_.hardcap;
+            i._percentTokensForTeam = a_.percentTokensForTeam > 20 ? 20 : a_.percentTokensForTeam;
             _totalTokensSupply = i_.totalSupply;
             
         }
@@ -627,6 +630,12 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         
         if(_ILOSuccess) {
             _tokensForLiquidity = uint(_totalTokensILO * _percentOfILOTokensForLiquidity / 100);
+            if(i._percentTokensForTeam > 0) {
+                
+                _fundingTokenForTeam = uint((_fundingTokenAvail * i._percentTokensForTeam) / 100);
+                _fundingTokenAvail = _fundingTokenAvail.sub(_fundingTokenForTeam);
+            }
+            
         }
         
         return true;
@@ -759,6 +768,22 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         proportionalRewardTokens = amtPer * reducedFunderFundingAmount;
     }
     
+    event FundingTokenForTeamWithdrawn(address indexed admin_, uint indexed amount_, uint indexed percentTokensForTeam_, uint totalFundingTokens_ );
+    function withdrawFundingToken() external onlyAdmin returns(bool success) {
+        require(_fundingTokenForTeam > 0, 'no balance');
+        uint amount_ = _fundingTokenForTeam;
+        _fundingTokenForTeam = 0;
+        if(i._fundingToken == address(0)) {
+                // send native token to funder
+                (success, ) = _msgSender().call{value: amount_}('');
+                
+        }else {
+                // or if funding token wasn't native, send ERC20 token
+                success = IERC20AndOwnable(i._fundingToken).approve(_msgSender(), amount_);
+        }
+        emit FundingTokenForTeamWithdrawn(_msgSender(), amount_, i._percentTokensForTeam, _fundingTokenTotal);
+    }
+    
     event WithdrawnOnFailure(address indexed funder_, address indexed TokenAddr_, uint indexed amount_,  bool isAdmin);
     function withdrawOnFailure() external allowedToWithdraw returns(bool success) {
         require(ILOFailed(), "ILO not failed");
@@ -827,6 +852,8 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         success = IERC20AndOwnable(_projectToken).approve(_admin, amount_);
         _allowWithdraw();
     }
+    
+    
     
     function _getLiquidityPairAddress() internal view returns(address liquidPair_) {
         

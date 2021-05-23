@@ -69,7 +69,8 @@ contract xStarterProposal {
         uint minPerAddr_,
         uint maxPerAddr_,
         uint softcap_,
-        uint hardcap_
+        uint hardcap_,
+        uint8 percentTokensForTeam_ 
         ) external returns(bool) {
             require(!locked, 'additional info already set, can not change after setting');
             locked = true;
@@ -81,6 +82,7 @@ contract xStarterProposal {
             _a.maxPerAddr = maxPerAddr_;
             _a.softcap = softcap_;
             _a.hardcap = hardcap_;
+            _a.percentTokensForTeam = percentTokensForTeam_;
             return true;
     }
     function getLaunchpadAddress() external  view returns(address) {
