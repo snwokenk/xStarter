@@ -2,17 +2,31 @@
 pragma solidity ^0.8.0;
 
 
+
 // launched by user, directly deploying from launchpad increases the code size
 contract BaseDeployer {
-     address public _admin; // address of deployer
-    
-     constructor() {
-        require(msg.sender == _admin, 'Not authorized');
-        _admin = msg.sender;
+     address public admin; // address of deployer
+     mapping(address => bool) _allowedCallers;
+     
+     modifier onlyAdmin() {
+        require(admin == msg.sender, "Not authorized");
+        _;
     }
-    function setLaunchPad(address launchPad_) external returns(bool) {
-        require(msg.sender == _admin, 'not authorized');
-        _admin = launchPad_;
+    modifier onlyAllowedCaller() {
+        require(_allowedCallers[msg.sender] || admin == msg.sender, "Not an Allowed Caller");
+        _;
+    }
+    
+    constructor() {
+        admin = msg.sender;
+    }
+    function setAdmin(address newAdmin_) external onlyAdmin returns(bool) {
+        admin = newAdmin_;
+        return true;
+    }
+    function setAllowedCaller(address allowedCaller_) external onlyAdmin returns(bool) {
+        require(!_allowedCallers[allowedCaller_], 'msg.sender already allowed');
+        _allowedCallers[allowedCaller_] = true;
         return true;
     }
 }

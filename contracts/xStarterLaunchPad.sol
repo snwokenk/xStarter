@@ -13,33 +13,11 @@ import "./xStarterPoolPairB.sol";
 import "./Interaction.sol";
 import "./xStarterDeployers.sol";
 
-contract xStarterDeployer {
-//   address _admin;
-//   function setAdmin(address addr) external returns(bool) {
-//       _admin = addr;
-//   }
-    
-    function deployILO(
-        address adminAddress_,
-        address proposalAddr_,
-        address addressOfDex_,
-        address addressOfDexFactory_
-        ) external returns(address ILO_) {
-            // require(msg.sender == _admin, "Only launchpad can deploy ILO");
-            
-            address ILO = address(new xStarterPoolPairB(
-                 adminAddress_,
-                 proposalAddr_,
-                 addressOfDex_,
-                 addressOfDexFactory_
-                ));
-            ILO_ = address(ILO);
-        
-    }
-}
-
-// contract xStarterDeployer is BaseDeployer {
-   
+// contract xStarterDeployer {
+// //   address _admin;
+// //   function setAdmin(address addr) external returns(bool) {
+// //       _admin = addr;
+// //   }
     
 //     function deployILO(
 //         address adminAddress_,
@@ -47,7 +25,7 @@ contract xStarterDeployer {
 //         address addressOfDex_,
 //         address addressOfDexFactory_
 //         ) external returns(address ILO_) {
-//             require(msg.sender == _admin, "Only launchpad can deploy ILO");
+//             // require(msg.sender == _admin, "Only launchpad can deploy ILO");
             
 //             address ILO = address(new xStarterPoolPairB(
 //                  adminAddress_,
@@ -60,10 +38,32 @@ contract xStarterDeployer {
 //     }
 // }
 
+contract xStarterDeployer is BaseDeployer {
+   
+    
+    function deployILO(
+        address adminAddress_,
+        address proposalAddr_,
+        address addressOfDex_,
+        address addressOfDexFactory_
+        ) external onlyAllowedCaller returns(address ILO_) {
+            
+            address ILO = address(new xStarterPoolPairB(
+                 adminAddress_,
+                 proposalAddr_,
+                 addressOfDex_,
+                 addressOfDexFactory_
+                ));
+            ILO_ = address(ILO);
+        
+    }
+}
+
 
 
 
 interface iXstarterDeployer {
+    function setAllowedCaller(address allowedCaller_) external returns(bool);
     function deployILO(
         address adminAddress_,
         address proposalAddr_,
@@ -71,6 +71,8 @@ interface iXstarterDeployer {
         address addressOfDexFactory_
         ) external returns(address ILO_);
 }
+
+
 
 // contract launches xStarterPoolPairB contracts for approved ILO proposals and enforces
 contract xStarterLaunchPad is Administration, Interaction{
@@ -94,6 +96,7 @@ contract xStarterLaunchPad is Administration, Interaction{
     address public _addressOfDex;
     address public _addressOfDexFactory;
     address  _xStarterDeployer;
+    address _xStarterERCDeployer;
     
     // todo: let mapping be string and uint in which index is the position of ILOproposal in array
     mapping(address => uint) private _ILOProposals;
@@ -110,6 +113,7 @@ contract xStarterLaunchPad is Administration, Interaction{
     constructor(
         address xStarterToken_, 
         address xStarterDeployer_, 
+        address xStarterERCDeployer_,
         uint depositPerProposal_,
         address addressOfDex_,
         address addressOfDexFactory_,
@@ -119,6 +123,7 @@ contract xStarterLaunchPad is Administration, Interaction{
         
         _xStarterToken = xStarterToken_;
         _xStarterDeployer = xStarterDeployer_;
+        _xStarterERCDeployer = xStarterERCDeployer_;
         _depositPerProposal = depositPerProposal_;
         _addressOfDex = addressOfDex_;
         _addressOfDexFactory = addressOfDexFactory_;
@@ -126,13 +131,11 @@ contract xStarterLaunchPad is Administration, Interaction{
     }
     
     function addGovernance(address xStarterGovernance_) external onlyAdmin returns(bool) {
-        // require(__admin != address(0) && _msgSender() == __admin, 'Not authorized');
         _xStarterGovernance = xStarterGovernance_;
         return true;
     }
     
     function addNFT(address xStarterNFT_) external onlyAdmin returns(bool) {
-        // require(__admin != address(0) && _msgSender() == __admin, 'Not authorized');
         _xStarterNFT = xStarterNFT_;
         return true;
     }
@@ -140,8 +143,8 @@ contract xStarterLaunchPad is Administration, Interaction{
     function xStarterDEXUsed() public view returns(address dexAddress, address dexFactoryAddress) {
         return (_addressOfDex, _addressOfDexFactory);
     }
-    function xStarterContracts() public view returns(address[4] memory) {
-        return [_xStarterGovernance, _xStarterToken, _xStarterNFT, _xStarterDeployer];
+    function xStarterContracts() public view returns(address[5] memory) {
+        return [_xStarterGovernance, _xStarterToken, _xStarterNFT, _xStarterDeployer, _xStarterERCDeployer];
     }
     function getProposal(address proposalAddr_) public view returns(ILOProposal memory i_, ILOAdditionalInfo memory a_) {
         // uint lenOfArrayAtTimeOfAdd = _ILOProposals[proposalAddr_];
@@ -202,7 +205,6 @@ contract xStarterLaunchPad is Administration, Interaction{
         return _tokenDeposits[addr_];
     }
     function isDeployed(address proposalAddr_) public view returns(bool) {
-        
         return iXstarterProposal(proposalAddr_).isDeployed();
         
     }
@@ -258,6 +260,7 @@ contract xStarterLaunchPad is Administration, Interaction{
             _addressOfDex,
             _addressOfDexFactory // contrib lock
         );
+        IXStarterERCDeployer(_xStarterERCDeployer).setAllowedCaller(ILO);
         
         // change proposal state
         success = iXstarterProposal(proposalAddr_).deploy(ILO);

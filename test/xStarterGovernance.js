@@ -21,6 +21,8 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
     let xStarterNFTInst;
     let xStarterDeployerFactory;
     let xStarterDeployerInst;
+    let xStarterERCDeployerFactory;
+    let xStarterERCDeployerInst;
     let xStarterProposalFactory;
     let xStarterProposalInst;
     let xStarterPoolPairInst;
@@ -44,13 +46,31 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
                 BigNumber.from('500000000'),
                 []
             )
-            // deploy governance
-            xStarterGovernanceFactory = await ethers.getContractFactory("xStarterGovernance")
-            xStarterGovernanceInst = await xStarterGovernanceFactory.deploy()
+
+            // deploy deployer
+            xStarterDeployerFactory = await ethers.getContractFactory("contracts/xStarterLaunchPad.sol:xStarterDeployer")
+            xStarterDeployerInst = await xStarterDeployerFactory.deploy()
+
+            // deploy erc deployer
+            xStarterERCDeployerFactory = await ethers.getContractFactory("contracts/xStarterPoolPairB.sol:xStarterERCDeployer")
+            xStarterERCDeployerInst = await xStarterERCDeployerFactory.deploy()
+            
 
             // deploy launchpad
             xStarterLaunchPadFactory = await ethers.getContractFactory("xStarterLaunchPad")
-            xStarterLaunchPadInst = await xStarterLaunchPadFactory.deploy()
+            xStarterLaunchPadInst = await xStarterLaunchPadFactory.deploy(
+                xStarterTokenInst.address, 
+                xStarterDeployerInst.address, // xstarter deployer
+                xStarterERCDeployerInst.address,
+                utils.parseEther('500'),
+                uniswapRouter,
+                uniswapFactory,
+                owner.address
+            )
+            
+            // deploy governance
+            xStarterGovernanceFactory = await ethers.getContractFactory("xStarterGovernance")
+            xStarterGovernanceInst = await xStarterGovernanceFactory.deploy()
 
             // deploy NFT
             xStarterNFTFactory = await ethers.getContractFactory("xStarterNFT")
@@ -60,9 +80,7 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
             poolPairFactory = await ethers.getContractFactory("contracts/xStarterPoolPairB.sol:xStarterPoolPairB");
 
 
-            // deploy deployer
-            xStarterDeployerFactory = await ethers.getContractFactory("contracts/xStarterLaunchPad.sol:xStarterDeployer")
-            xStarterDeployerInst = await xStarterDeployerFactory.deploy()
+            
 
             // initialize
             await (await xStarterNFTInst.initialize(
@@ -78,17 +96,20 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
                 false
             )).wait()
 
-            await (await xStarterLaunchPadInst.initialize(
-                xStarterGovernanceInst.address,
-                xStarterTokenInst.address, 
-                xStarterNFTInst.address, 
-                xStarterDeployerInst.address, // xstarter deployer
-                utils.parseEther('500'),
-                uniswapRouter,
-                uniswapFactory
-            )).wait()
+            // await (await xStarterLaunchPadInst.initialize(
+            //     xStarterGovernanceInst.address,
+            //     xStarterTokenInst.address, 
+            //     xStarterNFTInst.address, 
+            //     xStarterDeployerInst.address, // xstarter deployer
+            //     utils.parseEther('500'),
+            //     uniswapRouter,
+            //     uniswapFactory
+            // )).wait()
 
-            await (await xStarterDeployerInst.initialize(
+            await (await xStarterDeployerInst.setAdmin(
+                xStarterLaunchPadInst.address
+            )).wait()
+            await (await xStarterERCDeployerInst.setAdmin(
                 xStarterLaunchPadInst.address
             )).wait()
 
@@ -106,7 +127,7 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
         })
 
         it('xStartDeployer has correct Values', async function(){
-            let value = await xStarterDeployerInst.allowedCaller();
+            let value = await xStarterDeployerInst.admin();
             console.log('allowedCaller is ', value);
             expect(value).to.equal(xStarterLaunchPadInst.address);
         })
@@ -114,10 +135,11 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
         it('xStartLaunchpad has correct Values', async function(){
             let value = await xStarterLaunchPadInst.xStarterContracts();
             console.log('xStarterContracts from launchpad is ', value);
-            expect(value[0]).to.equal(xStarterGovernanceInst.address);
+            // expect(value[0]).to.equal(xStarterGovernanceInst.address);
             expect(value[1]).to.equal(xStarterTokenInst.address);
-            expect(value[2]).to.equal(xStarterNFTInst.address);
+            // expect(value[2]).to.equal(xStarterNFTInst.address);
             expect(value[3]).to.equal(xStarterDeployerInst.address);
+            expect(value[4]).to.equal(xStarterERCDeployerInst.address);
         })
 
         it('xStarterGovernance has correct Values', async function(){
@@ -138,9 +160,8 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
         })
     })
 
-    describe('Create xStarter ILO', function() {
-
-        it('deploy ILOProposal Contract', async function(){
+    describe('Create xStarter ILO Proposal', function() {
+        it('ILOProposal Contract deployed correctly', async function(){
             xStarterProposalInst = await xStarterProposalFactory.deploy(
                 "xStarter", 
                 "XSTN", 
@@ -158,12 +179,13 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
                 utils.parseEther('0.10'),
                 utils.parseEther('1'),
                 utils.parseEther('1'),
-                utils.parseEther('2')
+                utils.parseEther('2'),
+                20
                 )).wait()
 
-            let value = await xStarterProposalInst.getILOInfo();
-            let ILOInfo = value[0]
-            let ILOAdditional = value[1]
+            let value = await xStarterProposalInst.getCompactInfo();
+            let ILOInfo = value.info
+            let ILOAdditional = value.moreInfo
             console.log('ilo proposal is ', ILOInfo);
             console.log('ilo additional is ', ILOAdditional);
             // console.log('xStarter ILO Proposal addr', xStarterProposalInst.address)
@@ -179,25 +201,17 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
 
     })
 
-    describe('deploy initial xStarter ILO to launchpad', function() {
+    describe('add initial xStarter ILO proposal to launchpad', function() {
         // using the same info, but this should revert since deployXstarterILO hasn't been called by creator
-        it('deployment of another ILO before initial should revert', async function(){
+        it('adding of another ILO proposal before initial should revert', async function(){
             await expect(xStarterLaunchPadInst.registerILOProposal(
-                xStarterProposalInst.address,
-                "xStarter", 
-                "XSTN", 
-                "https://", 
-                utils.parseEther('500000000'),
-                70,
-                zeroAddress,
+                xStarterProposalInst.address
             )).to.be.revertedWith("revert Initial xStarter ILO not deployed")
         })
 
         it('deploying of initial ILO should revert if not called by allowedCaller', async function(){
             await expect(xStarterLaunchPadInst.connect(addr1).deployXstarterILO(
-                xStarterProposalInst.address,
-                zeroAddress,
-                "https://"
+                xStarterProposalInst.address
                 
             )).to.be.revertedWith("revert Not authorized")
         })

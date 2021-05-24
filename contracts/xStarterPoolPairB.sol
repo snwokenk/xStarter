@@ -14,6 +14,7 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./Administration.sol";
 import "./ERC777ReceiveSend.sol";
 import "./xStarterInterfaces.sol";
+import "./xStarterDeployers.sol";
 //import "./UniswapInterface.sol";
 
 
@@ -131,9 +132,34 @@ contract ProjectBaseTokenERC20 is Context, ERC20{
     
 }
 
+contract xStarterERCDeployer is BaseDeployer {
+    function deployToken(
+        string memory name_,
+        string memory symbol_,
+        uint totalTokenSupply_,
+        address[] memory defaultOperators_
+    ) external onlyAllowedCaller returns(address ercToken){
+        //ProjectBaseToken newToken = new ProjectBaseToken(name_,symbol_, totalTokenSupply_, address(this), defaultOperators_);
+       ercToken = address(new ProjectBaseTokenERC20(name_,symbol_, totalTokenSupply_, msg.sender));
+    }
+    
+}
+
+interface IXStarterERCDeployer {
+    function setAllowedCaller(address allowedCaller_) external returns(bool);
+    
+    function deployToken(
+        string memory name_,
+        string memory symbol_,
+        uint totalTokenSupply_,
+        address[] memory defaultOperators_
+    ) external returns(address ercToken);
+}
 
 
-contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777Sender {
+
+
+contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
     using SafeMath for uint256;
     using Address for address;
     
@@ -188,7 +214,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     // added to when token is transferred from admin address to contract.
     // subtracted from when token is transfered to dex
     // subtracted from when token can be withdrawn by participants and admin
-    uint private _totalTokensSupplyControlled;
+    uint private _tokensHeld;
     
     // this is set up by the launchpad, it enforces what the project told the community
     // if the project said 70% of tokens will be offered in the ILO. This will be set in the constructor.
@@ -414,8 +440,8 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     function percentOfTotalTokensForILO() public view returns (uint) {
         return _percentOfTotalTokensForILO;
     }
-    function totalTokensSupplyControlled() public view returns (uint) {
-        return _totalTokensSupplyControlled;
+    function tokensHeld() public view returns (uint) {
+        return _tokensHeld;
     }
     
     function totalTokensSupply() public view returns (uint) {
@@ -453,6 +479,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     // Step 2
     function setUpPoolPair(
         address addressOfProjectToken,
+        address ercDeployer_,
         string memory tokenName_,
         string memory tokenSymbol_,
         uint totalTokenSupply_,
@@ -469,7 +496,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
             // if address of project token is 0 address deploy token for it
             if(address(0) == addressOfProjectToken) {
                     address[] memory defaultOperators_;
-                    _deployToken(tokenName_, tokenSymbol_, totalTokenSupply_, defaultOperators_);
+                    _deployToken(ercDeployer_,tokenName_, tokenSymbol_, totalTokenSupply_, defaultOperators_);
             } 
             else {
                 IERC20AndOwnable existingToken = IERC20AndOwnable(addressOfProjectToken);
@@ -484,7 +511,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
                 
                 _projectToken = addressOfProjectToken;
                 // _totalTokensSupply = _totalTokensSupply.add(totalTokenSupply_);
-                // _totalTokensSupplyControlled = _totalTokensSupplyControlled.add(totalTokenSupply_);
+                // _tokensHeld = _tokensHeld.add(totalTokenSupply_);
                 
             }
             _startTime = startTime_;
@@ -496,19 +523,20 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     
     // function should be called within a function that checks proper access
     function _deployToken(
+        address ercDeployer_,
         string memory name_,
         string memory symbol_,
         uint totalTokenSupply_,
         address[] memory defaultOperators_
     ) internal returns(bool){
         //ProjectBaseToken newToken = new ProjectBaseToken(name_,symbol_, totalTokenSupply_, address(this), defaultOperators_);
-        ProjectBaseTokenERC20 newToken = new ProjectBaseTokenERC20(name_,symbol_, totalTokenSupply_, address(this));
+        _projectToken = IXStarterERCDeployer(ercDeployer_).deployToken(name_,symbol_, totalTokenSupply_, defaultOperators_);
 
-        _projectToken = address(newToken);
-        _totalTokensSupply = totalTokenSupply_;
-        _totalTokensSupplyControlled = _totalTokensSupplyControlled.add(totalTokenSupply_);
+        // _projectToken = address(newToken);
+        // _totalTokensSupply = totalTokenSupply_;
+        _tokensHeld = _tokensHeld.add(totalTokenSupply_);
         
-        //_totalTokensILO = _totalTokensSupplyControlled.mul(_percentOfTotalTokensForILO.div(100));
+        //_totalTokensILO = _tokensHeld.mul(_percentOfTotalTokensForILO.div(100));
         _setTokensForILO();
         
         emit TokenCreatedByXStarterPoolPair(_projectToken, address(this), _msgSender(), block.timestamp);
@@ -520,8 +548,8 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     
     // step 3 if PoolPair has not been funded, if token was created by poolpair contract it is automatically funded, also sets ILO tokens
     function depositAllTokenSupply() public onlyAdmin onlySetup returns(bool success) {
-        require(_totalTokensSupplyControlled != _totalTokensSupply, "already deposited");
-        // if(_totalTokensSupplyControlled == _totalTokensSupply) { 
+        require(_tokensHeld != _totalTokensSupply, "already deposited");
+        // if(_tokensHeld == _totalTokensSupply) { 
         //     return true;
             
         // }
@@ -533,7 +561,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         
         require(success,'could not transfer project tokens to pool pair contract');
 
-        _totalTokensSupplyControlled =  _totalTokensSupplyControlled.add(_totalTokensSupply);
+        _tokensHeld =  _tokensHeld.add(_totalTokensSupply);
         _setTokensForILO();
 
         
@@ -542,12 +570,12 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
     // function should be called within a function that checks proper access ie onlyAdmin or onlyOwner
     function _setTokensForILO() internal {
         // using the percent of tokens set in constructor by launchpad set total tokens for ILO 
-        // formular:  (_percentOfTotalTokensForILO/100 ) * _totalTokensSupplyControlled
-        //uint amount = _totalTokensSupplyControlled.mul(_percentOfTotalTokensForILO/100);
-        uint amount = _totalTokensSupplyControlled * _percentOfTotalTokensForILO/100;
+        // formular:  (_percentOfTotalTokensForILO/100 ) * _tokensHeld
+        //uint amount = _tokensHeld.mul(_percentOfTotalTokensForILO/100);
+        uint amount = _tokensHeld * _percentOfTotalTokensForILO/100;
         _totalTokensILO = amount;
         _availTokensILO = amount;
-        _adminBalance = _totalTokensSupplyControlled.sub(amount);
+        _adminBalance = _tokensHeld.sub(amount);
     }
     
     
@@ -712,7 +740,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         require(amount_ > 0, 'amount must be greater than 0');
         //funder.projectTokenAmount = funder.projectTokenAmount.sub(amount_);
         success = IERC20AndOwnable(_projectToken).approve(_msgSender(), amount_);
-         _totalTokensSupplyControlled = _totalTokensSupplyControlled.sub(amount_);
+         _tokensHeld = _tokensHeld.sub(amount_);
         
         _allowWithdraw();
         emit WithdrawnProjectToken(_msgSender(), amount_);
@@ -794,8 +822,8 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
             // if admin withdraw all project tokens
             require(_adminBalance != 0, "already withdrawn");
             _adminBalance = 0;
-            uint amount_ = _totalTokensSupplyControlled;
-            _totalTokensSupplyControlled = 0;
+            uint amount_ = _tokensHeld;
+            _tokensHeld = 0;
             success = IERC20AndOwnable(_projectToken).approve(_msgSender(), amount_);
             emit WithdrawnOnFailure(_msgSender(), _projectToken, amount_, true);
             
@@ -848,7 +876,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         // admin
         uint amount_ = _adminBalance;
         _adminBalance = 0;
-        _totalTokensSupplyControlled = _totalTokensSupplyControlled.sub(amount_);
+        _tokensHeld = _tokensHeld.sub(amount_);
         success = IERC20AndOwnable(_projectToken).approve(_admin, amount_);
         _allowWithdraw();
     }
@@ -914,7 +942,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         
         _fundingTokenAvail = 0;
         // subtract amount sent to liquidity pool from this
-        _totalTokensSupplyControlled =  _totalTokensSupplyControlled.sub(amountProjectToken);
+        _tokensHeld =  _tokensHeld.sub(amountProjectToken);
         _tokensForLiquidity = 0;
         
         
@@ -950,7 +978,7 @@ contract xStarterPoolPairB is Ownable, Administration, IERC777Recipient, IERC777
         
         _fundingTokenAvail = 0;
         // subtract amount sent to liquidity pool from this
-        _totalTokensSupplyControlled =  _totalTokensSupplyControlled.sub(amountProjectToken);
+        _tokensHeld =  _tokensHeld.sub(amountProjectToken);
         _tokensForLiquidity = 0;
         
         liquidityTokens_ = amountliquidityToken;

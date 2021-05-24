@@ -20,7 +20,7 @@ abstract contract Administration is Context {
     }
 
     modifier onlyAdmin() {
-        require(admin() == _msgSender(), "Administration: caller is not the admin");
+        require(admin() == _msgSender(), "Not authorized");
         _;
     }
 
