@@ -85,6 +85,7 @@ contract xStarterLaunchPad is Administration, Interaction{
     }
     
     bool private _initialILODeployed;
+    address private _initialILOAddr;
     bool _deploying;
     // address __admin = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266; // address of deployer
     
@@ -146,15 +147,15 @@ contract xStarterLaunchPad is Administration, Interaction{
     function xStarterContracts() public view returns(address[5] memory) {
         return [_xStarterGovernance, _xStarterToken, _xStarterNFT, _xStarterDeployer, _xStarterERCDeployer];
     }
-    function getProposal(address proposalAddr_) public view returns(ILOProposal memory i_, ILOAdditionalInfo memory a_) {
+    function getProposal(address proposalAddr_) public view returns(CompactInfo memory i_) {
         // uint lenOfArrayAtTimeOfAdd = _ILOProposals[proposalAddr_];
         // // proposalAddr does not exist return empty proposal
         // if(lenOfArrayAtTimeOfAdd == 0) {
         //     return proposal;
         // }
         // proposal = _ILOProposalArray[lenOfArrayAtTimeOfAdd - 1];
-        (i_, a_) = iXstarterProposal(proposalAddr_).getILOInfo();
-        return (i_, a_);
+        require((proposalAddr_ == _initialILOAddr && _ILOProposals[proposalAddr_] == 0) || _ILOProposals[proposalAddr_] != 0, "proposal address not registered");
+        i_ = iXstarterProposal(proposalAddr_).getCompactInfo();
     }
     
     // gets ILOProposals 5 at a time
@@ -196,10 +197,10 @@ contract xStarterLaunchPad is Administration, Interaction{
     }
     
     
-    function IsProposerOrAdmin(address msgSender_, address proposalAddr_) public view returns(bool) {
-        (ILOProposal memory proposal, ) = getProposal(proposalAddr_);
-        return proposal.proposer != address(0) && (proposal.proposer == msgSender_ || proposal.admin == msgSender_);
-    }
+    // function IsProposerOrAdmin(address msgSender_, address proposalAddr_) public view returns(bool) {
+    //     (ILOProposal memory proposal, ) = getProposal(proposalAddr_);
+    //     return proposal.proposer != address(0) && (proposal.proposer == msgSender_ || proposal.admin == msgSender_);
+    // }
     
     function depositBalance(address addr_) public view returns(uint) {
         return _tokenDeposits[addr_];
@@ -236,20 +237,18 @@ contract xStarterLaunchPad is Administration, Interaction{
     }
     
     
-    event ILOProposalRegistered(address indexed proposer, address indexed proposalAddr_);
-    
     function registerILOProposal(address proposalAddr_) public returns(bool success) {
         require(_initialILODeployed, "Initial xStarter ILO not deployed");
         success = _registerILOProposal(proposalAddr_);
-        require(success, "not able to register ILO");
-        emit ILOProposalRegistered(_msgSender(), proposalAddr_);
+        // require(success, "not able to register ILO");
+        
         
     }
     
     function deployXstarterILO(address proposalAddr_) external onlyAdmin returns(address ILO){
         // require(_msgSender() == __admin, "Not authorized");
         require(!_initialILODeployed, "xStarter ILO already deployed");
-        bool success = registerILOProposal(proposalAddr_);
+        bool success = _registerILOProposal(proposalAddr_);
         require(success, 'Not able to create initial ILO proposal');
         // (success, ILO) = _deployILO(proposalAddr_, _msgSender());
         
@@ -260,12 +259,14 @@ contract xStarterLaunchPad is Administration, Interaction{
             _addressOfDex,
             _addressOfDexFactory // contrib lock
         );
+        // allow newly created ILO pool pair to use erc20 deployer
         IXStarterERCDeployer(_xStarterERCDeployer).setAllowedCaller(ILO);
         
         // change proposal state
         success = iXstarterProposal(proposalAddr_).deploy(ILO);
         require(success, 'Not able to deploy initial ILO');
         _initialILODeployed = true;
+        _initialILOAddr = ILO;
         emit ILODeployed(proposalAddr_, _msgSender(), ILO);
         
     }
@@ -309,12 +310,15 @@ contract xStarterLaunchPad is Administration, Interaction{
         
         // change proposal state
         success = iXstarterProposal(proposalAddr_).deploy(ILO);
+        // allow newly created ILO pool pair to use erc20 deployer
+        IXStarterERCDeployer(_xStarterERCDeployer).setAllowedCaller(ILO);
         
         
         return (success, ILO);
         
     }
     
+    event ILOProposalRegistered(address indexed proposer, address indexed proposalAddr_);
     
     function _registerILOProposal(address proposalAddr_) internal returns(bool success) {
         
@@ -322,6 +326,7 @@ contract xStarterLaunchPad is Administration, Interaction{
         _ILOProposals[proposalAddr_] = _ILOProposalArray.length;
         success = iXstarterProposal(proposalAddr_).register(_xStarterGovernance);
         require(success, 'not able to register ILOProposal');
+        emit ILOProposalRegistered(_msgSender(), proposalAddr_);
         
         return success;
         

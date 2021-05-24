@@ -209,7 +209,7 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
             )).to.be.revertedWith("revert Initial xStarter ILO not deployed")
         })
 
-        it('deploying of initial ILO should revert if not called by allowedCaller', async function(){
+        it('deploying of initial ILO should revert if not called by admin', async function(){
             await expect(xStarterLaunchPadInst.connect(addr1).deployXstarterILO(
                 xStarterProposalInst.address
                 
@@ -220,14 +220,11 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
             console.log('owner addr', owner.address)
             // address of xStarterPoolPair for the xStarter ILO
             await (await xStarterLaunchPadInst.connect(owner).deployXstarterILO(
-                xStarterProposalInst.address,
-                zeroAddress,
-                "https://"
-                
+                xStarterProposalInst.address
             )).wait()
 
             let proposalInfo = await xStarterLaunchPadInst.getProposal(xStarterProposalInst.address)
-            console.log('address of pool pair is', proposalInfo.ILOAddress)
+            console.log('address of pool pair is', proposalInfo.info.ILOAddress)
             console.log('adddress of xstarter ILo', xStarterProposalInst.address)
             // await expect().to.be.revertedWith("revert Not authorized")
 
@@ -240,16 +237,17 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
               let startTime = parseInt(Date.now() / 1000) + 60;
               let endTime = parseInt(Date.now() / 1000) + 120;
               let proposalInfo = await xStarterLaunchPadInst.getProposal(xStarterProposalInst.address)
-              xStarterPoolPairInst = poolPairFactory.attach(proposalInfo.ILOAddress)
+              xStarterPoolPairInst = poolPairFactory.attach(proposalInfo.info.ILOAddress)
             //   const poolPairFromOther = poolPair.connect(addr2);
               await expect(xStarterPoolPairInst.connect(addr2).setUpPoolPair(
                 xStarterTokenInst.address,
+                xStarterERCDeployerInst.address,
                 "xStarter", 
                 "XSTN", 
                 500000000,
                 startTime,
                 endTime,
-            )).to.be.revertedWith("Administration: caller is not the admin");
+            )).to.be.revertedWith("revert Not authorized");
               
           })
           it("setUpPoolPair Should succeed Admin", async function () {
@@ -259,10 +257,11 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
               let startTime = parseInt(Date.now() / 1000) + 60;
               let endTime = parseInt(Date.now() / 1000) + 120;
               let proposalInfo = await xStarterLaunchPadInst.getProposal(xStarterProposalInst.address)
-              xStarterPoolPairInst = poolPairFactory.attach(proposalInfo.ILOAddress)
+              xStarterPoolPairInst = poolPairFactory.attach(proposalInfo.info.ILOAddress)
             //   const poolPairFromOther = poolPair.connect(addr2);
               let response = await xStarterPoolPairInst.setUpPoolPair(
                 xStarterTokenInst.address,
+                xStarterERCDeployerInst.address,
                 "xStarter", 
                 "XSTN", 
                 500000000,
@@ -279,29 +278,6 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
             // todo: add more checks, to make sure data from proposal contract was successfully added to ILO contract
               
           })
-        // it('register ILOProposal Contract', async function(){
-        //     xStarterProposalInst = await xStarterProposalFactory.deploy(
-        //         "xStarter", 
-        //         "XSTN", 
-        //         "https://", 
-        //         utils.parseEther('500000000'),
-        //         70,
-        //         zeroAddress,
-        //         xStarterLaunchPadInst.address 
-        //     );
-
-        //     let value = await xStarterProposalInst.getILOInfo();
-        //     console.log('value is ', value);
-        //     console.log('token name is ', value.tokenName, typeof value);
-        //     expect(value.tokenName).to.equal("xStarter");
-        //     expect(value.tokenSymbol).to.equal("XSTN");
-        //     expect(value.totalSupply).to.equal(utils.parseEther('500000000'));
-        //     expect(value.percentOfTokensForILO).to.equal(70);
-        //     expect(value.fundingToken).to.equal(zeroAddress);
-        //     expect(await xStarterProposalInst.getLaunchpadAddress()).to.equal(xStarterLaunchPadInst.address );
-        //     // expect(value[1]).to.equal(xStarterGovernanceInst.address);
-        //     // expect(value[2]).to.equal(xStarterLaunchPadInst.address);
-        // })
 
     })
 })
