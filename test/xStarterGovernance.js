@@ -279,5 +279,104 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
               
           })
 
+          it("deposit tokens to ILO", async function () {
+
+            let response = await xStarterTokenInst.approve(xStarterPoolPairInst.address, utils.parseEther('500000000'))
+            await response.wait()
+            response = await xStarterTokenInst.allowance(owner.address,xStarterPoolPairInst.address)
+            console.log('allowance is', response)
+            expect(response).to.equal(BigNumber.from('500000000000000000000000000'))
+            const depositing = await xStarterPoolPairInst.depositAllTokenSupply()
+            await expect(depositing.wait()).to.not.be.reverted
+        })
+        it('ILO project tokens held should be equal to 500 million tokens or 500 million * 10 ** 18', async function() {
+          let supply = await xStarterPoolPairInst.tokensHeld()
+          let addr = await xStarterPoolPairInst.projectToken()
+
+          expect(supply).to.be.equal(BigNumber.from('500000000000000000000000000'))
+          expect(addr).to.be.equal(xStarterTokenInst.address)
+        })
+
     })
+
+    describe("Contribute Native Token in xStarter ILO", function() {
+
+        it('should revert because event not open', async function(){
+        //   console.log('response is',response)
+        await expect(xStarterPoolPairInst.connect(addr1).contributeNativeToken({value: '1000000000000000000'})).to.be.revertedWith("ILO event not open");
+        })
+
+        it('wait till open, contribute and check balance has changed', async function(){
+        // because this will wait for some time let mocha know setting to 3 minutes 
+        this.timeout(300000)
+        for (let index = 0; index < 12; index++) {
+            await sleep(20000);
+            let isOpen = await xStarterPoolPairInst.isEventOpen()
+            console.log('event is open', isOpen)
+
+            if(isOpen) {break}
+            
+        }
+        let response = await xStarterPoolPairInst.connect(addr1).contributeNativeToken({value: utils.parseEther('1.0')});
+        await response.wait();
+        let val = await xStarterPoolPairInst.fundingTokenBalanceOfFunder(addr1.address);
+        expect(BigNumber.from(val).toString()).to.equal('1000000000000000000');
+        let amtRaised = await xStarterPoolPairInst.amountRaised()
+        expect(BigNumber.from(amtRaised).toString()).to.equal('1000000000000000000');
+
+        response = await xStarterPoolPairInst.connect(addr2).contributeNativeToken({value: utils.parseEther('1.0')});
+        await response.wait();
+        val = await xStarterPoolPairInst.fundingTokenBalanceOfFunder(addr2.address);
+        expect(BigNumber.from(val).toString()).to.equal('1000000000000000000');
+        amtRaised = await xStarterPoolPairInst.amountRaised()
+        expect(BigNumber.from(amtRaised).toString()).to.equal('2000000000000000000');
+
+        await expect(xStarterPoolPairInst.connect(addr3).contributeNativeToken({value: utils.parseEther('1.0')})).to.be.revertedWith("revert ILO event not open")
+        val = await xStarterPoolPairInst.fundingTokenBalanceOfFunder(addr3.address);
+        expect(BigNumber.from(val).toString()).to.equal('0');
+
+      })
+        
+    })
+
+    describe("validate xStarter ILO", function() {
+        
+        it('ILO should succeed', async function(){
+            let response = await xStarterPoolPairInst.validateILO();
+            //   console.log('response is',response)
+            await expect(response.wait()).to.not.be.reverted;
+            let ILOFailed = await xStarterPoolPairInst.ILOFailed();
+            expect(ILOFailed).to.equal(false);
+            expect(await xStarterPoolPairInst.tokensForLiquidity()).to.equal('175000000000000000000000000')
+        })
+        it('team should have funding token allocated', async function(){
+            let teamAmount = await xStarterPoolPairInst.fundingTokenForTeam();
+            console.log('team amount  is',teamAmount.toString())
+            expect(teamAmount).to.be.equal(utils.parseEther('0.40'));
+            let amountRaiseAvail = await xStarterPoolPairInst.fundingTokenAvail();
+            expect(amountRaiseAvail).to.equal(utils.parseEther('1.60'));
+            console.log('amount raise available after team tokens taking',amountRaiseAvail.toString())
+            expect(await xStarterPoolPairInst.tokensForLiquidity()).to.equal('175000000000000000000000000')
+        })
+    })
+
+    / describe('approveTokensForLiquidityPair', function() {
+              // this checks to make sure tokens are approved for uniswap or uniswap forks dex exchanges
+        
+            it('approval should succeed', async function(){
+              let response = await xStarterPoolPairInst.approveTokensForLiquidityPair();
+              await expect(response.wait()).to.not.be.reverted;
+        
+              // check project token allowances
+            //   let projectTokenAddr = await xStarterPoolPairInst.projectToken()
+              let amount = await xStarterTokenInst.totalSupply();
+              console.log('amount is', amount.toString());
+              expect(amount).to.equal('500000000000000000000000000');
+        
+              amount = await xStarterTokenInst.allowance(xStarterPoolPairInst.address, uniswapRouter)
+        
+              console.log('allowance amount is ', amount.toString())
+              expect(amount).to.equal('175000000000000000000000000');
+            })
+        })
 })

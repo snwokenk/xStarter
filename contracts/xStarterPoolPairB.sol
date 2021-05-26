@@ -339,6 +339,9 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
     function getFullInfo() external view returns(Info memory) {
         return i;
     }
+    function fundingTokenForTeam() public view returns(uint) {
+        return _fundingTokenForTeam;
+    }
     function addressOfDex() public view returns(address) {
         return i._addressOfDex;
     }
@@ -348,6 +351,10 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
     function amountRaised() public view returns(uint) {
         return _fundingTokenTotal;
     }
+    function fundingTokenAvail() public view returns(uint) {
+        return _fundingTokenAvail;
+    }
+    
     function availLPTokens() public view returns(uint) {
         return _availLPTokens;
     }
