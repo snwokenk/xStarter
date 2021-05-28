@@ -73,6 +73,10 @@ export default defineComponent( {
     liquidityOffering: {
       type: Object,
       required: true
+    },
+    anILO: {
+      type: Object,
+      required: true
     }
   },
   setup(){

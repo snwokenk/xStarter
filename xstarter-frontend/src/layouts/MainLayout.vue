@@ -79,11 +79,13 @@ export default defineComponent({
 
     let signer = undefined
     let launchPadContract = undefined
-
+    let launchPadLoaded = ref(false)
+    provide('$launchPadLoaded', launchPadLoaded)
     const ethereumProvider = ref(undefined)
     const metamaskInstalled = ref(false)
     const connectedAccounts = ref([])
     const connectedAndPermissioned = ref(Boolean(metamaskInstalled.value && connectedAccounts.value.length > 0))
+    provide('$connectedAndPermissioned', connectedAndPermissioned)
     // check if you already have connection and permission
     // can be called when account or network changes
 
@@ -113,10 +115,15 @@ export default defineComponent({
         signer = provider.getSigner()
         launchPadContract = await  new ethers.Contract(LAUNCHPAD_ADDRESS, launchpadCode.abi, signer)
         console.log('is permssioned 1', connectedAndPermissioned.value, await provider.getBlockNumber())
+        if (launchPadContract) {
+          launchPadLoaded.value = true
+        }
       }else {
+        launchPadLoaded.value = false
         provider = undefined
         signer = undefined
         launchPadContract = undefined
+
       }
       // checks to see if any account has permission
       ethereumProvider.value.on('accountsChanged', checkExisting)

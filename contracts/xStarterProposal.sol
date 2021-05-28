@@ -9,7 +9,7 @@ contract xStarterProposal {
     bool locked;
     address _xStarterLaunchpad;
     address _xStarterGov;
-    address _ILOAddress;
+    // address _ILOAddress;
     address admin;
     mapping(address => bool) public allowedCallers;
     
@@ -133,6 +133,12 @@ contract xStarterProposal {
         require(msg.sender == _xStarterLaunchpad, 'not authorized');
         _xStarterGov = xStarterGov_;
         _i.isRegistered = true;
+        return true;
+    }
+    function setILOTimes(uint48 startTime_, uint48 endTime_) external returns(bool) {
+        require(_i.ILOAddress != address(0) && msg.sender == _i.ILOAddress, 'not authorized');
+        _a.startTime = startTime_;
+        _a.endTime = endTime_;
         return true;
     }
     function approved() external view returns(bool) {

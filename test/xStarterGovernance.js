@@ -26,6 +26,7 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
     let xStarterProposalFactory;
     let xStarterProposalInst;
     let xStarterPoolPairInst;
+    let routerFactoryContractFactory
     const uniswapRouter = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
     const uniswapFactory = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
     const WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
@@ -46,6 +47,8 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
                 BigNumber.from('500000000'),
                 []
             )
+
+            routerFactoryContractFactory = await ethers.getContractFactory('UniswapV2Factory');
 
             // deploy deployer
             xStarterDeployerFactory = await ethers.getContractFactory("contracts/xStarterLaunchPad.sol:xStarterDeployer")
@@ -308,8 +311,8 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
 
         it('wait till open, contribute and check balance has changed', async function(){
         // because this will wait for some time let mocha know setting to 3 minutes 
-        this.timeout(300000)
-        for (let index = 0; index < 12; index++) {
+        this.timeout(340000)
+        for (let index = 0; index < 15; index++) {
             await sleep(20000);
             let isOpen = await xStarterPoolPairInst.isEventOpen()
             console.log('event is open', isOpen)
@@ -360,7 +363,7 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
         })
     })
 
-    / describe('approveTokensForLiquidityPair', function() {
+    describe('approveTokensForLiquidityPair', function() {
               // this checks to make sure tokens are approved for uniswap or uniswap forks dex exchanges
         
             it('approval should succeed', async function(){
@@ -378,5 +381,60 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
               console.log('allowance amount is ', amount.toString())
               expect(amount).to.equal('175000000000000000000000000');
             })
+    })
+
+
+    describe('createLiquidityPool', function() {
+        // this checks to make sure tokens are approved for uniswap or uniswap forks dex exchanges
+
+        it('lp creation should succeed', async function(){
+            let response = await xStarterPoolPairInst.createLiquidityPool();
+            await expect(response.wait()).to.not.be.reverted;
         })
+
+        it('lp address should be a non zero address', async function(){
+            let lpAddr1 = await xStarterPoolPairInst.liquidityPairAddress();
+            expect(lpAddr1).to.not.equal(zeroAddress);
+        })
+
+        it('lp tokens should be greater than 0', async function(){
+
+            // check project token allowances
+            let lpTokenAmount = await xStarterPoolPairInst.availLPTokens()
+            console.log('lp token amount is', lpTokenAmount.toString());
+            expect(lpTokenAmount).to.be.gte(0);
+
+            // validate weth address, and project token address lp pair address same as poolpair
+
+        })
+    })
+
+    describe('finalizeILO', function() {
+    // this checks to make sure tokens are approved for uniswap or uniswap forks dex exchanges
+
+        it('lp creation should succeed', async function(){
+            let response = await xStarterPoolPairInst.finalizeILO();
+            await expect(response.wait()).to.not.be.reverted;
+        })
+
+        it('liquidity pool address should be same on pool pair and uniswap* factory', async function(){
+
+            let routerFactoryAddr = await xStarterPoolPairInst.addressOfDexFactory()
+            routerFactoryInst = await routerFactoryContractFactory.attach(routerFactoryAddr)
+            let projectTokenAddr = await xStarterPoolPairInst.projectToken()
+
+            let lpAddr1 = await routerFactoryInst.getPair(WETH, projectTokenAddr)
+
+            let lpAddr2 = await xStarterPoolPairInst.liquidityPairAddress()
+
+            console.log('lp address from factory and lp address from pool pair', lpAddr1, lpAddr2)
+            expect(lpAddr2).to.equal(lpAddr1);
+
+            // validate weth address, and project token address lp pair address same as poolpair
+
+            
+        })
+    })
+
+    
 })

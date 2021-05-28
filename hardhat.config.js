@@ -44,7 +44,7 @@ module.exports = {
       forking: {
         url: ALCHEMYURL,
       },
-      blockGasLimit: 10000000,
+      blockGasLimit: 17000000,
       mining: {
         auto: false,
         interval: 5000

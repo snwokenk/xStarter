@@ -222,6 +222,7 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
     // uint8 _fundingTokenDecimals; 
     // address of  dex liquidity token pair, this is the pair that issues liquidity tokens from uniswap or deriivatives
     address _liquidityPairAddress; 
+    address _proposalAddr;
     uint private _totalLPTokens; // amount of liquidity
      uint private _availLPTokens; // amount of liquidity
     // timestamp when contributors can start withdrawing their their Liquidity pool tokens
@@ -311,6 +312,7 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
             
             (ILOProposal memory i_, ILOAdditionalInfo memory a_) = iXstarterProposal(proposalAddr_).getILOInfo();
             
+            _proposalAddr = proposalAddr_;
             
             i._minPerSwap = a_.minPerSwap;
             i._minPerAddr = a_.minPerAddr;
@@ -524,7 +526,9 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
             _startTime = startTime_;
             
             _endTime = endTime_;
-            _isSetup = true;
+            _isSetup = iXstarterProposal(_proposalAddr).setILOTimes(_startTime, _endTime);
+            require(_isSetup, 'not able register on proposal');
+            
             return _isSetup;
     }
     
