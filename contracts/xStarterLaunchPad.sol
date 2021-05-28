@@ -195,6 +195,9 @@ contract xStarterLaunchPad is Administration, Interaction{
         return (compactInfos, endOfArray);
         
     }
+    function noOfProposals() public view returns(uint256) {
+        return _ILOProposalArray.length;
+    }
     
     
     // function IsProposerOrAdmin(address msgSender_, address proposalAddr_) public view returns(bool) {
