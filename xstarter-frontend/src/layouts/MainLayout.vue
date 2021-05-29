@@ -77,11 +77,14 @@ export default defineComponent({
 
     let provider = undefined
 
+
     let signer = undefined
     let launchPadContract = undefined
     let launchPadLoaded = ref(false)
     provide('$launchPadLoaded', launchPadLoaded)
     const ethereumProvider = ref(undefined)
+    let chainId = ref(undefined)
+    provide('$chainId', chainId)
     const metamaskInstalled = ref(false)
     const connectedAccounts = ref([])
     const connectedAndPermissioned = ref(Boolean(metamaskInstalled.value && connectedAccounts.value.length > 0))
@@ -114,7 +117,8 @@ export default defineComponent({
         provider = new ethers.providers.Web3Provider(ethereumProvider.value)
         signer = provider.getSigner()
         launchPadContract = await  new ethers.Contract(LAUNCHPAD_ADDRESS, launchpadCode.abi, signer)
-        console.log('is permssioned 1', connectedAndPermissioned.value, await provider.getBlockNumber())
+        chainId.value = (await provider.getNetwork())['chainId']
+        console.log('is permssioned 1', connectedAndPermissioned.value, await provider.getNetwork())
         if (launchPadContract) {
           launchPadLoaded.value = true
         }
@@ -125,8 +129,13 @@ export default defineComponent({
         launchPadContract = undefined
 
       }
+        ethereumProvider.value.on('chainChanged', (chainId) => {
+          window.location.reload();
+        })
       // checks to see if any account has permission
+
       ethereumProvider.value.on('accountsChanged', checkExisting)
+
 
       console.log('is permssioned 2', connectedAndPermissioned.value)
     }
@@ -198,7 +207,8 @@ export default defineComponent({
       connectedAccounts,
       connectedAndPermissioned,
       launchPadContract,
-      launchPadLoaded
+      launchPadLoaded,
+      chainId
     }
   },
   computed: {

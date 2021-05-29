@@ -9,6 +9,9 @@
     </div>
     <div class="display-card-duration-container display-card-duration-container__succeed display-card-duration-text display-card-duration-text__succeed"> Ends In 2 Days</div>
   </div>
+  <div v-else-if="offeringStatus === 'tbd'" class="q-gutter-y-md">
+    <div class="display-card-duration-container display-card-duration-container__ended display-card-duration-text"> Duration TBD</div>
+  </div>
   <div v-else class="q-gutter-y-md">
     <div v-if="succeeded" class="display-card-duration-container display-card-duration-container__succeed display-card-duration-text display-card-duration-text__succeed row">
       <div class="col-3 row justify-end content-center"><q-icon name="done" size="16px"/></div><div class="col-1" /><div class="col-8 text-left">Success</div>

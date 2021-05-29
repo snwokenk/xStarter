@@ -53,7 +53,7 @@
   <q-card-section horizontal>
     <q-linear-progress class="progress-bar-style" :value="amtRaisedProgress">
       <div class="absolute-full flex flex-center">
-        <q-badge  class="black-white-dark-theme" style="font-family: 'Segoe UI Bold',serif" :label="parseFloat(amtRaisedProgress*100).toFixed(2) + '%'" />
+        <q-badge  class="black-white-dark-theme" style="font-family: 'Segoe UI Bold',serif" :label="progressBarLabel" />
       </div>
     </q-linear-progress>
   </q-card-section>
@@ -95,6 +95,9 @@ export default defineComponent( {
     },
     endTimestamp() {
       return parseInt(this.ILOMoreInfo.endTime) * 1000
+    },
+    progressBarLabel() {
+      return parseFloat(this.amtRaisedProgress*100).toFixed(2) + '%'
     },
     amountRaised() {
       // const amtRaised = parseFloat(this.$ethers.utils.formatEther(this.ILOMoreInfo.amountRaised.toString()))
@@ -157,10 +160,17 @@ export default defineComponent( {
       }
     },
     amtRaisedProgress() {
-      return this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.amountRaised) / this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.hardcap)
+      if (this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.hardcap) !== 0) {
+        return this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.amountRaised) / this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.hardcap)
+      }
+
+      return 0
     },
     ILOSuccess() {
-      return this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.amountRaised) >= this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.softcap)
+      if (this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.softcap) !== 0) {
+        return this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.amountRaised) >= this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.softcap)
+      }
+      return null
     },
     startLiveOrEndDisplay() {
       const endDate = new Date(this.endTimestamp)

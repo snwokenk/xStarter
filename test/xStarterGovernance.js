@@ -237,8 +237,8 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
             // Expect receives a value, and wraps it in an Assertion object. These
             // objects have a lot of utility methods to assert values.
               
-              let startTime = parseInt(Date.now() / 1000) + 60;
-              let endTime = parseInt(Date.now() / 1000) + 120;
+              let startTime = parseInt(Date.now() / 1000) + 120;
+              let endTime = parseInt(Date.now() / 1000) + 180;
               let proposalInfo = await xStarterLaunchPadInst.getProposal(xStarterProposalInst.address)
               xStarterPoolPairInst = poolPairFactory.attach(proposalInfo.info.ILOAddress)
             //   const poolPairFromOther = poolPair.connect(addr2);
