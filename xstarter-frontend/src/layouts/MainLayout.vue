@@ -177,6 +177,14 @@ export default defineComponent({
     }
     provide('$getLaunchPadContract', getLaunchPadContract)
 
+    const callLaunchPadFunction = async (functionName, argsList = []) => {
+      const launchpad = getLaunchPadContract()
+      console.log('launchpad is', launchpad)
+      return await launchpad[functionName](...argsList)
+    }
+
+    provide('$callLaunchPadFunction', callLaunchPadFunction)
+
 
     return {
       setDarkMode,
@@ -189,7 +197,8 @@ export default defineComponent({
       ethereumProvider,
       connectedAccounts,
       connectedAndPermissioned,
-      launchPadContract
+      launchPadContract,
+      launchPadLoaded
     }
   },
   computed: {

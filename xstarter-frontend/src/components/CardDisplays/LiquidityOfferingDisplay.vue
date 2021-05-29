@@ -11,7 +11,7 @@
   </q-card-section>
   <q-card-section horizontal>
     <div class="text-weight-bolder display-card-name-text">
-      xStarter
+      {{ ILOInfo.tokenName }}
     </div>
   </q-card-section>
   <q-card-section horizontal>
@@ -20,7 +20,7 @@
         Amount Raised
       </div>
       <div class="amount-raised-number-text">
-        500K xDAI
+        {{ amountRaised }} {{ fundingTokenSymbol }}
       </div>
     </div>
   </q-card-section>
@@ -30,7 +30,7 @@
         Soft Cap
       </div>
       <div class="amount-raised-number-text text-left" style="font-size: 12px !important;">
-        250K xDAI
+        250K {{ fundingTokenSymbol }}
       </div>
     </div>
     <div class="col-6">
@@ -38,7 +38,7 @@
         Min/Max Per Address
       </div>
       <div class="amount-raised-number-text" style="font-size: 12px !important; text-align: center !important;">
-        500/5K xDAI
+        500/5K {{ fundingTokenSymbol }}
       </div>
     </div>
     <div class="col-3">
@@ -46,7 +46,7 @@
         Hard Cap
       </div>
       <div class="amount-raised-number-text" style="font-size: 12px !important; text-align: right !important;">
-        1M xDAI
+        1M {{ fundingTokenSymbol }}
       </div>
     </div>
   </q-card-section>
@@ -66,6 +66,7 @@
 <script>
 import { defineComponent } from 'vue'
 import LiquidityDisplayDuration from "components/CardDisplays/LiquidityDisplayDuration";
+import {SUPPORTED_FUNDING_TOKENS} from "src/constants";
 export default defineComponent( {
   name: "LiquidityOfferingDisplay",
   components: {LiquidityDisplayDuration},
@@ -84,10 +85,25 @@ export default defineComponent( {
   },
   computed: {
     startTimestamp() {
-      return parseInt(this.liquidityOffering.startDate) * 1000
+      return parseInt(this.ILOMoreInfo.startTime) * 1000
+    },
+    fundingTokenSymbol() {
+      if (SUPPORTED_FUNDING_TOKENS[this.ILOInfo.fundingToken]) {
+        return SUPPORTED_FUNDING_TOKENS[this.ILOInfo.fundingToken]
+      }
+      return 'Custom Token'
     },
     endTimestamp() {
-      return parseInt(this.liquidityOffering.endDate) * 1000
+      return parseInt(this.ILOMoreInfo.endTime) * 1000
+    },
+    amountRaised() {
+      const amtRaised = parseFloat(this.$ethers.utils.formatEther(this.ILOMoreInfo.amountRaised.toString()))
+      if ( amtRaised >= 1000000) {
+        return `${amtRaised}M`
+      } else if (amtRaised >= 1000) {
+        return `${amtRaised}K`
+      }
+      return amtRaised
     },
     ILOStatus() {
       const now = Date.now()
@@ -108,6 +124,14 @@ export default defineComponent( {
       }else {
         return `Ended on ${endDate}`
       }
+    },
+    ILOInfo() {
+      // struct ILOProposal
+      return this.anILO.info
+    },
+    ILOMoreInfo() {
+      // struct ILOAdditionalInfo
+      return this.anILO.moreInfo
     }
   }
 })

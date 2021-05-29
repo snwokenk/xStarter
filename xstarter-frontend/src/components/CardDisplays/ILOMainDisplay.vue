@@ -1,6 +1,6 @@
 <template>
   <div class="display-container row q-gutter-y-lg q-gutter-x-lg justify-center q-py-lg q-my-md">
-    <LiquidityOfferingDisplay class="display-card col-md-10 col-lg-5"  :liquidity-offering="listOfLiquidityOffering"/>
+    <LiquidityOfferingDisplay v-for="(obj, index) in ILOs" :anILO="obj" :key="index" class="display-card col-md-10 col-lg-5"  :liquidity-offering="listOfLiquidityOffering"/>
     <q-btn label="Sam" @click="move += 1"/>
   </div>
 </template>
@@ -27,12 +27,25 @@ export default defineComponent( {
       const launchpad = getLaunchPadContract()
       return await launchpad.getProposals(ILORound.value)
     }
-    return {getProvider, getSigner, getLaunchPadContract, getConnectedAndPermissioned, connectedAndPermissioned,launchPadLoaded, ILORound, getILOs}
+    const callLaunchPadFunction = inject('$callLaunchPadFunction')
+    return {
+      getProvider,
+      getSigner,
+      getLaunchPadContract,
+      getConnectedAndPermissioned,
+      connectedAndPermissioned,
+      launchPadLoaded,
+      ILORound,
+      getILOs,
+      callLaunchPadFunction
+    }
   },
   data(){
     return {
       move: 0,
-      ILOs: []
+      ILOs: [],
+      noOfILOs: 0,
+      initialCheck: false
     }
   },
   computed: {
@@ -55,7 +68,13 @@ export default defineComponent( {
   watch: {
     launchPadLoaded: async function(val)  {
       if (this.launchPadLoaded) {
+        if (!this.initialCheck) {
+          this.noOfILOs = await this.callLaunchPadFunction('noOfProposals')
+          this.noOfILOs = this.noOfILOs.toNumber()
+          this.initialCheck = true
+        }
         const ILOs = await this.getILOs(this.move)
+        this.ILOs = ILOs[0]
         console.log('launchpad loaded and ILOs is', ILOs)
         console.log('ILO index o',  ILOs[0][0].info)
       }

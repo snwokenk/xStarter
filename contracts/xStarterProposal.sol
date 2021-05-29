@@ -141,6 +141,11 @@ contract xStarterProposal {
         _a.endTime = endTime_;
         return true;
     }
+    function setAmountRaised(uint amountRaised_) external returns(bool) {
+        require(_i.ILOAddress != address(0) && msg.sender == _i.ILOAddress, 'not authorized');
+        _a.amountRaised = amountRaised_;
+        
+    }
     function approved() external view returns(bool) {
         return _i.isApproved;
     }

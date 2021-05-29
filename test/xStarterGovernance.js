@@ -436,5 +436,86 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
         })
     })
 
+    describe('check timelocks', function() {
+        // this checks to make sure tokens are approved for uniswap or uniswap forks dex exchanges
+
+        it('should be timlocked', async function(){
+        let timeLockSet = await xStarterPoolPairInst.isTimeLockSet();
+        expect(timeLockSet).to.equal(true);
+        })
+
+        it('should revert when trying to withdraw token as contributor', async function(){
+            //   console.log('response is',response)
+            await expect(xStarterPoolPairInst.connect(addr1).withdraw()).to.be.revertedWith("revert withdrawal locked");
+        })
+        it('should revert when trying to withdraw token as project owner', async function(){
+            //   console.log('response is',response)
+            await expect(xStarterPoolPairInst.withdrawAdmin()).to.be.revertedWith("revert withdrawal locked");
+        })
+
+    })
+
+    describe('withdraw tokens', function() {
+
+        it('should equal right amount', async function(){
+            // this checks to make sure tokens are approved for uniswap or uniswap forks dex exchanges
+            // because this will wait for some time let mocha know setting to 3 minutes 
+            this.timeout(240000)
+            for (let index = 0; index < 10; index++) {
+                await sleep(20000);
+                let contributionLocked = await xStarterPoolPairInst.isContribTokenLocked();
+                console.log('contribution locked', contributionLocked)
+
+                if(!contributionLocked) {break}
+                
+            }
+            let bal = await xStarterPoolPairInst.projectTokenBalanceOfFunder(addr1.address);
+            console.log('balance is', bal.toString())
+                // 500 million tokens, 350 million for ilo, 50% for liquidity, so 175 million remaining, only 2 contributors so 87.5 million * 10 ** 18
+            expect(bal.toString()).to.be.equal('87500000000000000000000000')
+
+            let response = await xStarterPoolPairInst.connect(addr1).withdraw();
+            //   console.log('response is',response)
+            await expect(response.wait()).to.not.be.reverted;
+
+            // let allowBal = await projectTokenInst.allowance(poolPair.address, addr1.address);
+            // expect(allowBal).to.be.equal(bal)
+
+            // response = await projectTokenInst.connect(addr1).transferFrom(poolPair.address, addr1.address)
+            // await response.wait()
+
+            // let tokenBalance = await projectTokenInst.balanceOf(addr.address)
+            // expect(tokenBalance.toString()).to.equal('87500000000000000000000000')
+
+                
+        })
+
+        it('allowance should equal right amount', async function(){
+            // this checks to make sure tokens are approved for uniswap or uniswap forks dex exchanges
+            // because this will wait for some time let mocha know setting to 3 minutes 
+
+            let allowBal = await xStarterTokenInst.allowance(xStarterPoolPairInst.address, addr1.address);
+            expect(allowBal.toString()).to.be.equal('87500000000000000000000000')
+
+                
+        })
+        
+        it('after transferFrom balanceOf should be right amount', async function(){
+            // this checks to make sure tokens are approved for uniswap or uniswap forks dex exchanges
+            // because this will wait for some time let mocha know setting to 3 minutes 
+
+            let response = await xStarterTokenInst.connect(addr1).transferFrom(xStarterPoolPairInst.address, addr1.address, '87500000000000000000000000')
+            await response.wait()
+
+            let tokenBalance = await xStarterTokenInst.balanceOf(addr1.address)
+            expect(tokenBalance.toString()).to.equal('87500000000000000000000000')
+
+                
+        })
+        
+
+
+    })
+
     
 })

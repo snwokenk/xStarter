@@ -628,6 +628,8 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
         require((funder.fundingTokenAmount >= i._minPerAddr) || (amountLeft < i._minPerAddr && fundingTokenAmount_ == amountLeft ) , "Minimum amount not met");
         // if max is set then make sure not contributing max
         require(funder.fundingTokenAmount <= i._maxPerAddr || i._maxPerAddr == 0, "maximum exceeded");
+        // sets amount raised on proposal
+        iXstarterProposal(_proposalAddr).setAmountRaised(_fundingTokenTotal);
     }
     
     
