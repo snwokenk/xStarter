@@ -7,7 +7,7 @@
         <img :src="liquidityOffering.logo_url">
       </q-avatar>
     </div>
-    <LiquidityDisplayDuration  :end-time="endTimestamp" :start-time="startTimestamp" :offering-status="ILOStatus"  :succeeded="false"/>
+    <LiquidityDisplayDuration  :end-time="endTimestamp" :start-time="startTimestamp" :offering-status="ILOStatus"  :succeeded="ILOSuccess"/>
   </q-card-section>
   <q-card-section horizontal>
     <div class="text-weight-bolder display-card-name-text">
@@ -30,7 +30,7 @@
         Soft Cap
       </div>
       <div class="amount-raised-number-text text-left" style="font-size: 12px !important;">
-        250K {{ fundingTokenSymbol }}
+        {{ softCap }} {{ fundingTokenSymbol }}
       </div>
     </div>
     <div class="col-6">
@@ -38,7 +38,7 @@
         Min/Max Per Address
       </div>
       <div class="amount-raised-number-text" style="font-size: 12px !important; text-align: center !important;">
-        500/5K {{ fundingTokenSymbol }}
+        {{ minPerAddr }}/{{ maxPerAddr }} {{ fundingTokenSymbol }}
       </div>
     </div>
     <div class="col-3">
@@ -46,14 +46,14 @@
         Hard Cap
       </div>
       <div class="amount-raised-number-text" style="font-size: 12px !important; text-align: right !important;">
-        1M {{ fundingTokenSymbol }}
+        {{ hardCap }} {{ fundingTokenSymbol }}
       </div>
     </div>
   </q-card-section>
   <q-card-section horizontal>
-    <q-linear-progress class="progress-bar-style" :value="0.50">
+    <q-linear-progress class="progress-bar-style" :value="amtRaisedProgress">
       <div class="absolute-full flex flex-center">
-        <q-badge  class="black-white-dark-theme" style="font-family: 'Segoe UI Bold',serif" label="50%" />
+        <q-badge  class="black-white-dark-theme" style="font-family: 'Segoe UI Bold',serif" :label="parseFloat(amtRaisedProgress*100).toFixed(2) + '%'" />
       </div>
     </q-linear-progress>
   </q-card-section>
@@ -97,13 +97,51 @@ export default defineComponent( {
       return parseInt(this.ILOMoreInfo.endTime) * 1000
     },
     amountRaised() {
-      const amtRaised = parseFloat(this.$ethers.utils.formatEther(this.ILOMoreInfo.amountRaised.toString()))
+      // const amtRaised = parseFloat(this.$ethers.utils.formatEther(this.ILOMoreInfo.amountRaised.toString()))
+      const amtRaised = this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.amountRaised)
       if ( amtRaised >= 1000000) {
         return `${amtRaised}M`
       } else if (amtRaised >= 1000) {
         return `${amtRaised}K`
       }
       return amtRaised
+    },
+    softCap() {
+      const amt = this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.softcap)
+      if ( amt >= 1000000) {
+        return `${amt}M`
+      } else if (amt >= 1000) {
+        return `${amt}K`
+      }
+      return amt
+    },
+    hardCap() {
+      const amt = this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.hardcap)
+      if ( amt >= 1000000) {
+        return `${amt}M`
+      } else if (amt >= 1000) {
+        return `${amt}K`
+      }
+      return amt
+    },
+
+    minPerAddr() {
+      const amt = this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.minPerAddr)
+      if ( amt >= 1000000) {
+        return `${amt}M`
+      } else if (amt >= 1000) {
+        return `${amt}K`
+      }
+      return amt
+    },
+    maxPerAddr() {
+      const amt = this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.maxPerAddr)
+      if ( amt >= 1000000) {
+        return `${amt}M`
+      } else if (amt >= 1000) {
+        return `${amt}K`
+      }
+      return amt
     },
     ILOStatus() {
       const now = Date.now()
@@ -114,6 +152,12 @@ export default defineComponent( {
       }else {
         return `ended`
       }
+    },
+    amtRaisedProgress() {
+      return this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.amountRaised) / this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.hardcap)
+    },
+    ILOSuccess() {
+      return this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.amountRaised) >= this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.softcap)
     },
     startLiveOrEndDisplay() {
       const endDate = new Date(this.endTimestamp)
