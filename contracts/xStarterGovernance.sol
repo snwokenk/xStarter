@@ -231,7 +231,7 @@ contract xStarterGovernance is Context, Interaction {
     function addILO(address proposalAddr_) external allowedToInteract returns(bool) {
         _disallowInteraction();
         bool authorized = iXstarterProposal(proposalAddr_).isALlowedCaller(_msgSender());
-        require(authorized, "must an allowed caller on proposal");
+        require(authorized, "must be an allowed caller on proposal");
         require(getILOPoll(proposalAddr_).startBlock == 0, 'IlO proposal already exist');
         // 86400 / 5 = 17280 blocks assuming 5 sec blocks
         uint sBlock = block.number + 17280;

@@ -1,7 +1,6 @@
 <template>
   <div class="display-container row q-gutter-y-lg q-gutter-x-lg justify-center q-py-lg q-my-md">
     <LiquidityOfferingDisplay v-for="(obj, index) in ILOs" :anILO="obj" :key="index" class="display-card col-md-10 col-lg-5"  :liquidity-offering="listOfLiquidityOffering"/>
-    <q-btn label="Sam" @click="move += 1"/>
   </div>
 </template>
 

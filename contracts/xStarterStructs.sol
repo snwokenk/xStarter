@@ -15,11 +15,11 @@ struct ILOProposal {
     uint blockNumber;
     uint timestamp;
     bool isApproved;
-    bool isRegistered;
+    bool isRegistered; // has been registered on the launchpad
     bool isOpen;
     uint deployedBlockNumber;
     uint deployedTimestamp;
-    bool isDeployed;
+    bool isDeployed; // has ilo pool pair been deployed
     address ILOAddress;
 }
 struct ILOAdditionalInfo {

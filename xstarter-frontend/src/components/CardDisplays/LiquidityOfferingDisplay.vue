@@ -145,6 +145,9 @@ export default defineComponent( {
     },
     ILOStatus() {
       const now = Date.now()
+      if (this.startTimestamp === 0) {
+        return 'tbd'
+      }
       if (now >= this.startTimestamp && now < this.endTimestamp) {
         return `live`
       }else if (now < this.startTimestamp) {
@@ -165,7 +168,9 @@ export default defineComponent( {
         return `Ends on ${endDate}`
       }else if (this.ILOStatus === 'starting') {
         return `Starts on  ${new Date(this.startTimestamp)}`
-      }else {
+      }else if (this.ILOStatus === 'tbd') {
+        return `Starting To Be Determined`
+      } else {
         return `Ended on ${endDate}`
       }
     },
