@@ -9,3 +9,15 @@ export const SUPPORTED_FUNDING_TOKENS = {
   '0x0000000000000000000000000000000000000000': CHAIN_ID === '100' ? 'xDai' : 'ETH'
   // add xstarter token
 }
+
+export const CHAIN_ID_TO_NAME = {
+  1: 'Ethereum Main Net',
+  31337: 'Hardhat Localhost',
+  100: 'xDai Layer 2',
+  56: 'Binance Smart Chain'
+}
+
+export const  ACCEPTED_CHAINS = {
+  31337: true,
+  100: true
+}

@@ -1,5 +1,9 @@
 <template>
   <q-page class="flex flex-center">
+    <div class="row full-width justify-center q-pt-lg">
+      <AccountDisplay class="col-lg-5 col-xs-10"  />
+    </div>
+
     <ILOMainDisplay v-if="currentView === 'ilo'" />
 
   </q-page>
@@ -9,10 +13,11 @@
 import {defineComponent, inject, provide} from 'vue';
 import LiquidityOfferingDisplay from "components/CardDisplays/LiquidityOfferingDisplay";
 import ILOMainDisplay from "components/CardDisplays/ILOMainDisplay";
+import AccountDisplay from "components/CardDisplays/AccountDisplay";
 
 export default defineComponent({
   name: 'PageIndex',
-  components: {ILOMainDisplay},
+  components: {AccountDisplay, ILOMainDisplay},
   data() {
     return {
       currentView: 'ilo',

@@ -78,6 +78,8 @@ body.body--dark {
   }
 }
 
+
+
 body.body--light {
   background: #f5f8f8;
   .black-white-dark-theme{
@@ -120,13 +122,22 @@ body.body--light {
   }
 }
 
-.display-card {
+.ILODisplayCard {
   min-width: 320px;
   max-width: 500px !important;
   //height: 400px;
   min-height: 400px !important;
   border-radius: 25px !important;
   border: 2px solid;
+}
+
+.accountDisplayCard {
+  border-radius: 25px !important;
+  border: 2px solid;
+}
+
+.display-card {
+
   .display-card-date-text {
     font-family: "Segoe UI Regular", serif;
     font-weight: normal;
