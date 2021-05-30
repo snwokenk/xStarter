@@ -11,7 +11,7 @@
           </div>
         </q-toolbar-title>
         <div class="q-gutter-x-sm">
-          <q-btn rounded outline size="md" :label="connectBtnLabel"  :icon="metamaskInstalled.value ? undefined : 'error_outline'" :color="metamaskInstalled.value ? darkLightText: 'negative'" :disable="!metamaskInstalled.value" @click="connectEthereum"/>
+          <q-btn rounded outline size="md" :label="connectBtnLabel"  :icon="metamaskInstalled ? undefined : 'error_outline'" :color="metamaskInstalled ? darkLightText: 'negative'" :disable="!metamaskInstalled" @click="connectEthereum"/>
           <q-btn outline :color="darkLightText" label="sign"  @click="callContract"/>
           <q-btn round flat :color="darkLightText" :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'" @click="setDarkMode"/>
         </div>
@@ -56,7 +56,7 @@ import { defineComponent, ref, watch, onMounted, provide } from 'vue'
 import { useQuasar } from 'quasar'
 import { ethers } from 'boot/ethers'
 import detectEthereumProvider from '@metamask/detect-provider';
-import {ILO_ADDRESS, LAUNCHPAD_ADDRESS} from "src/constants";
+import {ILO_ADDRESS, JSON_RPC_ENDPOINT, LAUNCHPAD_ADDRESS} from "src/constants";
 // import data from 'src/artifacts/contracts/xStarterPoolPairB.sol/xStarterPoolPairB.json';
 import launchpadCode from 'src/artifacts/contracts/xStarterLaunchPad.sol/xStarterLaunchPad.json';
 
@@ -76,8 +76,6 @@ export default defineComponent({
 
 
     let provider = undefined
-
-
     let signer = undefined
     let launchPadContract = undefined
     let launchPadLoaded = ref(false)
@@ -99,10 +97,23 @@ export default defineComponent({
     const getExistingTab = () => {
       return selectedTab
     }
-    const checkExisting = async () => {
-      ethereumProvider.value = await detectEthereumProvider();
-      metamaskInstalled.value = ref(Boolean(ethereumProvider.value))
+    const connectUsingJsonRPCProvider = async () => {
+
+      console.log('connecting using json rpc', JSON_RPC_ENDPOINT)
+      provider  = await new ethers.providers.JsonRpcProvider(JSON_RPC_ENDPOINT);
+      console.log('json rpc provider is', provider)
+      if (provider) {
+        launchPadContract = await new ethers.Contract(LAUNCHPAD_ADDRESS, launchpadCode.abi, provider)
+        if (launchPadContract) {
+          launchPadLoaded.value = true
+        }
+        // chainId.value = (await provider.getNetwork())['chainId']
+      }
+
+    }
+    const connectUsingWebProvider = async () => {
       if (metamaskInstalled.value) {
+        console.log('meta mask installed')
         try {
           connectedAccounts.value = await ethereumProvider.value.request({
             method: 'eth_accounts'
@@ -111,34 +122,39 @@ export default defineComponent({
           console.log(e)
           return
         }
-
-      connectedAndPermissioned.value = metamaskInstalled.value && connectedAccounts.value.length > 0
-      if (connectedAndPermissioned.value) {
-        provider = new ethers.providers.Web3Provider(ethereumProvider.value)
-        signer = provider.getSigner()
-        launchPadContract = await  new ethers.Contract(LAUNCHPAD_ADDRESS, launchpadCode.abi, signer)
-        chainId.value = (await provider.getNetwork())['chainId']
-        console.log('is permssioned 1', connectedAndPermissioned.value, await provider.getNetwork())
-        if (launchPadContract) {
-          launchPadLoaded.value = true
+        connectedAndPermissioned.value = metamaskInstalled.value && connectedAccounts.value.length > 0
+        if (connectedAndPermissioned.value) {
+          provider = new ethers.providers.Web3Provider(ethereumProvider.value)
+          signer = provider.getSigner()
+          launchPadContract = await new ethers.Contract(LAUNCHPAD_ADDRESS, launchpadCode.abi, signer)
+          chainId.value = (await provider.getNetwork())['chainId'] // getNetwork = {chain id, chain name}
+          if (launchPadContract) {
+            launchPadLoaded.value = true
+          }
+          // reload if chain is changed
+          ethereumProvider.value.on('chainChanged', (chainId) => {
+            window.location.reload();
+          })
+          // checks to see if any account has permission
+          ethereumProvider.value.on('accountsChanged', checkExisting)
+        }else {
+          launchPadLoaded.value = false
+          provider = undefined
+          signer = undefined
+          launchPadContract = undefined
         }
-      }else {
-        launchPadLoaded.value = false
-        provider = undefined
-        signer = undefined
-        launchPadContract = undefined
-
       }
-        ethereumProvider.value.on('chainChanged', (chainId) => {
-          window.location.reload();
-        })
-      // checks to see if any account has permission
-
-      ethereumProvider.value.on('accountsChanged', checkExisting)
-
-
-      console.log('is permssioned 2', connectedAndPermissioned.value)
     }
+    const checkExisting = async () => {
+      // check if an web3 wallet is visible
+      ethereumProvider.value = await detectEthereumProvider();
+      metamaskInstalled.value = ethereumProvider.value ? Boolean(ethereumProvider.value) : false
+      console.log('etherruem prov is', ethereumProvider.value, metamaskInstalled.value)
+       if (metamaskInstalled.value) {
+         await connectUsingWebProvider()
+       }else {
+        await connectUsingJsonRPCProvider()
+      }
     }
     onMounted(() => {
       checkExisting()
@@ -202,6 +218,7 @@ export default defineComponent({
       getProvider,
       getSigner,
       getLaunchPadContract,
+      connectUsingJsonRPCProvider,
       metamaskInstalled,
       ethereumProvider,
       connectedAccounts,
