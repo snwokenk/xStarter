@@ -47,7 +47,9 @@ contract xStarterDeployer is BaseDeployer {
         address addressOfDex_,
         address addressOfDexFactory_,
         address xStarterToken_,
-        address xstarterLP_
+        address xstarterLP_,
+        uint  minXSTN_,
+        uint  minXSTNLP_
         ) external onlyAllowedCaller returns(address ILO_) {
             
             address ILO = address(new xStarterPoolPairB(
@@ -56,7 +58,9 @@ contract xStarterDeployer is BaseDeployer {
                 addressOfDex_,
                 addressOfDexFactory_,
                 xStarterToken_,
-                xstarterLP_
+                xstarterLP_,
+                minXSTN_,
+                minXSTNLP_
                 ));
             ILO_ = address(ILO);
         
@@ -74,7 +78,9 @@ interface iXstarterDeployer {
         address addressOfDex_,
         address addressOfDexFactory_,
         address xStarterToken_,
-        address xstarterLP_
+        address xstarterLP_,
+        uint  minXSTN_,
+        uint  minXSTNLP_
         ) external returns(address ILO_);
 }
 
@@ -129,6 +135,8 @@ contract xStarterLaunchPad is Administration, Interaction{
         address xStarterDeployer_, 
         address xStarterERCDeployer_,
         uint depositPerProposal_,
+        uint  minXSTN_,
+        uint  minXSTNLP_,
         address addressOfDex_,
         address addressOfDexFactory_,
         address admin_
@@ -139,9 +147,24 @@ contract xStarterLaunchPad is Administration, Interaction{
         _xStarterDeployer = xStarterDeployer_;
         _xStarterERCDeployer = xStarterERCDeployer_;
         _depositPerProposal = depositPerProposal_;
+        _minXSTN = minXSTN_;
+        _minXSTNLP = minXSTNLP_;
         _addressOfDex = addressOfDex_;
         _addressOfDexFactory = addressOfDexFactory_;
         
+    }
+    
+    function changeMinTokensRequirements(
+        uint  minXSTN_,
+        uint  minXSTNLP_
+        ) external returns(bool) {
+            require(_xStarterGovernance != address(0) && _msgSender() == _xStarterGovernance, 'Not authorized' );
+            _minXSTN = minXSTN_;
+            _minXSTNLP = minXSTNLP_;
+            return true;
+        }
+    function getMinTokensRequirements() public returns(uint, uint) {
+        return (_minXSTN, _minXSTNLP);
     }
     
     function addGovernance(address xStarterGovernance_) external onlyAdmin returns(bool) {
@@ -275,7 +298,9 @@ contract xStarterLaunchPad is Administration, Interaction{
             _addressOfDex,
             _addressOfDexFactory, // contrib lock
             address(0), // xStarter token not yet distributed so should 
-            address(0)
+            address(0),
+            _minXSTN,
+            _minXSTNLP
         );
         // allow newly created ILO pool pair to use erc20 deployer
         IXStarterERCDeployer(_xStarterERCDeployer).setAllowedCaller(ILO);
@@ -333,7 +358,9 @@ contract xStarterLaunchPad is Administration, Interaction{
             _addressOfDex,
             _addressOfDexFactory, // contrib lock
             _xStarterToken,
-            _xStarterLP
+            _xStarterLP,
+            _minXSTN,
+            _minXSTNLP
         );
         
         // change proposal state

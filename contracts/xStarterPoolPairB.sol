@@ -317,7 +317,9 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
         address addressOfDex_,
         address addressOfDexFactory_,
         address xStarterToken_,
-        address xstarterLP_
+        address xstarterLP_,
+        uint  minXSTN_,
+        uint  minXSTNLP_
         
         ) Administration(adminAddress) {
             // require(percentOfTokensForILO_ > 0 && percentOfTokensForILO_ <= 100, "percent of tokens must be between 1 and 100");
@@ -329,6 +331,8 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
             _proposalAddr = proposalAddr_;
             _xStarterToken = xStarterToken_;
             _xStarterLP = xstarterLP_;
+            _minXSTN = minXSTN_;
+            _minXSTNLP = minXSTNLP_;
             
             i._minPerSwap = a_.minPerSwap;
             i._minPerAddr = a_.minPerAddr;

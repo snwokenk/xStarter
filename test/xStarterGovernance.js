@@ -69,6 +69,8 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
                 xStarterDeployerInst.address, // xstarter deployer
                 xStarterERCDeployerInst.address,
                 utils.parseEther('500'),
+                utils.parseEther('5000'), // 5000 tokens required  OR
+                utils.parseEther('50'), // 50 LP tokens
                 uniswapRouter,
                 uniswapFactory,
                 owner.address
@@ -368,7 +370,7 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
 
     describe('approveTokensForLiquidityPair', function() {
               // this checks to make sure tokens are approved for uniswap or uniswap forks dex exchanges
-        
+            this.timeout(40000)
             it('approval should succeed', async function(){
               let response = await xStarterPoolPairInst.approveTokensForLiquidityPair();
               await expect(response.wait()).to.not.be.reverted;
