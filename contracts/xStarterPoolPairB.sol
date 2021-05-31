@@ -28,12 +28,13 @@ import "./xStarterDeployers.sol";
 
 // xStarterPoolPairB: project tokens are swapped after total funding is raised. As Long as a Minimum funding amount is reached.
 
-interface IERC20AndOwnable {
+interface IERC20Custom {
     function totalSupply() external view returns (uint256);
     // function owner() external view  returns (address);
     function allowance(address owner_, address spender) external view returns (uint256);
     function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
     function approve(address spender, uint256 amount) external returns (bool);
+    function balanceOf(address) external view returns (uint256);
     function decimals() external view returns (uint8);
 }
 
@@ -223,6 +224,13 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
     // address of  dex liquidity token pair, this is the pair that issues liquidity tokens from uniswap or deriivatives
     address _liquidityPairAddress; 
     address _proposalAddr;
+    
+    address _xStarterToken;
+    // Minimum  xstarter token required to participate during private sale
+    uint private _minXSTN;
+    address _xStarterLP;
+    // Minimum xstarter LP tokens required
+    uint private _minXSTNLP;
     uint private _totalLPTokens; // amount of liquidity
      uint private _availLPTokens; // amount of liquidity
     // timestamp when contributors can start withdrawing their their Liquidity pool tokens
@@ -280,6 +288,10 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
     
     // uint timestamp
     uint48 private _endTime;
+    
+    // utc timestamp
+    uint48 private _pubStartTime;
+    
     
     // bool if xStarterPoolPair is set up
     bool _isSetup;
@@ -438,6 +450,10 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
     function startTime() public view returns (uint48) {
         return _startTime;
     }
+    
+    function pubStartTime() public view returns(uint48) {
+        return _pubStartTime;
+    }
 
     function availTokensILO() public view returns (uint) {
         return _availTokensILO;
@@ -508,7 +524,7 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
                     _deployToken(ercDeployer_,tokenName_, tokenSymbol_, totalTokenSupply_, defaultOperators_);
             } 
             else {
-                IERC20AndOwnable existingToken = IERC20AndOwnable(addressOfProjectToken);
+                IERC20Custom existingToken = IERC20Custom(addressOfProjectToken);
                 
                 // address existingTokenOwner = existingToken.owner();
                 uint existingTokenSupply = existingToken.totalSupply();
@@ -526,6 +542,11 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
             _startTime = startTime_;
             
             _endTime = endTime_;
+            
+            uint48 privLen = (endTime_ - startTime_) / 2;
+            
+            _pubStartTime = startTime_ + privLen;
+            
             _isSetup = iXstarterProposal(_proposalAddr).setILOTimes(_startTime, _endTime);
             require(_isSetup, 'not able register on proposal');
             
@@ -564,7 +585,7 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
         //     return true;
             
         // }
-        IERC20AndOwnable existingToken = IERC20AndOwnable(_projectToken);
+        IERC20Custom existingToken = IERC20Custom(_projectToken);
         uint allowance = existingToken.allowance(admin(), address(this));
         require(allowance == _totalTokensSupply, "You must deposit all available tokens by calling the approve function on the token contract");
         // transfer approved tokens from admin to current ILO contract
@@ -614,6 +635,11 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
     }
     
     function _contribute(uint fundingTokenAmount_, address funder_) internal {
+        // check to see if currently in private sale time
+        if(_pubStartTime > 0 && block.timestamp < _pubStartTime) {
+            require(IERC20Custom(_xStarterToken).balanceOf(funder_) >= _minXSTN || IERC20Custom(_xStarterLP).balanceOf(funder_) >= _minXSTNLP, "must hold xStarter tokens");
+        }
+        
         _fundingTokenTotal = _fundingTokenTotal.add(fundingTokenAmount_);
         _fundingTokenAvail = _fundingTokenAvail.add(fundingTokenAmount_);
         require(_fundingTokenTotal <= i._hardcap, "exceeds hard carp");
@@ -635,7 +661,7 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
     
     function _retrieveApprovedToken() internal returns(uint allowedAmount_) {
         address ownAddress = address(this);
-        IERC20AndOwnable existingToken = IERC20AndOwnable(i._fundingToken);
+        IERC20Custom existingToken = IERC20Custom(i._fundingToken);
         allowedAmount_ = existingToken.allowance(_msgSender(), ownAddress);
         require(allowedAmount_ > i._minPerSwap, "Amount must be greater than 0");
         bool success = existingToken.transferFrom(_msgSender(), ownAddress, allowedAmount_);
@@ -752,7 +778,7 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
         // require(funder.fundingTokenAmount > 0, "Did Not Contribute");
         require(amount_ > 0, 'amount must be greater than 0');
         //funder.projectTokenAmount = funder.projectTokenAmount.sub(amount_);
-        success = IERC20AndOwnable(_projectToken).approve(_msgSender(), amount_);
+        success = IERC20Custom(_projectToken).approve(_msgSender(), amount_);
          _tokensHeld = _tokensHeld.sub(amount_);
         
         _allowWithdraw();
@@ -820,7 +846,7 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
                 
         }else {
                 // or if funding token wasn't native, send ERC20 token
-                success = IERC20AndOwnable(i._fundingToken).approve(_msgSender(), amount_);
+                success = IERC20Custom(i._fundingToken).approve(_msgSender(), amount_);
         }
         emit FundingTokenForTeamWithdrawn(_msgSender(), amount_, i._percentTokensForTeam, _fundingTokenTotal);
     }
@@ -837,7 +863,7 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
             _adminBalance = 0;
             uint amount_ = _tokensHeld;
             _tokensHeld = 0;
-            success = IERC20AndOwnable(_projectToken).approve(_msgSender(), amount_);
+            success = IERC20Custom(_projectToken).approve(_msgSender(), amount_);
             emit WithdrawnOnFailure(_msgSender(), _projectToken, amount_, true);
             
         }else{
@@ -856,7 +882,7 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
                 
             }else {
                 // or if funding token wasn't native, send ERC20 token
-                success = IERC20AndOwnable(i._fundingToken).approve(_msgSender(), amount_);
+                success = IERC20Custom(i._fundingToken).approve(_msgSender(), amount_);
                 emit WithdrawnOnFailure(_msgSender(), i._fundingToken, amount_, false);
             }
         }
@@ -890,7 +916,7 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
         uint amount_ = _adminBalance;
         _adminBalance = 0;
         _tokensHeld = _tokensHeld.sub(amount_);
-        success = IERC20AndOwnable(_projectToken).approve(_admin, amount_);
+        success = IERC20Custom(_projectToken).approve(_admin, amount_);
         _allowWithdraw();
     }
     

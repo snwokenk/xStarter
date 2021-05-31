@@ -31,6 +31,8 @@ contract xStarterGovernance is Context, Interaction {
     // mapping (address => ILOPoll) _ILOPolls;
     mapping (address => GovPoll) _GovPolls;
     mapping (address => Voter) _voters;
+    mapping (address => mapping(address => bool)) ILOVotersRecord;
+    mapping (string => mapping(address => bool)) GOVVotersRecord;
     
     uint _totalBalance;
     uint _totalAccumulated;
@@ -58,6 +60,12 @@ contract xStarterGovernance is Context, Interaction {
         _xStarterLaunchPad = xStarterLaunchPad_;
         return true;
         
+    }
+    function isILOVoter(address proposalAddr_, address voter_) public view returns(bool){
+        return ILOVotersRecord[proposalAddr_][voter_];
+    }
+    function isGOVVoter(string memory proposalName_, address voter_) public view returns(bool){
+        return GOVVotersRecord[proposalName_][voter_];
     }
     function xStarterContracts() public view returns(address[3] memory) {
         return [_xStarterToken, _xStarterLaunchPad, _xStarterNFT];
@@ -148,6 +156,7 @@ contract xStarterGovernance is Context, Interaction {
         proposal.votes.push(vote);
         voter.votes.push(ILOVoteInfo(proposalAddr_, proposal.votes.length - 1, amount_, true, proposal.endBlock));
         emit ILOVoted(proposalAddr_, _msgSender(), choice_, amount_);
+        ILOVotersRecord[proposalAddr_][_msgSender()] = true;
         _allowInteraction();
         return true;
     }

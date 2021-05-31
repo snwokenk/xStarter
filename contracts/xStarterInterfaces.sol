@@ -18,7 +18,9 @@ interface iXstarterProposal {
 }
 
 interface iXstarterGovernance {
-    function ILOApproved(address proposalAddr_) external returns(bool);
+    function ILOApproved(address proposalAddr_) external view returns(bool);
+    function isILOVoter(address proposalAddr_, address voter_) external view returns(bool);
+    function isGOVVoter(string memory proposalName_, address voter_) external view returns(bool);
     function validateILOVotes(address proposalAddr_) external returns(bool results);
     function getILOPoll(address proposalAddr_) external view returns (ILOPoll memory poll_);
 }
