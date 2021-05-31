@@ -39,14 +39,6 @@ contract xStarterProposal {
            totalSupply_, 
            percentOfTokensForILO_, 
            fundingToken_
-        //   contribTimeLock_,
-        //   minPerSwap_,
-        //   minPerAddr_,
-        //   maxPerAddr_,
-        //   softcap_,
-        //   hardcap_
-        //   addressOfDex_,
-        //   addressOfDexFactory_
            );
        require(success, "Not able to deploy");
       _xStarterLaunchpad = xStarterLaunchpad_;
@@ -124,7 +116,6 @@ contract xStarterProposal {
         _i.isDeployed = true;
         _i.isOpen = false;
         _i.ILOAddress = ILOAddr_;
-        // _i.isApproved = true;
         return true;
         
     }
@@ -135,6 +126,18 @@ contract xStarterProposal {
         _i.isRegistered = true;
         return true;
     }
+    
+    function setTokenAndLPAddr(address projectToken_, address liqPairAddr_) external returns(bool) {
+        _a.liqPairAddr = liqPairAddr_;
+        _a.projectToken = projectToken_;
+        return true;
+    }
+    
+    function getTokenAndLPAddr() external view returns(address, address) {
+        return (_a.liqPairAddr, _a.projectToken);
+    }
+    
+    
     function setILOTimes(uint48 startTime_, uint48 endTime_) external returns(bool) {
         require(_i.ILOAddress != address(0) && msg.sender == _i.ILOAddress, 'not authorized');
         _a.startTime = startTime_;
@@ -164,14 +167,6 @@ contract xStarterProposal {
         uint totalSupply_, 
         uint8 percentOfTokensForILO_, 
         address fundingToken_
-        // uint48 contribTimeLock_,
-        // uint minPerSwap_,
-        // uint minPerAddr_,
-        // uint maxPerAddr_,
-        // uint softcap_,
-        // uint hardcap_
-        // address addressOfDex_,
-        // address addressOfDexFactory_
         ) internal returns(bool) {
         
         
@@ -195,14 +190,6 @@ contract xStarterProposal {
             0,
             false,
             address(0)
-            // contribTimeLock_,
-            // minPerSwap_,
-            // minPerAddr_,
-            // maxPerAddr_,
-            // softcap_,
-            // hardcap_
-            // addressOfDex_,
-            // addressOfDexFactory_
         );
         
         return true;

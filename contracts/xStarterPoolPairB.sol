@@ -227,15 +227,15 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
     
     address _xStarterToken;
     // Minimum  xstarter token required to participate during private sale
-    uint private _minXSTN;
+    uint  _minXSTN;
     address _xStarterLP;
     // Minimum xstarter LP tokens required
-    uint private _minXSTNLP;
-    uint private _totalLPTokens; // amount of liquidity
-     uint private _availLPTokens; // amount of liquidity
+    uint  _minXSTNLP;
+    uint  _totalLPTokens; // amount of liquidity
+     uint  _availLPTokens; // amount of liquidity
     // timestamp when contributors can start withdrawing their their Liquidity pool tokens
-    uint private _liqPairTimeLock;
-    uint private _liqPairBlockLock;
+    uint  _liqPairTimeLock;
+    uint  _liqPairBlockLock;
     
     
     uint8 private _percentOfTotalTokensForILO;
@@ -315,7 +315,9 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
         address adminAddress,
         address proposalAddr_,
         address addressOfDex_,
-        address addressOfDexFactory_
+        address addressOfDexFactory_,
+        address xStarterToken_,
+        address xstarterLP_
         
         ) Administration(adminAddress) {
             // require(percentOfTokensForILO_ > 0 && percentOfTokensForILO_ <= 100, "percent of tokens must be between 1 and 100");
@@ -325,6 +327,8 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
             (ILOProposal memory i_, ILOAdditionalInfo memory a_) = iXstarterProposal(proposalAddr_).getILOInfo();
             
             _proposalAddr = proposalAddr_;
+            _xStarterToken = xStarterToken_;
+            _xStarterLP = xstarterLP_;
             
             i._minPerSwap = a_.minPerSwap;
             i._minPerAddr = a_.minPerAddr;
@@ -545,7 +549,7 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
             
             uint48 privLen = (endTime_ - startTime_) / 2;
             
-            _pubStartTime = startTime_ + privLen;
+            _pubStartTime = _xStarterToken == address(0) ? startTime_ : startTime_ + privLen;
             
             _isSetup = iXstarterProposal(_proposalAddr).setILOTimes(_startTime, _endTime);
             require(_isSetup, 'not able register on proposal');
@@ -635,7 +639,9 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
     }
     
     function _contribute(uint fundingTokenAmount_, address funder_) internal {
-        // check to see if currently in private sale time
+        // check to see if currently in private sale time, for initial xStarter ILO this will == _startTime 
+        //for subsequent it will be half of the ILO time, for example, if the ILO time was 1000 seconds, private sale would be the first 500 seconds, 
+        // and the public sale would be the last 500 seconds
         if(_pubStartTime > 0 && block.timestamp < _pubStartTime) {
             require(IERC20Custom(_xStarterToken).balanceOf(funder_) >= _minXSTN || IERC20Custom(_xStarterLP).balanceOf(funder_) >= _minXSTNLP, "must hold xStarter tokens");
         }
@@ -751,6 +757,8 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
         _liquidityPairAddress = _getLiquidityPairAddress();
         
         emit liquidityPairCreated(_liquidityPairAddress, addressOfDex(), liquidityAmount);
+        
+        iXstarterProposal(_proposalAddr).setTokenAndLPAddr(_projectToken, _liquidityPairAddress);
         
         return true;
         

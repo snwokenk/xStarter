@@ -4,6 +4,8 @@ import "./xStarterStructs.sol";
 
 interface iXstarterProposal {
     function setILOTimes(uint48 startTime_, uint48 endTime_) external returns(bool);
+    function setTokenAndLPAddr(address projectToken_, address liqPairAddr_) external returns(bool);
+     function getTokenAndLPAddr() external view returns(address, address);
     function setAmountRaised(uint amountRaised_) external returns(bool);
     function getILOInfo() external view returns(ILOProposal memory, ILOAdditionalInfo memory);
     function getCompactInfo() external view returns(CompactInfo memory);

@@ -45,14 +45,18 @@ contract xStarterDeployer is BaseDeployer {
         address adminAddress_,
         address proposalAddr_,
         address addressOfDex_,
-        address addressOfDexFactory_
+        address addressOfDexFactory_,
+        address xStarterToken_,
+        address xstarterLP_
         ) external onlyAllowedCaller returns(address ILO_) {
             
             address ILO = address(new xStarterPoolPairB(
-                 adminAddress_,
-                 proposalAddr_,
-                 addressOfDex_,
-                 addressOfDexFactory_
+                adminAddress_,
+                proposalAddr_,
+                addressOfDex_,
+                addressOfDexFactory_,
+                xStarterToken_,
+                xstarterLP_
                 ));
             ILO_ = address(ILO);
         
@@ -68,7 +72,9 @@ interface iXstarterDeployer {
         address adminAddress_,
         address proposalAddr_,
         address addressOfDex_,
-        address addressOfDexFactory_
+        address addressOfDexFactory_,
+        address xStarterToken_,
+        address xstarterLP_
         ) external returns(address ILO_);
 }
 
@@ -85,13 +91,20 @@ contract xStarterLaunchPad is Administration, Interaction{
     }
     
     bool private _initialILODeployed;
+    // xStarter's ILO address
     address private _initialILOAddr;
+    address private _initialILOPropAddr;
     bool _deploying;
     // address __admin = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266; // address of deployer
     
     // min amount of tokens to have deposited 
     uint _depositPerProposal;
+    
+    // minimum amount of xStarter tokens or xStarter lps needed to participate
+    uint  _minXSTNLP;
+    uint  _minXSTN;
     address  _xStarterToken;
+    address _xStarterLP;
     address  _xStarterGovernance;
     address  _xStarterNFT;
     address public _addressOfDex;
@@ -260,7 +273,9 @@ contract xStarterLaunchPad is Administration, Interaction{
             _msgSender(),
             proposalAddr_,
             _addressOfDex,
-            _addressOfDexFactory // contrib lock
+            _addressOfDexFactory, // contrib lock
+            address(0), // xStarter token not yet distributed so should 
+            address(0)
         );
         // allow newly created ILO pool pair to use erc20 deployer
         IXStarterERCDeployer(_xStarterERCDeployer).setAllowedCaller(ILO);
@@ -270,8 +285,14 @@ contract xStarterLaunchPad is Administration, Interaction{
         require(success, 'Not able to deploy initial ILO');
         _initialILODeployed = true;
         _initialILOAddr = ILO;
+        _initialILOPropAddr = proposalAddr_;
         emit ILODeployed(proposalAddr_, _msgSender(), ILO);
         
+    }
+    
+    function setTokenAndLPAddr() external view returns(address xStarterToken_, address xStarterLP_) {
+        (xStarterToken_, xStarterLP_) = iXstarterProposal(_initialILOPropAddr).getTokenAndLPAddr();
+        require(xStarterToken_ != address(0) && xStarterLP_ != address(0), "initial xStarter ILO not completed");
     }
     
     event ILODeployed(address proposalAddr_, address indexed caller_, address indexed ILO);
@@ -279,8 +300,10 @@ contract xStarterLaunchPad is Administration, Interaction{
         // anyone can deploy an ILO, but if ILOAdmin_ != ILO proposer then, then the msg.sender must be the ILO proposer
         // ILO proposer also gets the NFT rewards, so it makes no sense for anyone but the 
         _disallowInteraction();
-        require(_initialILODeployed, "initial xStarter ILO not deployed");
-        require(!iXstarterProposal(proposalAddr_).isDeployed(), "ILO already deployed or being deployed");
+        
+        // initial ILO of xStarter tokens should have been completed, with liquidity pair created
+        require(_xStarterToken != address(0) && _xStarterLP != address(0), "initial xStarter ILO not completed");
+        // require(!iXstarterProposal(proposalAddr_).isDeployed(), "ILO already deployed or being deployed");
         address ILO;
         (success, ILO) = _deployILO(proposalAddr_, ILOAdmin_);
         require(success, "Not able to deploy ILO");
@@ -308,7 +331,9 @@ contract xStarterLaunchPad is Administration, Interaction{
             ILOAdmin_,
             proposalAddr_,
             _addressOfDex,
-            _addressOfDexFactory // contrib lock
+            _addressOfDexFactory, // contrib lock
+            _xStarterToken,
+            _xStarterLP
         );
         
         // change proposal state
