@@ -47,9 +47,125 @@
       </q-tab-panel>
 
       <q-tab-panel name="info">
-        <div class="row justify-center">
-          <div class="display-card accountDisplayCard col-lg-9 col-12" style="min-height: 250px;">
-            Sam
+        <div class="row justify-center q-py-md">
+          <div class="display-card accountDisplayCard col-lg-7 col-12 q-pa-lg q-gutter-y-md" style="min-height: 250px;">
+
+            <!--    access info        -->
+            <div class="row  q-gutter-x-xl">
+              <div class="col-auto">
+                <q-icon name="fas fa-users" size="lg" />
+              </div>
+              <div class="col-auto">
+                <div class="segoe-bold info-text">
+                  Early Access For XSTN Holders / Open To Public
+                </div>
+                <div class="segoe-regular info-label">
+                  Access
+                </div>
+              </div>
+
+            </div>
+            <div class="straight-line" />
+
+            <!--    softcap info        -->
+            <div class="row  q-gutter-x-xl">
+              <div class="col-auto">
+                <q-icon name="fab fa-ethereum" size="lg" />
+              </div>
+              <div class="col-auto">
+                <div class="segoe-bold info-text">
+                  {{ softCapFullDisplay }} {{ fundingTokenSymbol}}
+                </div>
+                <div class="segoe-regular info-label">
+                  SoftCap
+                </div>
+              </div>
+
+            </div>
+            <div class="straight-line" />
+
+            <!--    hardcap info        -->
+            <div class="row q-gutter-x-xl">
+              <div class="col-auto">
+                <q-icon name="fab fa-ethereum" size="lg" />
+              </div>
+              <div class="col-auto">
+                <div class="segoe-bold info-text">
+                  {{ hardCapFullDisplay }} {{ fundingTokenSymbol}}
+                </div>
+                <div class="segoe-regular info-label">
+                  HardCap
+                </div>
+              </div>
+            </div>
+            <div class="straight-line" />
+
+            <!--    min spend per address info        -->
+            <div class="row q-gutter-x-xl">
+              <div class="col-auto">
+                <q-icon name="fab fa-ethereum" size="lg" />
+              </div>
+              <div class="col-auto">
+                <div class="segoe-bold info-text">
+                  {{ minPerAddr }} {{ fundingTokenSymbol}}
+                </div>
+                <div class="segoe-regular info-label">
+                  Minimum Spend Per Address
+                </div>
+              </div>
+            </div>
+            <div class="straight-line" />
+
+            <!--    max spend per address info        -->
+            <div class="row q-gutter-x-xl">
+              <div class="col-auto">
+                <q-icon name="fab fa-ethereum" size="lg" />
+              </div>
+              <div class="col-auto">
+                <div class="segoe-bold info-text">
+                  {{ maxPerAddr }} {{ fundingTokenSymbol}}
+                </div>
+                <div class="segoe-regular info-label">
+                  Maximum Spend Per Address
+                </div>
+              </div>
+            </div>
+            <div class="straight-line" />
+
+
+            <!--    swap rate range @ softcap info        -->
+            <div class="row q-gutter-x-xl">
+              <div class="col-auto">
+                <q-icon name="fab fa-ethereum" size="lg" />
+              </div>
+              <div class="col-auto">
+                <div class="segoe-bold info-text">
+                  {{ softCapSwapRate }} tokens per 1 {{ fundingTokenSymbol }}
+                </div>
+                <div class="segoe-regular info-label">
+                  Swap Rate @ Soft Cap
+                </div>
+              </div>
+            </div>
+            <div class="straight-line" />
+
+            <!--    swap rate range @ hardcap info        -->
+            <div class="row q-gutter-x-xl">
+              <div class="col-auto">
+                <q-icon name="fab fa-ethereum" size="lg" />
+              </div>
+              <div class="col-auto">
+                <div class="segoe-bold info-text">
+                  {{ hardCapSwapRate }} tokens per 1 {{ fundingTokenSymbol }}
+                </div>
+                <div class="segoe-regular info-label">
+                  Swap Rate @ Hard Cap
+                </div>
+              </div>
+            </div>
+            <div class="straight-line" />
+
+
           </div>
         </div>
 
@@ -64,6 +180,7 @@
 
 <script>
 import {defineComponent} from "vue";
+import {SUPPORTED_FUNDING_TOKENS} from "src/constants";
 
 export default defineComponent( {
   name: "ILOAdditionalInfoDisplay",
@@ -90,6 +207,37 @@ export default defineComponent( {
     ILOMoreInfo() {
       // struct ILOAdditionalInfo
       return this.selectedILO.moreInfo
+    },
+    softCapFullDisplay() {
+      return this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.softcap)
+    },
+    hardCapFullDisplay() {
+      return this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.hardcap)
+    },
+    fundingTokenSymbol() {
+      if (SUPPORTED_FUNDING_TOKENS[this.ILOInfo.fundingToken]) {
+        return SUPPORTED_FUNDING_TOKENS[this.ILOInfo.fundingToken]
+      }
+      return 'Custom Token'
+    },
+    minPerAddr() {
+      return this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.minPerAddr)
+    },
+    maxPerAddr() {
+      return this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.maxPerAddr)
+    },
+
+    tokensForILO() {
+      let totalTokens = this.$helper.weiBigNumberToFloatEther(this.ILOInfo.totalSupply)
+      return totalTokens * (this.ILOInfo.percentOfTokensForILO / 100)
+      // return totalTokens
+    },
+    softCapSwapRate() {
+      return this.tokensForILO / this.softCapFullDisplay
+    },
+
+    hardCapSwapRate() {
+      return this.tokensForILO / this.hardCapFullDisplay
     }
   },
   methods: {

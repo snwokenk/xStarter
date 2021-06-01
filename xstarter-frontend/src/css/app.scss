@@ -199,11 +199,23 @@ body.body--light {
   width: 100%;
   height: 20px;
   border-radius: 10px !important;
-  color: #acecf4 ;
+  color: #acecf4;
   background:  rgba(220, 220, 220, 0.89);;
 
   //border: 1px solid rgba(112, 112, 112, 0.2);
 
+}
+
+.straight-line {
+  border: 1px solid #acecf4;
+}
+
+.info-text {
+  font-size: 12px;
+}
+
+.info-label {
+  font-size: 10px;
 }
 
 

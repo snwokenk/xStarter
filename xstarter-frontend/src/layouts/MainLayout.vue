@@ -111,7 +111,7 @@ export default defineComponent({
       }
 
     }
-    const connectUsingWebProvider = async () => {
+    const connectUsingWebProvider = async (accountsChanged = null) => {
       if (metamaskInstalled.value) {
         console.log('meta mask installed')
         try {
@@ -136,22 +136,32 @@ export default defineComponent({
             window.location.reload();
           })
           // checks to see if any account has permission
-          ethereumProvider.value.on('accountsChanged', checkExisting)
+          ethereumProvider.value.on('accountsChanged',() => { checkExisting(true) })
         }else {
           launchPadLoaded.value = false
           provider = undefined
           signer = undefined
           launchPadContract = undefined
+          console.log('connecteda')
+          if (accountsChanged) {
+            // if accounts was just changed an no accounts is connected reload
+            window.location.reload();
+          } else {
+            // this is probably from a reload, so use jsonrpc provider
+            await connectUsingJsonRPCProvider()
+          }
+
+
         }
       }
     }
-    const checkExisting = async () => {
+    const checkExisting = async (accountsChanged = null) => {
       // check if an web3 wallet is visible
       ethereumProvider.value = await detectEthereumProvider();
       metamaskInstalled.value = ethereumProvider.value ? Boolean(ethereumProvider.value) : false
       console.log('etherruem prov is', ethereumProvider.value, metamaskInstalled.value)
        if (metamaskInstalled.value) {
-         await connectUsingWebProvider()
+         await connectUsingWebProvider(accountsChanged)
        }else {
         await connectUsingJsonRPCProvider()
       }
@@ -174,6 +184,9 @@ export default defineComponent({
         }
 
         connectedAndPermissioned.value = metamaskInstalled.value && connectedAccounts.value.length > 0
+        if (connectedAndPermissioned.value) {
+          checkExisting();
+        }
 
         // provider = new ethers.providers.Web3Provider(ethereumProvider.value)
         // signer = provider.getSigner()
@@ -241,7 +254,7 @@ export default defineComponent({
         return `${addr.slice(0, 6)}....${addr.slice(addr.length - 4)}`
       }
 
-      return this.metamaskInstalled.value ? 'Connect' : 'Install Metamask'
+      return this.metamaskInstalled ? 'Connect' : 'Install Metamask'
     }
   },
   methods: {
