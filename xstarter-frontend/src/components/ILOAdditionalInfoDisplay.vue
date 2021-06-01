@@ -139,8 +139,11 @@
                 <q-icon name="fab fa-ethereum" size="lg" />
               </div>
               <div class="col-auto">
-                <div class="segoe-bold info-text">
+                <div v-if="hardCapFullDisplay" class="segoe-bold info-text">
                   {{ softCapSwapRate }} tokens per 1 {{ fundingTokenSymbol }}
+                </div>
+                <div v-else class="segoe-bold info-text">
+                  TBD
                 </div>
                 <div class="segoe-regular info-label">
                   Swap Rate @ Soft Cap
@@ -155,8 +158,11 @@
                 <q-icon name="fab fa-ethereum" size="lg" />
               </div>
               <div class="col-auto">
-                <div class="segoe-bold info-text">
+                <div v-if="hardCapFullDisplay" class="segoe-bold info-text">
                   {{ hardCapSwapRate }} tokens per 1 {{ fundingTokenSymbol }}
+                </div>
+                <div v-else class="segoe-bold info-text">
+                  TBD
                 </div>
                 <div class="segoe-regular info-label">
                   Swap Rate @ Hard Cap
@@ -164,6 +170,25 @@
               </div>
             </div>
             <div class="straight-line" />
+
+            <!--    swap rate range @ hardcap info        -->
+            <div class="row q-gutter-x-xl">
+              <div class="col-auto">
+                <q-icon name="fab fa-ethereum" size="lg" />
+              </div>
+              <div class="col-auto">
+                <div v-if="hardCapFullDisplay" class="segoe-bold info-text">
+                  {{ listingPremium }}%  Above Swap ILO Swap Eate
+                </div>
+                <div v-else class="segoe-bold info-text">
+                  TBD
+                </div>
+                <div class="segoe-regular info-label">
+                  Listing Premium
+                </div>
+              </div>
+            </div>
+<!--            <div class="straight-line" />-->
 
 
           </div>
@@ -238,6 +263,11 @@ export default defineComponent( {
 
     hardCapSwapRate() {
       return this.tokensForILO / this.hardCapFullDisplay
+    },
+
+    listingPremium() {
+      // percentTokensForTeam not greater than 20 or 20%
+      return ((100 - this.ILOMoreInfo.percentTokensForTeam) * 2 ) - 100
     }
   },
   methods: {

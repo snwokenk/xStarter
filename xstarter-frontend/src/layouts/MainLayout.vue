@@ -83,6 +83,8 @@ export default defineComponent({
     const ethereumProvider = ref(undefined)
     let chainId = ref(undefined)
     provide('$chainId', chainId)
+    let blockInfo = ref({timestamp: 0, blockNumber: 0})
+    provide('$blockInfo', blockInfo)
     const metamaskInstalled = ref(false)
     const connectedAccounts = ref([])
     const connectedAndPermissioned = ref(Boolean(metamaskInstalled.value && connectedAccounts.value.length > 0))
@@ -137,6 +139,11 @@ export default defineComponent({
           })
           // checks to see if any account has permission
           ethereumProvider.value.on('accountsChanged',() => { checkExisting(true) })
+          provider.on("block", async (blockNumber) => {
+            console.log('received block event')
+            const block = await  provider.getBlock()
+            blockInfo.value = {timestamp: block.timestamp, blockNumber: blockNumber}
+          })
         }else {
           launchPadLoaded.value = false
           provider = undefined
@@ -148,6 +155,7 @@ export default defineComponent({
             window.location.reload();
           } else {
             // this is probably from a reload, so use jsonrpc provider
+            provider.off("block")
             await connectUsingJsonRPCProvider()
           }
 
@@ -238,7 +246,8 @@ export default defineComponent({
       connectedAndPermissioned,
       launchPadContract,
       launchPadLoaded,
-      chainId
+      chainId,
+      blockInfo
     }
   },
   computed: {

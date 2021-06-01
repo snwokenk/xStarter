@@ -7,6 +7,18 @@
       <div v-if="!acceptedChain" class="text-warning text-center full-width">
         Please connect to the xDai Layer 2 chain on metamask
       </div>
+      <div v-if="chainId && blockInfo.blockNumber !== 0">
+        <div>
+          Current Block Number: &nbsp; <span class="segoe-bold text-positive">{{blockInfo.blockNumber}}</span>
+        </div>
+        <div>
+          Current Block Timestamp: &nbsp; <span class="segoe-bold text-positive">{{blockInfo.timestamp}}</span>
+
+          <div>
+          Current Block Date: &nbsp; <span class="segoe-bold text-positive">{{ currentBlockDate.toLocaleString() }}</span>
+        </div>
+        </div>
+      </div>
 
     </q-card-section>
   </q-card>
@@ -20,8 +32,10 @@ export default defineComponent( {
   name: "AccountDisplay",
   setup() {
     const chainId = inject('$chainId')
+    const blockInfo = inject('$blockInfo')
     return {
-      chainId
+      chainId,
+      blockInfo
     }
   },
   computed: {
@@ -30,6 +44,9 @@ export default defineComponent( {
     },
     acceptedChain() {
       return Boolean(ACCEPTED_CHAINS[this.chainId])
+    },
+    currentBlockDate() {
+      return new Date(this.blockInfo.timestamp * 1000)
     }
   }
 })
