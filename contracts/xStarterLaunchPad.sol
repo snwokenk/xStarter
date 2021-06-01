@@ -163,7 +163,7 @@ contract xStarterLaunchPad is Administration, Interaction{
             _minXSTNLP = minXSTNLP_;
             return true;
         }
-    function getMinTokensRequirements() public returns(uint, uint) {
+    function getMinTokensRequirements() public view returns(uint, uint) {
         return (_minXSTN, _minXSTNLP);
     }
     

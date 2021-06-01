@@ -1,66 +1,66 @@
-<template>
-<q-card flat square class=" display-card q-py-md q-mb-lg q-px-lg q-gutter-y-sm" clickable>
-  <div class="display-card-date-text" v-html="startLiveOrEndDisplay" />
-  <q-card-section horizontal class="justify-between">
-    <div>
-      <q-avatar square size="4rem">
-        <img :src="liquidityOffering.logo_url">
-      </q-avatar>
-    </div>
-    <LiquidityDisplayDuration  :end-time="endTimestamp" :start-time="startTimestamp" :offering-status="ILOStatus"  :succeeded="ILOSuccess"/>
-  </q-card-section>
-  <q-card-section horizontal>
-    <div class="text-weight-bolder display-card-name-text">
-      {{ ILOInfo.tokenName }}
-    </div>
-  </q-card-section>
-  <q-card-section horizontal>
-    <div>
-      <div class="amount-raised-text">
-        Amount Raised
+<template >
+  <q-card v-if="!selectedILO || selectedILO.proposalAddr === anILO.proposalAddr" flat square class=" display-card q-py-md q-mb-lg q-px-lg q-gutter-y-sm" clickable>
+    <div class="display-card-date-text" v-html="startLiveOrEndDisplay" />
+    <q-card-section horizontal class="justify-between">
+      <div>
+        <q-avatar square size="4rem">
+          <img :src="liquidityOffering.logo_url">
+        </q-avatar>
       </div>
-      <div class="amount-raised-number-text">
-        {{ amountRaised }} {{ fundingTokenSymbol }}
+      <LiquidityDisplayDuration  :end-time="endTimestamp" :start-time="startTimestamp" :offering-status="ILOStatus"  :succeeded="ILOSuccess"/>
+    </q-card-section>
+    <q-card-section horizontal>
+      <div class="text-weight-bolder display-card-name-text">
+        {{ ILOInfo.tokenName }}
       </div>
-    </div>
-  </q-card-section>
-  <q-card-section horizontal>
-    <div class="col-3">
-      <div class="display-card-small-title text-left">
-        Soft Cap
+    </q-card-section>
+    <q-card-section horizontal>
+      <div>
+        <div class="amount-raised-text">
+          Amount Raised
+        </div>
+        <div class="amount-raised-number-text">
+          {{ amountRaised }} {{ fundingTokenSymbol }}
+        </div>
       </div>
-      <div class="amount-raised-number-text text-left" style="font-size: 12px !important;">
-        {{ softCap }} {{ fundingTokenSymbol }}
+    </q-card-section>
+    <q-card-section horizontal>
+      <div class="col-3">
+        <div class="display-card-small-title text-left">
+          Soft Cap
+        </div>
+        <div class="amount-raised-number-text text-left" style="font-size: 12px !important;">
+          {{ softCap }} {{ fundingTokenSymbol }}
+        </div>
       </div>
-    </div>
-    <div class="col-6">
-      <div class="display-card-small-title text-center">
-        Min/Max Per Address
+      <div class="col-6">
+        <div class="display-card-small-title text-center">
+          Min/Max Per Address
+        </div>
+        <div class="amount-raised-number-text" style="font-size: 12px !important; text-align: center !important;">
+          {{ minPerAddr }}/{{ maxPerAddr }} {{ fundingTokenSymbol }}
+        </div>
       </div>
-      <div class="amount-raised-number-text" style="font-size: 12px !important; text-align: center !important;">
-        {{ minPerAddr }}/{{ maxPerAddr }} {{ fundingTokenSymbol }}
+      <div class="col-3">
+        <div class="display-card-small-title text-right">
+          Hard Cap
+        </div>
+        <div class="amount-raised-number-text" style="font-size: 12px !important; text-align: right !important;">
+          {{ hardCap }} {{ fundingTokenSymbol }}
+        </div>
       </div>
-    </div>
-    <div class="col-3">
-      <div class="display-card-small-title text-right">
-        Hard Cap
-      </div>
-      <div class="amount-raised-number-text" style="font-size: 12px !important; text-align: right !important;">
-        {{ hardCap }} {{ fundingTokenSymbol }}
-      </div>
-    </div>
-  </q-card-section>
-  <q-card-section horizontal>
-    <q-linear-progress class="progress-bar-style" :value="amtRaisedProgress">
-      <div class="absolute-full flex flex-center">
-        <q-badge  class="black-white-dark-theme" style="font-family: 'Segoe UI Bold',serif" :label="progressBarLabel" />
-      </div>
-    </q-linear-progress>
-  </q-card-section>
-  <q-card-actions>
-    <q-btn rounded class="full-width" outline label="View more"/>
-  </q-card-actions>
-</q-card>
+    </q-card-section>
+    <q-card-section horizontal>
+      <q-linear-progress class="progress-bar-style" :value="amtRaisedProgress">
+        <div class="absolute-full flex flex-center">
+          <q-badge  class="black-white-dark-theme" style="font-family: 'Segoe UI Bold',serif" :label="progressBarLabel" />
+        </div>
+      </q-linear-progress>
+    </q-card-section>
+    <q-card-actions>
+      <q-btn rounded class="full-width" outline :label="isSelected ? 'Back': 'View more'" @click="viewMoreCallBack"/>
+    </q-card-actions>
+  </q-card>
 </template>
 
 <script>
@@ -78,12 +78,23 @@ export default defineComponent( {
     anILO: {
       type: Object,
       required: true
+    },
+    viewMoreCallBack: {
+      type: Function,
+      required: true
+    },
+    selectedILO: {
+      type: Object,
+      default: null
     }
   },
   setup(){
     return {}
   },
   computed: {
+    isSelected() {
+      return !!this.selectedILO && this.anILO.proposalAddr === this.selectedILO.proposalAddr
+    },
     startTimestamp() {
       return parseInt(this.ILOMoreInfo.startTime) * 1000
     },
@@ -192,6 +203,9 @@ export default defineComponent( {
       // struct ILOAdditionalInfo
       return this.anILO.moreInfo
     }
+  },
+  methods: {
+
   }
 })
 </script>

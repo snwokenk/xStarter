@@ -1,16 +1,27 @@
 <template>
-  <div class="display-container row q-gutter-y-lg q-gutter-x-lg justify-center q-py-lg q-my-md">
-    <LiquidityOfferingDisplay v-for="(obj, index) in ILOs" :anILO="obj" :key="index" class="ILODisplayCard col-md-10 col-lg-5"  :liquidity-offering="listOfLiquidityOffering"/>
+  <div class="display-container row q-gutter-y-lg q-gutter-x-lg justify-center q-pt-md q-pb-lg q-my-md">
+    <LiquidityOfferingDisplay
+      v-for="(obj, index) in ILOs"
+      :anILO="obj"
+      :selectedILO="selectedILO"
+      :key="index"
+      class="ILODisplayCard col-md-10 col-lg-5"
+      :liquidity-offering="listOfLiquidityOffering"
+      :view-more-call-back="() => { changeSelectedILO(obj) }"
+    />
+
+    <ILOAdditionalInfoDisplay v-if="selectedILO" style="width: 200%;"  class="q-my-xl"  :selectedILO="selectedILO" />
   </div>
 </template>
 
 <script>
 import {defineComponent, inject, ref} from "vue";
 import LiquidityOfferingDisplay from "components/CardDisplays/LiquidityOfferingDisplay";
+import ILOAdditionalInfoDisplay from "components/ILOAdditionalInfoDisplay";
 
 export default defineComponent( {
   name: "ILOMainDisplay",
-  components: {LiquidityOfferingDisplay},
+  components: {ILOAdditionalInfoDisplay, LiquidityOfferingDisplay},
   setup() {
     let ILORound = ref(0)
 
@@ -44,7 +55,8 @@ export default defineComponent( {
       move: 0,
       ILOs: [],
       noOfILOs: 0,
-      initialCheck: false
+      initialCheck: false,
+      selectedILO: null
     }
   },
   computed: {
@@ -63,6 +75,11 @@ export default defineComponent( {
     checkIt() {
       console.log('provider', this.getProvider())
     },
+    changeSelectedILO(ILOObj) {
+      // if no selected ILO, then set to ILO obj, else set to null
+      console.log('calling change ILO')
+      this.selectedILO = !this.selectedILO ? ILOObj : null
+    }
   },
   watch: {
     launchPadLoaded: async function(val)  {

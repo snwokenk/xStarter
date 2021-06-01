@@ -84,7 +84,7 @@ contract xStarterProposal {
         return (_i, _a);
     }
     function getCompactInfo() external view returns(CompactInfo memory) {
-        return CompactInfo(_i, _a);
+        return CompactInfo(address(this), _i, _a);
     }
     function getMainInfo() external view returns(string memory tokenName, string memory tokenSymbol, string memory infoURL, uint totalSupply, uint8 percentOfTokensForILO, address fundingToken){
         

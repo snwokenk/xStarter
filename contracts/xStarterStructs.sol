@@ -44,6 +44,7 @@ struct ILOAdditionalInfo {
 }
 
 struct CompactInfo {
+    address proposalAddr;
     ILOProposal info;
     ILOAdditionalInfo moreInfo;
 }

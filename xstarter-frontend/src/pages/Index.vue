@@ -12,7 +12,7 @@
 <script>
 import {defineComponent, inject, provide} from 'vue';
 import LiquidityOfferingDisplay from "components/CardDisplays/LiquidityOfferingDisplay";
-import ILOMainDisplay from "components/CardDisplays/ILOMainDisplay";
+import ILOMainDisplay from "components/ILOMainDisplay";
 import AccountDisplay from "components/CardDisplays/AccountDisplay";
 
 export default defineComponent({

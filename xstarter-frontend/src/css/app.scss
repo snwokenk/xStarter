@@ -40,6 +40,9 @@ body.body--dark {
     color: white;
     background: black;
   }
+  .dark-light-background {
+    background: #000A48 !important;
+  }
   .display-card {
     border-color: #ace5e3;
     background: #000A48 !important;
@@ -85,6 +88,9 @@ body.body--light {
   .black-white-dark-theme{
     color: black;
     background: white;
+  }
+  .dark-light-background {
+    background: white !important;
   }
   .display-card {
     border-color: rgba(49, 187, 182, 0.56) !important;
@@ -177,6 +183,16 @@ body.body--light {
     font-weight: 900;
     font-size: 40px;
   }
+}
+
+.segoe-bold {
+  font-family: "Segoe UI Bold", serif;
+  font-weight: 900;
+}
+
+.segoe-regular {
+  font-family: "Segoe UI Regular", serif;
+  font-weight: normal;
 }
 
 .progress-bar-style {
