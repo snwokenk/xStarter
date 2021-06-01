@@ -1,17 +1,22 @@
 <template>
-  <div class="display-container row q-gutter-y-lg q-gutter-x-lg justify-center q-pt-md q-pb-lg q-my-md">
-    <LiquidityOfferingDisplay
-      v-for="(obj, index) in ILOs"
-      :anILO="obj"
-      :selectedILO="selectedILO"
-      :key="index"
-      class="ILODisplayCard col-md-10 col-lg-5"
-      :liquidity-offering="listOfLiquidityOffering"
-      :view-more-call-back="() => { changeSelectedILO(obj) }"
-    />
+  <div class="full-width">
+    <div class="display-container row q-gutter-y-lg q-gutter-x-lg justify-center q-pt-md q-px-md q-pb-lg q-my-md">
+      <LiquidityOfferingDisplay
+        v-for="(obj, index) in ILOs"
+        :anILO="obj"
+        :selectedILO="selectedILO"
+        :key="index"
+        class="ILODisplayCard col-11 col-lg-5"
+        :liquidity-offering="listOfLiquidityOffering"
+        :view-more-call-back="() => { changeSelectedILO(obj) }"
+      />
+    </div>
 
-    <ILOAdditionalInfoDisplay v-if="selectedILO" style="width: 200%;"  class="q-my-xl"  :selectedILO="selectedILO" />
+    <div>
+      <ILOAdditionalInfoDisplay v-if="selectedILO" class="q-mt-md q-mb-lg" :backBtnHandler="() => { changeSelectedILO(selectedILO) }"  :selectedILO="selectedILO" />
+    </div>
   </div>
+
 </template>
 
 <script>
@@ -78,6 +83,9 @@ export default defineComponent( {
     changeSelectedILO(ILOObj) {
       // if no selected ILO, then set to ILO obj, else set to null
       console.log('calling change ILO')
+      if (!this.selectedILO) {
+        history.pushState({}, '')
+      }
       this.selectedILO = !this.selectedILO ? ILOObj : null
     }
   },

@@ -19,26 +19,28 @@
 <!--  about    -->
       <q-tab-panel name="about">
         <div class="row justify-center " :class="{'text-dark': !$q.dark.isActive, 'text-light': $q.dark.isActive}">
-          <div class="col-11 segoe-bold" style="font-size: 26px;">
-            {{ ILOInfo.tokenName }}
-          </div>
+          <div class="col-lg-8 col-12">
+            <div class="col-11 segoe-bold" style="font-size: 26px;">
+              {{ ILOInfo.tokenName }}
+            </div>
 
-          <div class="col-11 segoe-regular q-mt-lg">
+            <div class="col-11 segoe-regular q-mt-lg">
               Circa 2021, xStarter is a Decentralized Ecosystem of Smart Contracts provided for
               businesses world wide that are seeking to launch and maintain their
               own crypto utility token.
-          </div>
-
-          <div class="row col-11 q-mt-md">
-            <div class="col-auto">
-              <q-btn icon="fas fa-globe" round flat  target="_blank" type="a" href="https://www.xStarter.org" />
-            </div>
-            <div class="col-auto">
-              <q-btn icon="fab fa-telegram-plane" round flat  target="_blank" type="a" href="https://t.me/xStarterDev" />
             </div>
 
-            <div class="col-auto">
-              <q-btn icon="fab fa-twitter" round flat target="_blank" type="a" href="https://www.twitter.com/xStarterdev" />
+            <div class="row col-11 q-mt-md">
+              <div class="col-auto">
+                <q-btn icon="fas fa-globe" round flat  target="_blank" type="a" href="https://www.xStarter.org" />
+              </div>
+              <div class="col-auto">
+                <q-btn icon="fab fa-telegram-plane" round flat  target="_blank" type="a" href="https://t.me/xStarterDev" />
+              </div>
+
+              <div class="col-auto">
+                <q-btn icon="fab fa-twitter" round flat target="_blank" type="a" href="https://www.twitter.com/xStarterdev" />
+              </div>
             </div>
           </div>
         </div>
@@ -69,6 +71,10 @@ export default defineComponent( {
     selectedILO: {
       type: Object,
       required: false
+    },
+    backBtnHandler: {
+      type: Function,
+      required: true
     }
   },
   data() {
@@ -88,6 +94,16 @@ export default defineComponent( {
   },
   methods: {
 
+  },
+
+  mounted() {
+    // handle back btn
+    window.onpopstate = (event) => {
+      window.onpopstate = null
+      console.log('back btn hander', this.backBtnHandler)
+      this.backBtnHandler()
+
+    }
   }
 })
 </script>
