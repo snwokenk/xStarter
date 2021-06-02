@@ -13,12 +13,12 @@
         </div>
         <div>
           Current Block Timestamp: &nbsp; <span class="segoe-bold text-positive">{{blockInfo.timestamp}}</span>
+        </div>
 
-          <div>
+        <div>
           Current Block Date: &nbsp; <span class="segoe-bold text-positive">{{ currentBlockDate.toLocaleString() }}</span>
         </div>
         </div>
-      </div>
 
     </q-card-section>
   </q-card>

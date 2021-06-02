@@ -178,6 +178,25 @@
               </div>
               <div class="col-auto">
                 <div v-if="hardCapFullDisplay" class="segoe-bold info-text">
+                  {{ percentOfFundingTokenForLiqudity }}%
+                </div>
+                <div v-else class="segoe-bold info-text">
+                  TBD
+                </div>
+                <div class="segoe-regular info-label">
+                  % Of {{ fundingTokenSymbol }} Raised For Liquidity Pool
+                </div>
+              </div>
+            </div>
+            <div class="straight-line" />
+
+            <!--    swap rate range @ hardcap info        -->
+            <div class="row q-gutter-x-xl">
+              <div class="col-auto">
+                <q-icon name="fab fa-ethereum" size="lg" />
+              </div>
+              <div class="col-auto">
+                <div v-if="hardCapFullDisplay" class="segoe-bold info-text">
                   {{ listingPremium }}%  Above Swap ILO Swap Eate
                 </div>
                 <div v-else class="segoe-bold info-text">
@@ -191,6 +210,85 @@
 <!--            <div class="straight-line" />-->
 
 
+          </div>
+        </div>
+
+
+      </q-tab-panel>
+
+      <q-tab-panel name="tokenomics">
+        <div class="row justify-center q-py-md">
+          <div class="display-card accountDisplayCard col-lg-7 col-12 q-pa-lg q-gutter-y-md" style="min-height: 250px;">
+
+            <!--    token symbol       -->
+            <div class="row  q-gutter-x-xl">
+              <div class="col-auto">
+                <div class="segoe-bold info-text">
+                  {{ ILOInfo.tokenSymbol }}
+                </div>
+                <div class="segoe-regular info-label">
+                  Token Symbol
+                </div>
+              </div>
+
+            </div>
+            <div class="straight-line" />
+
+            <!--   type        -->
+            <div class="row  q-gutter-x-xl">
+              <div class="col-auto">
+                <div class="segoe-bold info-text">
+                  ERC20
+                </div>
+                <div class="segoe-regular info-label">
+                  Token Type
+                </div>
+              </div>
+
+            </div>
+            <div class="straight-line" />
+
+            <!--    total supply info        -->
+            <div class="row q-gutter-x-xl">
+
+              <div class="col-auto">
+                <div class="segoe-bold info-text">
+                  {{ totalSupply.toLocaleString() }}
+                </div>
+                <div class="segoe-regular info-label">
+                  Total Token Supply
+                </div>
+              </div>
+            </div>
+            <div class="straight-line" />
+
+            <!--    total supply info        -->
+            <div class="row q-gutter-x-xl">
+
+              <div class="col-auto">
+                <div class="segoe-bold info-text">
+                  {{ tokensForILO.toLocaleString() }}
+                </div>
+                <div class="segoe-regular info-label">
+                  Tokens Supply
+                </div>
+              </div>
+            </div>
+
+          </div>
+          <div class="display-card accountDisplayCard col-lg-7 col-12 q-pa-lg q-mt-lg" style="min-height: 250px;">
+            <div class="row">
+
+              <div class="col-12">
+                <div class="segoe-bold info-text-header text-center">
+                  Token Use Cases
+                </div>
+                <div class="segoe-regular info-text q-mt-md">
+                  xStarter tokens are used for governance and early access of ILOs launched on the xStarter Platform.
+                  xStarter tokens can also be used as a funding token for ILOs.
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -252,9 +350,13 @@ export default defineComponent( {
       return this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.maxPerAddr)
     },
 
+    totalSupply() {
+      return this.$helper.weiBigNumberToFloatEther(this.ILOInfo.totalSupply)
+    },
+
     tokensForILO() {
-      let totalTokens = this.$helper.weiBigNumberToFloatEther(this.ILOInfo.totalSupply)
-      return totalTokens * (this.ILOInfo.percentOfTokensForILO / 100)
+
+      return this.totalSupply * (this.ILOInfo.percentOfTokensForILO / 100)
       // return totalTokens
     },
     softCapSwapRate() {
@@ -265,9 +367,13 @@ export default defineComponent( {
       return this.tokensForILO / this.hardCapFullDisplay
     },
 
+    percentOfFundingTokenForLiqudity() {
+      return 100 - this.ILOMoreInfo.percentTokensForTeam
+    },
+
     listingPremium() {
       // percentTokensForTeam not greater than 20 or 20%
-      return ((100 - this.ILOMoreInfo.percentTokensForTeam) * 2 ) - 100
+      return (this.percentOfFundingTokenForLiqudity * 2 ) - 100
     }
   },
   methods: {
