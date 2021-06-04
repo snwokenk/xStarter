@@ -74,10 +74,12 @@
 import { defineComponent, ref, watch, onMounted, provide } from 'vue'
 import { useQuasar } from 'quasar'
 import { ethers } from 'boot/ethers'
+import { abiUtils } from "boot/abiGenerator";
 import detectEthereumProvider from '@metamask/detect-provider';
 import {ILO_ADDRESS, JSON_RPC_ENDPOINT, LAUNCHPAD_ADDRESS} from "src/constants";
 // import data from 'src/artifacts/contracts/xStarterPoolPairB.sol/xStarterPoolPairB.json';
 import launchpadCode from 'src/artifacts/contracts/xStarterLaunchPad.sol/xStarterLaunchPad.json';
+import xStarterProposalCode from 'src/artifacts/contracts/xStarterLaunchPad.sol/xStarterLaunchPad.json'
 
 
 export default defineComponent({
@@ -92,7 +94,8 @@ export default defineComponent({
       $q.dark.toggle()
     }
 
-
+    // console.log('xstarterpropsal code', typeof  xStarterProposalCode, xStarterProposalCode)
+    console.log('xstarter constructor abi', abiUtils.getConstructorObj(xStarterProposalCode.abi))
 
     let provider = undefined
     let signer = undefined

@@ -6,6 +6,8 @@
 
     <ILOMainDisplay v-if="currentView === 'ilo'" />
 
+    <ABIGeneratedForm v-show="false" :display-names="{xStarterToken_: 'Address of xStarter Token'}" :abi="proposalABI" :title="{name: 'Create A Proposal', class: '', style: ''}" function-name="constructor"/>
+
   </q-page>
 </template>
 
@@ -14,10 +16,12 @@ import {defineComponent, inject, provide} from 'vue';
 import LiquidityOfferingDisplay from "components/CardDisplays/LiquidityOfferingDisplay";
 import ILOMainDisplay from "components/ILOMainDisplay";
 import AccountDisplay from "components/CardDisplays/AccountDisplay";
+import ABIGeneratedForm from "components/ABIGenerated/ABIGeneratedForm";
+import xStarterProposalCode from 'src/artifacts/contracts/xStarterLaunchPad.sol/xStarterLaunchPad.json'
 
 export default defineComponent({
   name: 'PageIndex',
-  components: {AccountDisplay, ILOMainDisplay},
+  components: {ABIGeneratedForm, AccountDisplay, ILOMainDisplay},
   data() {
     return {
       currentView: 'ilo',
@@ -28,8 +32,9 @@ export default defineComponent({
     const getSigner = inject('$getSigner')
     const getLaunchPadContract = inject('$getLaunchPadContract')
     const getConnectedAndPermissioned = inject('$getConnectedAndPermissioned')
+    const proposalABI = xStarterProposalCode.abi
     console.log('provider is ', getProvider())
-    return {getProvider, getSigner, getLaunchPadContract, getConnectedAndPermissioned}
+    return {getProvider, getSigner, getLaunchPadContract, getConnectedAndPermissioned, proposalABI}
   },
   computed: {
     listOfLiquidityOffering() {
