@@ -1,19 +1,24 @@
 <template>
-  <q-form class="full-width">
-    <div :class="title.class" :style="title.style">
-      {{ title.name}}
-    </div>
-
-    <div class="full-width">
-      <div v-for="(obj, ind) in funcABI.inputs" :key="ind" >
-        <q-input v-model="formFields[obj.name]" :label="!displayNames[obj.name] ? obj.name : displayNames[obj.name]"  />
+  <q-dialog
+    model-value="modelValue"
+    persistent
+    :maximized="true"
+    transition-show="slide-up"
+    transition-hide="slide-down"
+    @update:model-value="minimize"
+  >
+    <q-form class="full-width">
+      <div :class="title.class" :style="title.style">
+        {{ title.name}}
       </div>
 
-
-    </div>
-
-
-  </q-form>
+      <div class="full-width">
+        <div v-for="(obj, ind) in funcABI.inputs" :key="ind" >
+          <q-input v-model="formFields[obj.name]" :label="!displayNames[obj.name] ? obj.name : displayNames[obj.name]"  />
+        </div>
+      </div>
+    </q-form>
+  </q-dialog>
 
 </template>
 
@@ -34,6 +39,10 @@ export default defineComponent( {
     }
   },
   props: {
+    modelValue: {
+      type: Boolean,
+      default: false
+    },
     title: {
       type: Object, // fields = 'name', 'class', 'style'
       default: () => {return {name: '', class: '', style: ''}}
@@ -60,6 +69,11 @@ export default defineComponent( {
       type: Object,
       required: false
     },
+  },
+  methods: {
+    minimize() {
+      this.$emit('update:modelValue', !this.modelValue)
+    }
   },
   mounted() {
     const funcABI = abiUtils.getFunctionObj(this.abi, this.functionName, this.functionType)

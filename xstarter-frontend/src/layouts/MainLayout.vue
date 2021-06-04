@@ -46,6 +46,7 @@
     <q-page-container>
       <router-view />
     </q-page-container>
+    <ABIGeneratedForm v-if="currentFormABI && currentFormFunctionName"  :abi="currentFormABI" :function-name="currentFormFunctionName"/>
 
     <q-footer elevated class="text-white" :class="{'bg-dark': $q.dark.isActive, 'bg-light': !$q.dark.isActive}">
       <q-toolbar class="justify-center">
@@ -80,12 +81,14 @@ import {ILO_ADDRESS, JSON_RPC_ENDPOINT, LAUNCHPAD_ADDRESS} from "src/constants";
 // import data from 'src/artifacts/contracts/xStarterPoolPairB.sol/xStarterPoolPairB.json';
 import launchpadCode from 'src/artifacts/contracts/xStarterLaunchPad.sol/xStarterLaunchPad.json';
 import xStarterProposalCode from 'src/artifacts/contracts/xStarterLaunchPad.sol/xStarterLaunchPad.json'
+import ABIGeneratedForm from "components/ABIGenerated/ABIGeneratedForm";
 
 
 export default defineComponent({
   name: 'MainLayout',
 
   components: {
+    ABIGeneratedForm
   },
 
   setup () {
@@ -273,6 +276,12 @@ export default defineComponent({
       launchPadLoaded,
       chainId,
       blockInfo
+    }
+  },
+  data() {
+    return {
+      currentFormABI: null,
+      currentFormFunctionName: ''
     }
   },
   computed: {

@@ -57,14 +57,15 @@
         </div>
       </q-linear-progress>
     </q-card-section>
-    <q-card-actions>
+    <q-card-actions align="stretch" class="q-gutter-y-md q-py-md">
       <q-btn rounded class="full-width" outline :label="isSelected ? 'Back': 'View more'" @click="viewMoreCallBack"/>
+      <q-btn rounded class="full-width" outline v-if="isSelected && connectedAndPermissioned"  label="Participate" />
     </q-card-actions>
   </q-card>
 </template>
 
 <script>
-import { defineComponent } from 'vue'
+import {defineComponent, inject} from 'vue'
 import LiquidityDisplayDuration from "components/CardDisplays/LiquidityDisplayDuration";
 import {SUPPORTED_FUNDING_TOKENS} from "src/constants";
 export default defineComponent( {
@@ -89,7 +90,9 @@ export default defineComponent( {
     }
   },
   setup(){
-    return {}
+    const connectedAndPermissioned = inject('$connectedAndPermissioned',)
+
+    return {connectedAndPermissioned}
   },
   computed: {
     isSelected() {

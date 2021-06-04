@@ -17,7 +17,7 @@ import LiquidityOfferingDisplay from "components/CardDisplays/LiquidityOfferingD
 import ILOMainDisplay from "components/ILOMainDisplay";
 import AccountDisplay from "components/CardDisplays/AccountDisplay";
 import ABIGeneratedForm from "components/ABIGenerated/ABIGeneratedForm";
-import xStarterProposalCode from 'src/artifacts/contracts/xStarterLaunchPad.sol/xStarterLaunchPad.json'
+import xStarterProposalCode from 'src/artifacts/contracts/xStarterProposal.sol/xStarterProposal.json'
 
 export default defineComponent({
   name: 'PageIndex',
