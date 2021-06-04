@@ -11,7 +11,26 @@
           </div>
         </q-toolbar-title>
         <div class="q-gutter-x-sm">
-          <q-btn rounded outline size="md" :label="connectBtnLabel"  :icon="metamaskInstalled ? undefined : 'error_outline'" :color="metamaskInstalled ? darkLightText: 'negative'" :disable="!metamaskInstalled" @click="connectEthereum"/>
+          <q-btn-dropdown
+            rounded
+            outline
+            size="md"
+            :label="connectBtnLabel"
+            :disable-dropdown="!connectedAndPermissioned"
+            :icon="metamaskInstalled ? undefined : 'error_outline'"
+            :color="metamaskInstalled ? darkLightText: 'negative'"
+            :disable="!metamaskInstalled"
+            @click="connectEthereum"
+          >
+            <q-list>
+              <q-item clickable v-close-popup >
+                <q-item-section>
+                  <q-item-label>Create ILO</q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-list>
+
+          </q-btn-dropdown>
           <q-btn outline :color="darkLightText" label="sign"  @click="callContract"/>
           <q-btn round flat :color="darkLightText" :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'" @click="setDarkMode"/>
         </div>
@@ -155,7 +174,10 @@ export default defineComponent({
             window.location.reload();
           } else {
             // this is probably from a reload, so use jsonrpc provider
-            provider.off("block")
+            if (provider) {
+              provider.off("block")
+            }
+
             await connectUsingJsonRPCProvider()
           }
 
