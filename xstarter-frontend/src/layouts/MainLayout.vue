@@ -46,7 +46,7 @@
     <q-page-container>
       <router-view />
     </q-page-container>
-    <ABIGeneratedForm v-if="currentFormABI && currentFormFunctionName"  :abi="currentFormABI" :function-name="currentFormFunctionName"/>
+
 
     <q-footer elevated class="text-white" :class="{'bg-dark': $q.dark.isActive, 'bg-light': !$q.dark.isActive}">
       <q-toolbar class="justify-center">
@@ -81,15 +81,13 @@ import {ILO_ADDRESS, JSON_RPC_ENDPOINT, LAUNCHPAD_ADDRESS} from "src/constants";
 // import data from 'src/artifacts/contracts/xStarterPoolPairB.sol/xStarterPoolPairB.json';
 import launchpadCode from 'src/artifacts/contracts/xStarterLaunchPad.sol/xStarterLaunchPad.json';
 import xStarterProposalCode from 'src/artifacts/contracts/xStarterLaunchPad.sol/xStarterLaunchPad.json'
-import ABIGeneratedForm from "components/ABIGenerated/ABIGeneratedForm";
+
 
 
 export default defineComponent({
   name: 'MainLayout',
 
-  components: {
-    ABIGeneratedForm
-  },
+  components: {},
 
   setup () {
     const $q = useQuasar()
@@ -112,6 +110,7 @@ export default defineComponent({
     provide('$blockInfo', blockInfo)
     const metamaskInstalled = ref(false)
     const connectedAccounts = ref([])
+    provide('$connectedAccounts', connectedAccounts)
     const connectedAndPermissioned = ref(Boolean(metamaskInstalled.value && connectedAccounts.value.length > 0))
     provide('$connectedAndPermissioned', connectedAndPermissioned)
     // check if you already have connection and permission
@@ -280,8 +279,6 @@ export default defineComponent({
   },
   data() {
     return {
-      currentFormABI: null,
-      currentFormFunctionName: ''
     }
   },
   computed: {

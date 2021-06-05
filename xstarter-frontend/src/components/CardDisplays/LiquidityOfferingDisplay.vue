@@ -59,18 +59,28 @@
     </q-card-section>
     <q-card-actions align="stretch" class="q-gutter-y-md q-py-md">
       <q-btn rounded class="full-width" outline :label="isSelected ? 'Back': 'View more'" @click="viewMoreCallBack"/>
-      <q-btn rounded class="full-width" outline v-if="isSelected && connectedAndPermissioned"  label="Participate" />
+      <q-btn rounded class="full-width" outline v-if="isSelected && connectedAndPermissioned"  label="Participate"  @click="viewModal = true"/>
     </q-card-actions>
+
+    <ILOInteractionModal
+      v-if="viewModal"
+      v-model="viewModal"
+      :anILO="anILO"
+      :ILOName="ILOInfo.tokenName"
+      :ILOStatus="ILOStatus"
+      :fundingTokenSymbol="fundingTokenSymbol"
+    />
   </q-card>
 </template>
 
 <script>
-import {defineComponent, inject} from 'vue'
+import {defineComponent, inject, ref} from 'vue'
 import LiquidityDisplayDuration from "components/CardDisplays/LiquidityDisplayDuration";
 import {SUPPORTED_FUNDING_TOKENS} from "src/constants";
+import ILOInteractionModal from "components/Modals/ILOInteractionModal";
 export default defineComponent( {
   name: "LiquidityOfferingDisplay",
-  components: {LiquidityDisplayDuration},
+  components: {ILOInteractionModal, LiquidityDisplayDuration},
   props: {
     liquidityOffering: {
       type: Object,
@@ -91,8 +101,9 @@ export default defineComponent( {
   },
   setup(){
     const connectedAndPermissioned = inject('$connectedAndPermissioned',)
+    const viewModal = ref(false)
 
-    return {connectedAndPermissioned}
+    return {connectedAndPermissioned, viewModal}
   },
   computed: {
     isSelected() {

@@ -1,5 +1,5 @@
 import { boot } from 'quasar/wrappers'
-import xStarterProposalCode from 'src/artifacts/contracts/xStarterLaunchPad.sol/xStarterLaunchPad.json'
+import xStarterProposalCode from 'src/artifacts/contracts/xStarterProposal.sol/xStarterProposal.json'
 
 const formFuncs = {
   getFunctionObj(abi, functionName, functionType) {
