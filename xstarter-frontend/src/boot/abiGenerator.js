@@ -12,7 +12,7 @@ const abiUtils = {
     // if functypes is empty return
     if (!funcTypes.length) { return undefined }
 
-    return funcTypes.find(obj => obj.name.toLowerCase() === functionName)
+    return funcTypes.find(obj => obj.name === functionName)
   },
 
   getConstructorObj(abi) {

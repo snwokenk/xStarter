@@ -29,6 +29,8 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
     let routerFactoryContractFactory;
     let liquidityPairTokenFactory;
     let liquidityTokenInst;
+    let initialStartTime = 60
+    let initialEndTime = 300;
     const uniswapRouter = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
     const uniswapFactory = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
     const WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
@@ -242,8 +244,9 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
             // Expect receives a value, and wraps it in an Assertion object. These
             // objects have a lot of utility methods to assert values.
               
-              let startTime = parseInt(Date.now() / 1000) + 120;
-              let endTime = parseInt(Date.now() / 1000) + 180;
+              let startTime = parseInt(Date.now() / 1000) + initialStartTime;
+              let endTime = parseInt(Date.now() / 1000) + initialEndTime;
+              console.log('start time and endtime is', startTime, endTime)
               let proposalInfo = await xStarterLaunchPadInst.getProposal(xStarterProposalInst.address)
               xStarterPoolPairInst = poolPairFactory.attach(proposalInfo.info.ILOAddress)
             //   const poolPairFromOther = poolPair.connect(addr2);
@@ -262,8 +265,8 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
             // Expect receives a value, and wraps it in an Assertion object. These
             // objects have a lot of utility methods to assert values.
               
-              let startTime = parseInt(Date.now() / 1000) + 60;
-              let endTime = parseInt(Date.now() / 1000) + 120;
+              let startTime = parseInt(Date.now() / 1000) + initialStartTime;
+              let endTime = parseInt(Date.now() / 1000) + initialEndTime;
               let proposalInfo = await xStarterLaunchPadInst.getProposal(xStarterProposalInst.address)
               xStarterPoolPairInst = poolPairFactory.attach(proposalInfo.info.ILOAddress)
             //   const poolPairFromOther = poolPair.connect(addr2);

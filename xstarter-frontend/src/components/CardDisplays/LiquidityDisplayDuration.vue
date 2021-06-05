@@ -7,7 +7,7 @@
     <div class="display-card-duration-container display-card-duration-container__succeed display-card-duration-text display-card-duration-text__succeed row">
       <div class="col-4 row justify-end content-center"><div class="circle circle__succeed col-auto"/></div><div class="col-1" /><div class="col-7 text-left">Live</div>
     </div>
-    <div class="display-card-duration-container display-card-duration-container__succeed display-card-duration-text display-card-duration-text__succeed"> Ends In 2 Days</div>
+    <div class="display-card-duration-container display-card-duration-container__succeed display-card-duration-text display-card-duration-text__succeed"> Ends In {{ nowToEndDate }}</div>
   </div>
   <div v-else-if="offeringStatus === 'tbd'" class="q-gutter-y-md">
     <div class="display-card-duration-container display-card-duration-container__ended display-card-duration-text"> Duration TBD</div>
@@ -23,9 +23,14 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue'
+import {defineComponent, inject} from 'vue'
+import { date } from 'quasar'
 export default defineComponent({
   name: "LiquidityDisplayDuration",
+  setup() {
+    const blockInfo = inject('$blockInfo')
+    return {blockInfo}
+  },
   props: {
     offeringStatus: {
       type: String,
@@ -44,6 +49,16 @@ export default defineComponent({
       required: true
     }
   },
+  methods: {
+    getDateDisplay(lesserDate, greaterDate, unit = 'hours') {
+      return date.getDateDiff(new Date(greaterDate), new Date(lesserDate), unit)
+    }
+  },
+  computed: {
+    nowToEndDate() {
+      return `${this.getDateDisplay(this.blockInfo.timestamp * 1000, this.endTime)} hours`
+    }
+  }
 })
 </script>
 

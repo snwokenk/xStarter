@@ -1,6 +1,7 @@
 <template >
   <q-card v-if="!selectedILO || selectedILO.proposalAddr === anILO.proposalAddr" flat square class=" display-card q-py-md q-mb-lg q-px-lg q-gutter-y-sm" clickable>
     <div class="display-card-date-text" v-html="startLiveOrEndDisplay" />
+    <div class="display-card-date-text">Start Timestamp {{ startTimestamp / 1000 }} | End TimeStamp {{ endTimestamp / 1000}} </div>
     <q-card-section horizontal class="justify-between">
       <div>
         <q-avatar square size="4rem">
@@ -101,9 +102,10 @@ export default defineComponent( {
   },
   setup(){
     const connectedAndPermissioned = inject('$connectedAndPermissioned',)
+    const blockInfo = inject('$blockInfo')
     const viewModal = ref(false)
 
-    return {connectedAndPermissioned, viewModal}
+    return {connectedAndPermissioned, viewModal, blockInfo}
   },
   computed: {
     isSelected() {
@@ -172,7 +174,10 @@ export default defineComponent( {
       return amt
     },
     ILOStatus() {
-      const now = Date.now()
+      // const now = Date.now()
+      // use block timestamp
+      const now = this.blockInfo.timestamp * 1000
+      console.log('now in status is', now, this.startTimestamp)
       if (this.startTimestamp === 0) {
         return 'tbd'
       }
