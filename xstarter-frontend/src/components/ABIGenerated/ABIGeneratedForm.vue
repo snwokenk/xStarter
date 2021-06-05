@@ -12,6 +12,9 @@
         <div v-if="errorMessage" class="text-negative">
           {{ errorMessage }}
         </div>
+        <div v-if="successMessage" class="text-positive">
+          Success! TX hash: {{ successMessage }}
+        </div>
         <div v-if="funcABI.stateMutability === 'payable'">
           <q-input v-model="payableValue" label="Ethers to send"/>
         </div>
@@ -40,6 +43,7 @@ export default defineComponent( {
       formFields: {
       },
       errorMessage: '',
+      successMessage: '',
       payableValue: '',
       funcABI: {inputs: [], stateMutability: ''}
     }
@@ -88,7 +92,12 @@ export default defineComponent( {
     minimize() {
       this.$emit('update:modelValue', !this.modelValue)
     },
+    callBeforeExecute() {
+      this.successMessage = ''
+      this.errorMessage = ''
+    },
     async execute() {
+      this.callBeforeExecute()
       let response;
       try {
         if (this.funcABI.stateMutability === 'payable' && this.payableValue){
@@ -103,7 +112,7 @@ export default defineComponent( {
           this.successCallBack()
         }
         this.payableValue = ''
-        this.errorMessage = ''
+        this.successMessage = tx.transactionHash
       }catch (e) {
         console.log('caught error', e)
         this.errorMessage = e.data.message

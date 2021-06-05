@@ -18,13 +18,16 @@
 <!--  TITLE    -->
       <q-card-section>
         <div class="text-center">
-          Interact With {{ ILOName }}
+          Interacting With: &nbsp; {{ ILOName }} Initial Liquidity Offering
+        </div>
+        <div class="text-center">
+          At Contract Address: &nbsp; {{ ILOInfo.ILOAddress }}
         </div>
       </q-card-section>
 <!--  Contribution Info    -->
       <q-card-section align="center">
         <div>
-          Current Account Address: &nbsp; {{ connectedAccount[0] }}
+          Current Wallet Address: &nbsp; {{ connectedAccount[0] }}
         </div>
         <div>
           Maximum Contribution Per Address: &nbsp; {{ maxPerAddr }} {{ fundingTokenSymbol }}
