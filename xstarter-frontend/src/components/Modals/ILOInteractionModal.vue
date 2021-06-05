@@ -52,6 +52,8 @@
         :abi="currentABI"
         :function-name="currentFunctionName"
         :connected-contract="currentConnectedContract"
+        :success-call-back="currentSuccessCallback"
+        :close-btn-callback="currentCloseCallBack"
       />
     </q-card>
 
@@ -90,6 +92,8 @@ export default defineComponent( {
       currentContrib: 0,
       currentNativeTokenBalance: null,
       currentABI: null,
+      currentSuccessCallback: null,
+      currentCloseCallBack: null,
       formType: null
     }
   },
@@ -151,6 +155,8 @@ export default defineComponent( {
         this.currentABI = null
         this.currentFunctionName = ''
         this.currentConnectedContract = null
+        this.currentSuccessCallback = null
+        this.currentCloseCallBack = null
         return
       }
 
@@ -160,15 +166,20 @@ export default defineComponent( {
         this.currentFunctionName = 'contributeNativeToken'
         this.formType = 'contribute'
         this.currentConnectedContract = this.ILOContract.connect(this.getSigner())
+        this.currentSuccessCallback = this.refreshBalances
+        this.currentCloseCallBack = this.toggleContributeForm
       } else {
         console.log('funding token is not native must call allowance')
       }
 
+    },
+    async refreshBalances() {
+      this.currentContrib = this.$helper.weiBigNumberToFloatEther(await this.ILOContract.fundingTokenBalanceOfFunder(this.currentAddress))
+      this.currentNativeTokenBalance = this.$helper.weiBigNumberToFloatEther(await this.getSigner().getBalance())
     }
   },
   async mounted() {
-    this.currentContrib = this.$helper.weiBigNumberToFloatEther(await this.ILOContract.fundingTokenBalanceOfFunder(this.currentAddress))
-    this.currentNativeTokenBalance = this.$helper.weiBigNumberToFloatEther(await this.getSigner().getBalance())
+    await this.refreshBalances()
   },
   watch: {
   }

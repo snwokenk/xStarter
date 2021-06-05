@@ -9,15 +9,16 @@
         <q-input v-model="formFields[obj.name]" :label="!displayNames[obj.name] ? obj.name : displayNames[obj.name]"  />
       </div>
       <div>
-      <div v-if="funcABI.stateMutability === 'payable'">
-        <q-input v-model="payableValue" label="Ethers to send"/>
-      </div>
+        <div v-if="errorMessage" class="text-negative">
+          {{ errorMessage }}
+        </div>
+        <div v-if="funcABI.stateMutability === 'payable'">
+          <q-input v-model="payableValue" label="Ethers to send"/>
+        </div>
         <div class="row">
           <q-btn class="col-6" label="execute" @click="execute" />
-          <q-btn class="col-6" label="cancel" />
+          <q-btn v-if="closeBtnCallback" class="col-6" label="cancel" @click="closeBtnCallback"/>
         </div>
-
-
       </div>
     </div>
   </q-form>
@@ -38,6 +39,7 @@ export default defineComponent( {
     return {
       formFields: {
       },
+      errorMessage: '',
       payableValue: '',
       funcABI: {inputs: [], stateMutability: ''}
     }
@@ -73,22 +75,40 @@ export default defineComponent( {
       type: Object,
       required: false
     },
+    closeBtnCallback: {
+      type: Function,
+      required: false
+    },
+    successCallBack: {
+      type: Function,
+      required: false
+    }
   },
   methods: {
     minimize() {
       this.$emit('update:modelValue', !this.modelValue)
     },
     async execute() {
-      console.log('this.payableValue is', this.payableValue)
       let response;
-      if (this.funcABI.stateMutability === 'payable' && this.payableValue){
-        console.log('calling payable function')
-        response = await this.connectedContract[this.functionName]({value: this.$ethers.utils.parseEther(this.payableValue)})
-      } else {
-        response = this.connectedContract[this.functionName]()
+      try {
+        if (this.funcABI.stateMutability === 'payable' && this.payableValue){
+          response = await this.connectedContract[this.functionName]({value: this.$ethers.utils.parseEther(this.payableValue)})
+        } else {
+          response = this.connectedContract[this.functionName]()
+        }
+        let tx = await response.wait()
+        console.log('tx is', tx)
+        if (typeof this.successCallBack === 'function') {
+          console.log('success call back is', this.successCallBack)
+          this.successCallBack()
+        }
+        this.payableValue = ''
+        this.errorMessage = ''
+      }catch (e) {
+        console.log('caught error', e)
+        this.errorMessage = e.data.message
       }
 
-      console.log('response is ', response)
 
     }
   },

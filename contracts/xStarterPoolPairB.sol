@@ -680,10 +680,10 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
     }
     
     function _allowFunding() internal {
-        _currentlyFunding[_msgSender()] = true;
+        _currentlyFunding[_msgSender()] = false;
     }
     function _disallowFunding() internal {
-        _currentlyFunding[_msgSender()] = false;
+        _currentlyFunding[_msgSender()] = true;
     }
     
     function _allowWithdraw() internal {
