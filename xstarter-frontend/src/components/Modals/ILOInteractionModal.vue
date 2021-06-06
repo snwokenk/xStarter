@@ -50,9 +50,17 @@
         <q-btn outline rounded label="Contribute" @click="toggleContributeForm"/>
         <q-btn outline rounded label="Withdraw" />
       </q-card-actions>
+
+      <q-card-actions align="center">
+        <q-btn v-if="ILOStatus === 'ended'" outline rounded label="Validate" @click="toggleValidateForm"/>
+        <q-btn v-if="ILOStatus === 'ended'" outline rounded label="Approve Tokens For Liquidity" @click="toggleApproveTokensForLiquidityForm"/>
+        <q-btn v-if="ILOStatus === 'ended'" outline rounded label="Create Liquidity Pool" @click="toggleCreateLiquidityPoolForm"/>
+        <q-btn v-if="ILOStatus === 'ended'" outline rounded label="Finalize ILO" @click="toggleFinalizeILOForm"/>
+      </q-card-actions>
       <ABIGeneratedForm
         v-if="currentFunctionName && currentABI"
         :abi="currentABI"
+        :title="formTitle"
         :function-name="currentFunctionName"
         :connected-contract="currentConnectedContract"
         :success-call-back="currentSuccessCallback"
@@ -89,6 +97,7 @@ export default defineComponent( {
   data() {
     return {
       formFields: {},
+      formTitle: {class:'', style: '', name: ''},
       currentFunctionName: '',
       currentConnectedContract: null,
       balanceChecked: false,
@@ -152,20 +161,25 @@ export default defineComponent( {
     minimize() {
       this.$emit('update:modelValue', !this.modelValue)
     },
+    clearForm() {
+      this.formType = null
+      this.formTitle.name = ''
+      this.currentABI = null
+      this.currentFunctionName = ''
+      this.currentConnectedContract = null
+      this.currentSuccessCallback = null
+      this.currentCloseCallBack = null
+    },
     toggleContributeForm() {
       if (this.formType) {
-        this.formType = null
-        this.currentABI = null
-        this.currentFunctionName = ''
-        this.currentConnectedContract = null
-        this.currentSuccessCallback = null
-        this.currentCloseCallBack = null
+        this.clearForm()
         return
       }
 
       if (this.ILOInfo.fundingToken === this.$ethers.constants.AddressZero) {
         // native token so no need to create allowance in funding token
         this.currentABI = this.poolPairABI
+        this.formTitle.name = 'Contribute To ILO'
         this.currentFunctionName = 'contributeNativeToken'
         this.formType = 'contribute'
         this.currentConnectedContract = this.ILOContract.connect(this.getSigner())
@@ -176,6 +190,66 @@ export default defineComponent( {
       }
 
     },
+    toggleValidateForm() {
+      if (this.formType) {
+        this.clearForm()
+        return
+      }
+        // native token so no need to create allowance in funding token
+      this.currentABI = this.poolPairABI
+      this.formTitle.name = 'Validate ILO'
+      this.currentFunctionName = 'validateILO'
+      this.formType = 'validateILO'
+      this.currentConnectedContract = this.ILOContract.connect(this.getSigner())
+      this.currentSuccessCallback = this.refreshBalances
+      this.currentCloseCallBack = this.toggleValidateForm
+    },
+
+    toggleApproveTokensForLiquidityForm() {
+      if (this.formType) {
+        this.clearForm()
+        return
+      }
+      // native token so no need to create allowance in funding token
+      this.currentABI = this.poolPairABI
+      this.formTitle.name = 'Approve Tokens For Liquidity Pool'
+      this.currentFunctionName = 'approveTokensForLiquidityPair'
+      this.formType = 'approveTokensForLiquidityPair'
+      this.currentConnectedContract = this.ILOContract.connect(this.getSigner())
+      this.currentSuccessCallback = this.refreshBalances
+      this.currentCloseCallBack = this.toggleApproveTokensForLiquidityForm
+    },
+
+    toggleCreateLiquidityPoolForm() {
+      if (this.formType) {
+        this.clearForm()
+        return
+      }
+      // native token so no need to create allowance in funding token
+      this.currentABI = this.poolPairABI
+      this.formTitle.name = 'Create Liquidity Pool on DEX'
+      this.currentFunctionName = 'createLiquidityPool'
+      this.formType = 'createLiquidityPool'
+      this.currentConnectedContract = this.ILOContract.connect(this.getSigner())
+      this.currentSuccessCallback = this.refreshBalances
+      this.currentCloseCallBack = this.toggleCreateLiquidityPoolForm
+    },
+
+    toggleFinalizeILOForm() {
+      if (this.formType) {
+        this.clearForm()
+        return
+      }
+      // native token so no need to create allowance in funding token
+      this.currentABI = this.poolPairABI
+      this.formTitle.name = 'Finalize ILO And Set Time Locks'
+      this.currentFunctionName = 'finalizeILO'
+      this.formType = 'finalizeILO'
+      this.currentConnectedContract = this.ILOContract.connect(this.getSigner())
+      this.currentSuccessCallback = this.refreshBalances
+      this.currentCloseCallBack = this.toggleFinalizeILOForm
+    },
+
     async refreshBalances() {
       this.currentContrib = this.$helper.weiBigNumberToFloatEther(await this.ILOContract.fundingTokenBalanceOfFunder(this.currentAddress))
       this.currentNativeTokenBalance = this.$helper.weiBigNumberToFloatEther(await this.getSigner().getBalance())
@@ -185,6 +259,9 @@ export default defineComponent( {
     await this.refreshBalances()
   },
   watch: {
+    connectedAccount: async function () {
+      await this.refreshBalances()
+    }
   }
 })
 </script>

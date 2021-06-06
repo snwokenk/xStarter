@@ -32,6 +32,7 @@ export default defineComponent( {
 
     const getProvider = inject('$getProvider')
     const getSigner = inject('$getSigner')
+    const blockInfo = inject('$blockInfo')
     const getLaunchPadContract = inject('$getLaunchPadContract')
     const getConnectedAndPermissioned = inject('$getConnectedAndPermissioned')
     let connectedAndPermissioned = inject('$connectedAndPermissioned')
@@ -51,6 +52,7 @@ export default defineComponent( {
       connectedAndPermissioned,
       launchPadLoaded,
       ILORound,
+      blockInfo,
       getILOs,
       callLaunchPadFunction
     }
@@ -102,6 +104,9 @@ export default defineComponent( {
         console.log('launchpad loaded and ILOs is', ILOs)
         console.log('ILO index o',  ILOs[0][0].info)
       }
+    },
+    blockInfo: async function (val) {
+      await this.getILOs()
     }
   }
 })
