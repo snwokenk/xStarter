@@ -106,7 +106,9 @@ export default defineComponent( {
       }
     },
     blockInfo: async function (val) {
-      await this.getILOs()
+      console.log('block info watced')
+      const ILOs = await this.getILOs(this.move)
+      this.ILOs = ILOs[0]
     }
   }
 })

@@ -44,18 +44,33 @@
         <div>
           Current ETH Balance: &nbsp; {{ currentNativeTokenBalance }}
         </div>
+
+        <div>
+          Calculated Share Of {{ ILOName }} Tokens: &nbsp; {{ currentShareOfProjectTokenBalance ? currentShareOfProjectTokenBalance.toLocaleString(): 'Not Available' }}
+        </div>
+
+        <div>
+          Calculated Share Of {{ ILOName }} LP Tokens: &nbsp; {{ currentShareOfLPTokenBalance ? currentShareOfLPTokenBalance.toLocaleString(): 'Not Available' }}
+        </div>
+<!--        <div>-->
+<!--          Current {{ ILOName }} Tokens Balance: &nbsp; {{ currentProjectTokenBalance }}-->
+<!--        </div>-->
       </q-card-section>
 
       <q-card-actions align="center">
         <q-btn outline rounded label="Contribute" @click="toggleContributeForm"/>
         <q-btn outline rounded label="Withdraw" @click="toggleWithdrawForm" />
       </q-card-actions>
-
+      <q-card-section>
+        <div>
+          ILO Has Ended Status is: {{ ILOProcessStatus }}
+        </div>
+      </q-card-section>
       <q-card-actions v-if="ILOStatus === 'ended'"  align="center">
-        <q-btn  outline rounded label="Validate" @click="toggleValidateForm"/>
-        <q-btn  outline rounded label="Approve Tokens For Liquidity" @click="toggleApproveTokensForLiquidityForm"/>
-        <q-btn  outline rounded label="Create Liquidity Pool" @click="toggleCreateLiquidityPoolForm"/>
-        <q-btn  outline rounded label="Finalize ILO" @click="toggleFinalizeILOForm"/>
+        <q-btn :disable="ILOProcessStatus > 2"  outline rounded label="Validate" @click="toggleValidateForm"/>
+        <q-btn :disable="ILOProcessStatus > 3" outline rounded label="Approve Tokens For Liquidity" @click="toggleApproveTokensForLiquidityForm"/>
+        <q-btn :disable="ILOProcessStatus > 4" outline rounded label="Create Liquidity Pool" @click="toggleCreateLiquidityPoolForm"/>
+        <q-btn :disable="ILOProcessStatus > 5" outline rounded label="Finalize ILO" @click="toggleFinalizeILOForm"/>
       </q-card-actions>
       <ABIGeneratedForm
         v-if="currentFunctionName && currentABI"
@@ -87,12 +102,12 @@ export default defineComponent( {
   name: "ILOInteractionModal",
   components: {ABIGeneratedForm},
   setup() {
-    const abi = xStarterProposalCode.abi
+    const proposalABI = xStarterProposalCode.abi
     const poolPairABI = xStarterPoolPairCode.abi
     const getProvider = inject('$getProvider')
     const getSigner = inject('$getSigner')
     const connectedAccount = inject('$connectedAccounts')
-    return {abi, poolPairABI, getProvider, getSigner, connectedAccount}
+    return {proposalABI, poolPairABI, getProvider, getSigner, connectedAccount}
   },
   data() {
     return {
@@ -103,10 +118,14 @@ export default defineComponent( {
       balanceChecked: false,
       currentContrib: 0,
       currentNativeTokenBalance: null,
+      currentProjectTokenBalance: null,
+      currentShareOfProjectTokenBalance: null,
+      currentShareOfLPTokenBalance: null,
       currentABI: null,
       currentSuccessCallback: null,
       currentCloseCallBack: null,
-      formType: null
+      formType: null,
+      updatedILO: null
     }
   },
   props: {
@@ -132,13 +151,25 @@ export default defineComponent( {
     }
   },
   computed: {
+    usingILO() {
+      return this.updatedILO ? this.updatedILO : this.anILO
+    },
     ILOInfo() {
       // struct ILOProposal
-      return this.anILO.info
+      return this.usingILO.info
     },
     ILOMoreInfo() {
       // struct ILOAdditionalInfo
-      return this.anILO.moreInfo
+      return this.usingILO.moreInfo
+    },
+    ILOProcessStatus() {
+      return this.ILOMoreInfo.ILOStatus
+    },
+    proposalAddress() {
+      return this.anILO.proposalAddr
+    },
+    liquidityPairAddress() {
+      return this.ILOMoreInfo.liqPairAddr
     },
     currentAddress() {
       return this.connectedAccount[0]
@@ -152,6 +183,9 @@ export default defineComponent( {
     ILOContract() {
       console.log('signeer for provider is', this.getProvider(),this.getSigner(), this.getSigner().getAddress(), this.connectedAccount[0])
       return new ethers.Contract(this.ILOInfo.ILOAddress, this.poolPairABI, this.getProvider());
+    },
+    ILOProposalContract() {
+      return new ethers.Contract(this.proposalAddress, this.proposalABI, this.getProvider());
     },
     minPer: {
 
@@ -268,6 +302,18 @@ export default defineComponent( {
     async refreshBalances() {
       this.currentContrib = this.$helper.weiBigNumberToFloatEther(await this.ILOContract.fundingTokenBalanceOfFunder(this.currentAddress))
       this.currentNativeTokenBalance = this.$helper.weiBigNumberToFloatEther(await this.getSigner().getBalance())
+      await this.refreshILOInfo()
+      if (this.ILOProcessStatus >= 3) {
+        // check project token share
+        this.currentShareOfProjectTokenBalance = this.$helper.weiBigNumberToFloatEther(await this.ILOContract.projectTokenBalanceOfFunder(this.currentAddress))
+      }
+      if (this.ILOProcessStatus >= 5) {
+        this.currentShareOfLPTokenBalance = this.$helper.weiBigNumberToFloatEther(await this.ILOContract.projectLPTokenBalanceOfFunder(this.currentAddress))
+      }
+
+    },
+    async refreshILOInfo() {
+      this.updatedILO = await this.ILOProposalContract.getCompactInfo()
     }
   },
   async mounted() {

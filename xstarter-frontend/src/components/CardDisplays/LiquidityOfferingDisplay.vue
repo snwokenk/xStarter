@@ -60,7 +60,7 @@
     </q-card-section>
     <q-card-actions align="stretch" class="q-gutter-y-md q-py-md">
       <q-btn rounded class="full-width" outline :label="isSelected ? 'Back': 'View more'" @click="viewMoreCallBack"/>
-      <q-btn rounded class="full-width" outline v-if="isSelected && connectedAndPermissioned"  label="Participate"  @click="viewModal = true"/>
+      <q-btn rounded class="full-width" outline v-if="isSelected && connectedAndPermissioned"  label="Join"  @click="viewModal = true"/>
     </q-card-actions>
 
     <ILOInteractionModal

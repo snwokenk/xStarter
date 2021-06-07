@@ -31,8 +31,12 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
     let liquidityTokenInst;
     let initialStartTime = 60
     let initialEndTime = 300;
-    const uniswapRouter = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
-    const uniswapFactory = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
+
+    const uniswapRouter = "0x1C232F01118CB8B424793ae03F870aa7D0ac7f77";
+    const uniswapFactory = "0xa818b4f111ccac7aa31d0bcc0806d64f2e0737d7";
+
+    // const uniswapRouter = "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D";
+    // const uniswapFactory = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
     const WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
 
     let owner;
