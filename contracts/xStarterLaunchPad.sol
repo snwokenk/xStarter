@@ -101,7 +101,7 @@ contract xStarterLaunchPad is Administration, Interaction{
     address private _initialILOAddr;
     address private _initialILOPropAddr;
     bool _deploying;
-    // address __admin = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266; // address of deployer
+    // address __admin = 0xF4c8163B122fc28686990AC2777Fe090ca6b5357; // address of deployer
     
     // min amount of tokens to have deposited 
     uint _depositPerProposal;

@@ -15,7 +15,7 @@ contract testSuite {
     function beforeAll() public {
         // Here should instantiate tested contract
         foo = new xStarterPoolPairB(
-            "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+            "0xF4c8163B122fc28686990AC2777Fe090ca6b5357",
             70,1,15500000,1800,60,10000000000000000,10000000000000000,1000000000000000000,0x0000000000000000000000000000000000000000,
             "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D","0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f");
         Assert.equal(uint(1), uint(1), "1 should be equal to 1");
@@ -24,7 +24,7 @@ contract testSuite {
     function checkSuccess() public {
         // Use 'Assert' to test the contract, 
         // See documentation: https://remix-ide.readthedocs.io/en/latest/assert_library.html
-        Assert.equal(foo.admin(), "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", "value of address not the same");
+        Assert.equal(foo.admin(), "0xF4c8163B122fc28686990AC2777Fe090ca6b5357", "value of address not the same");
         Assert.equal(uint(2), uint(2), "2 should be equal to 2");
         Assert.notEqual(uint(2), uint(3), "2 should not be equal to 3");
     }

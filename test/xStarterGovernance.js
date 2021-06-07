@@ -45,6 +45,7 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
         this.timeout(60000);
         if(!xStarterTokenInst){
             [owner, addr1, addr2, addr3, ...addrs] = await ethers.getSigners();
+            console.log('address of owner is', owner.address)
             xStarterNFTFactory = await ethers.getContractFactory("xStarterNFT")
             xStarterTokenFactory = await ethers.getContractFactory("xStarterToken")
             xStarterTokenInst = await xStarterTokenFactory.deploy(

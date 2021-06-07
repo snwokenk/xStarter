@@ -10,7 +10,7 @@ contract xStarterNFT is Context {
     address public _xStarterGovernance;
     bool _isProd;
     bool _initialized;
-    address _allowedCaller = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266; // address of deployer
+    address _allowedCaller = 0xF4c8163B122fc28686990AC2777Fe090ca6b5357; // address of deployer
     
     function initialize(address xStarterGovernance_, address xStarterToken_, address xStarterLaunchPad_, bool isProd_) external returns(bool) {
         require(!_initialized, "contract has already been initialized");

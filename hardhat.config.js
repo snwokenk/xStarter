@@ -1,4 +1,4 @@
-const { ALCHEMYURL } = require('./ignored_constants');
+const { ALCHEMYURL, XDAIURL, XDAIURL2, XDAIBLOCKSCOUTARCHIVE, mnemonicTest } = require('./ignored_constants');
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
@@ -42,12 +42,16 @@ module.exports = {
   networks: {
     hardhat: {
       forking: {
-        url: ALCHEMYURL,
+        url: XDAIBLOCKSCOUTARCHIVE,
       },
       blockGasLimit: 17000000,
+      gasPrice: 1000000000,
       mining: {
         auto: false,
         interval: 5000
+      },
+      accounts: {
+        mnemonic: mnemonicTest
       }
     },
   },

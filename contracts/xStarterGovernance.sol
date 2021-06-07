@@ -21,7 +21,7 @@ contract xStarterGovernance is Context, Interaction {
     bool private _isProd;
     bool _initialized;
     // todo: change in prod
-    address _allowedCaller = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266; // address of deployer
+    address _allowedCaller = 0xF4c8163B122fc28686990AC2777Fe090ca6b5357; // address of deployer
     address public _xStarterToken;
     address public _xStarterLaunchPad;
     address public _xStarterNFT;

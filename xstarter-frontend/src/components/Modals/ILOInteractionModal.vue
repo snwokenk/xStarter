@@ -51,11 +51,11 @@
         <q-btn outline rounded label="Withdraw" @click="toggleWithdrawForm" />
       </q-card-actions>
 
-      <q-card-actions align="center">
-        <q-btn v-if="ILOStatus === 'ended'" outline rounded label="Validate" @click="toggleValidateForm"/>
-        <q-btn v-if="ILOStatus === 'ended'" outline rounded label="Approve Tokens For Liquidity" @click="toggleApproveTokensForLiquidityForm"/>
-        <q-btn v-if="ILOStatus === 'ended'" outline rounded label="Create Liquidity Pool" @click="toggleCreateLiquidityPoolForm"/>
-        <q-btn v-if="ILOStatus === 'ended'" outline rounded label="Finalize ILO" @click="toggleFinalizeILOForm"/>
+      <q-card-actions v-if="ILOStatus === 'ended'"  align="center">
+        <q-btn  outline rounded label="Validate" @click="toggleValidateForm"/>
+        <q-btn  outline rounded label="Approve Tokens For Liquidity" @click="toggleApproveTokensForLiquidityForm"/>
+        <q-btn  outline rounded label="Create Liquidity Pool" @click="toggleCreateLiquidityPoolForm"/>
+        <q-btn  outline rounded label="Finalize ILO" @click="toggleFinalizeILOForm"/>
       </q-card-actions>
       <ABIGeneratedForm
         v-if="currentFunctionName && currentABI"
