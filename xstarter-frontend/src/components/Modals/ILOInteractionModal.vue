@@ -48,7 +48,7 @@
 
       <q-card-actions align="center">
         <q-btn outline rounded label="Contribute" @click="toggleContributeForm"/>
-        <q-btn outline rounded label="Withdraw" />
+        <q-btn outline rounded label="Withdraw" @click="toggleWithdrawForm" />
       </q-card-actions>
 
       <q-card-actions align="center">
@@ -248,6 +248,21 @@ export default defineComponent( {
       this.currentConnectedContract = this.ILOContract.connect(this.getSigner())
       this.currentSuccessCallback = this.refreshBalances
       this.currentCloseCallBack = this.toggleFinalizeILOForm
+    },
+
+    toggleWithdrawForm() {
+      if (this.formType) {
+        this.clearForm()
+        return
+      }
+      // native token so no need to create allowance in funding token
+      this.currentABI = this.poolPairABI
+      this.formTitle.name = `Withdraw Your Share Of ${this.ILOName} Tokens`
+      this.currentFunctionName = 'withdraw'
+      this.formType = 'withdraw'
+      this.currentConnectedContract = this.ILOContract.connect(this.getSigner())
+      this.currentSuccessCallback = this.refreshBalances
+      this.currentCloseCallBack = this.toggleWithdrawForm
     },
 
     async refreshBalances() {

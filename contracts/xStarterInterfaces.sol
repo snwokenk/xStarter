@@ -3,7 +3,9 @@ pragma solidity ^0.8.0;
 import "./xStarterStructs.sol";
 
 interface iXstarterProposal {
-    function setILOTimes(uint48 startTime_, uint48 endTime_) external returns(bool);
+    function setILOTimes(uint48 startTime_, uint48 endTime_, address projectToken_) external returns(bool);
+    function setStatus(uint8 status_) external returns(bool);
+    function getStatus() external view returns(uint8);
     function setTokenAndLPAddr(address projectToken_, address liqPairAddr_) external returns(bool);
      function getTokenAndLPAddr() external view returns(address, address);
     function setAmountRaised(uint amountRaised_) external returns(bool);

@@ -40,7 +40,9 @@ struct ILOAdditionalInfo {
     // percent of tokens for team/admin. ie. if project wants to raise 1 million xDai for liquidity pool, and would like to take 20% of that for other things like
     // marketing, etc. then this would be 20, this is enforced to be no more than 20%. xStarter's goal is to have a mechanism for creating a fair market value for a token
     // not necessarily as a fund raising platform
-    uint8 percentTokensForTeam; 
+    uint8 percentTokensForTeam;
+    // 1 = ILO set, 2 = all project tokens held by ILO
+    uint8 ILOStatus;
 }
 
 struct CompactInfo {

@@ -138,11 +138,21 @@ contract xStarterProposal {
     }
     
     
-    function setILOTimes(uint48 startTime_, uint48 endTime_) external returns(bool) {
+    function setILOTimes(uint48 startTime_, uint48 endTime_, address projectToken_) external returns(bool) {
         require(_i.ILOAddress != address(0) && msg.sender == _i.ILOAddress, 'not authorized');
         _a.startTime = startTime_;
         _a.endTime = endTime_;
+        _a.projectToken = projectToken_;
         return true;
+    }
+    function setStatus(uint8 status_) public returns(bool) {
+        require(_i.ILOAddress != address(0) && msg.sender == _i.ILOAddress, 'not authorized');
+        require(status_ > _a.ILOStatus);
+        _a.ILOStatus = status_;
+        return true;
+    }
+    function getStatus() public view returns(uint8) {
+        return _a.ILOStatus;
     }
     function setAmountRaised(uint amountRaised_) external returns(bool) {
         require(_i.ILOAddress != address(0) && msg.sender == _i.ILOAddress, 'not authorized');

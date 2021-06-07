@@ -555,7 +555,10 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
             
             _pubStartTime = _xStarterToken == address(0) ? startTime_ : startTime_ + privLen;
             
-            _isSetup = iXstarterProposal(_proposalAddr).setILOTimes(_startTime, _endTime);
+            // this also sets ILO status to 1
+            _isSetup = iXstarterProposal(_proposalAddr).setILOTimes(_startTime, _endTime, _projectToken);
+            // if address of project token was zero address, then poolpair launches ERC20 for the project and keeps control of supply
+            _isSetup = address(0) == addressOfProjectToken ? iXstarterProposal(_proposalAddr).setStatus(2) : iXstarterProposal(_proposalAddr).setStatus(1);
             require(_isSetup, 'not able register on proposal');
             
             return _isSetup;
@@ -603,8 +606,7 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
 
         _tokensHeld =  _tokensHeld.add(_totalTokensSupply);
         _setTokensForILO();
-
-        
+        iXstarterProposal(_proposalAddr).setStatus(2);
     }
     
     // function should be called within a function that checks proper access ie onlyAdmin or onlyOwner
@@ -714,6 +716,7 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
             }
             
         }
+        iXstarterProposal(_proposalAddr).setStatus(3);
         
         return true;
     }
@@ -735,7 +738,7 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
         
         // approve project token to be sent to dex. Spender is dex IUniswapRouter address (honeyswap, uniswap etc)
         require(_approvedForLP, "xStarterPair: TokenApprovalFail");
-       
+        iXstarterProposal(_proposalAddr).setStatus(4);
         return _approvedForLP;
     }
     
@@ -763,6 +766,7 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
         emit liquidityPairCreated(_liquidityPairAddress, addressOfDex(), liquidityAmount);
         
         iXstarterProposal(_proposalAddr).setTokenAndLPAddr(_projectToken, _liquidityPairAddress);
+        iXstarterProposal(_proposalAddr).setStatus(5);
         
         return true;
         
@@ -775,6 +779,7 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
         // set liquidity pair address 
         success = _setTimeLocks();
         emit ILOFinalized(_msgSender());
+        iXstarterProposal(_proposalAddr).setStatus(6);
     }
     
     
