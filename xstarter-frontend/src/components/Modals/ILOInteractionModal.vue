@@ -25,37 +25,49 @@
         </div>
       </q-card-section>
 <!--  Contribution Info    -->
-      <q-card-section align="center">
-        <div>
-          Current Wallet Address: &nbsp; {{ connectedAccount[0] }}
-        </div>
-        <div>
-          Maximum Contribution Per Address: &nbsp; {{ maxPerAddr }} {{ fundingTokenSymbol }}
-        </div>
-
-        <div>
-        Minimum Contribution Allowed Per Address: &nbsp; {{ minPerAddr }} {{ fundingTokenSymbol }}
-        </div>
-
-        <div>
-          Current Contribution: &nbsp; {{ currentContrib }} {{ fundingTokenSymbol }}
-        </div>
-
-        <div>
-          Current ETH Balance: &nbsp; {{ currentNativeTokenBalance }}
-        </div>
-
-        <div>
-          Calculated Share Of {{ ILOName }} Tokens: &nbsp; {{ currentShareOfProjectTokenBalance ? currentShareOfProjectTokenBalance.toLocaleString(): 'Not Available' }}
-        </div>
-
-        <div>
-          Calculated Share Of {{ ILOName }} LP Tokens: &nbsp; {{ currentShareOfLPTokenBalance ? currentShareOfLPTokenBalance.toLocaleString(): 'Not Available' }}
-        </div>
-<!--        <div>-->
-<!--          Current {{ ILOName }} Tokens Balance: &nbsp; {{ currentProjectTokenBalance }}-->
-<!--        </div>-->
+      <q-card-section class="justify-center row" >
+        <ILOInteractionInfoDisplay
+          class="col-auto"
+          :ILOName="ILOName"
+          :ILOInfo="ILOInfo"
+          :maxPerAddr="maxPerAddr"
+          :fundingTokenSymbol="fundingTokenSymbol"
+          :minPerAddr="minPerAddr"
+          :currentContrib="currentContrib"
+          :currentNativeTokenBalance="currentNativeTokenBalance"
+          :currentShareOfProjectTokenBalance="currentShareOfProjectTokenBalance"
+          :currentShareOfLPTokenBalance="currentShareOfLPTokenBalance"
+        />
       </q-card-section>
+<!--      <q-card-section align="center">-->
+<!--        <div>-->
+<!--          Current Wallet Address: &nbsp; {{ connectedAccount[0] }}-->
+<!--        </div>-->
+<!--        <div>-->
+<!--          Maximum Contribution Per Address: &nbsp; {{ maxPerAddr }} {{ fundingTokenSymbol }}-->
+<!--        </div>-->
+
+<!--        <div>-->
+<!--        Minimum Contribution Allowed Per Address: &nbsp; {{ minPerAddr }} {{ fundingTokenSymbol }}-->
+<!--        </div>-->
+
+<!--        <div>-->
+<!--          Current Contribution: &nbsp; {{ currentContrib }} {{ fundingTokenSymbol }}-->
+<!--        </div>-->
+
+<!--        <div>-->
+<!--          Current ETH Balance: &nbsp; {{ currentNativeTokenBalance }}-->
+<!--        </div>-->
+
+<!--        <div>-->
+<!--          Calculated Share Of {{ ILOName }} Tokens: &nbsp; {{ currentShareOfProjectTokenBalance ? currentShareOfProjectTokenBalance.toLocaleString(): 'Not Available' }}-->
+<!--        </div>-->
+
+<!--        <div>-->
+<!--          Calculated Share Of {{ ILOName }} LP Tokens: &nbsp; {{ currentShareOfLPTokenBalance ? currentShareOfLPTokenBalance.toLocaleString(): 'Not Available' }}-->
+<!--        </div>-->
+
+<!--      </q-card-section>-->
 
       <q-card-actions align="center">
         <q-btn outline rounded label="Contribute" @click="toggleContributeForm"/>
@@ -95,12 +107,13 @@ import { ethers } from 'boot/ethers'
 import ABIGeneratedForm from "components/ABIGenerated/ABIGeneratedForm";
 import xStarterProposalCode from 'src/artifacts/contracts/xStarterProposal.sol/xStarterProposal.json'
 import xStarterPoolPairCode from 'src/artifacts/contracts/xStarterPoolPairB.sol/xStarterPoolPairB.json'
+import ILOInteractionInfoDisplay from "components/CardDisplays/ILOInteractionInfoDisplay";
 
 
 
 export default defineComponent( {
   name: "ILOInteractionModal",
-  components: {ABIGeneratedForm},
+  components: {ILOInteractionInfoDisplay, ABIGeneratedForm},
   setup() {
     const proposalABI = xStarterProposalCode.abi
     const poolPairABI = xStarterPoolPairCode.abi

@@ -1,6 +1,6 @@
 <template>
   <q-card flat square class="display-card accountDisplayCard q-py-md q-mb-lg q-px-lg q-gutter-y-sm" clickable>
-    <q-card-section class="justify-between text-center full-width">
+    <q-card-section class="justify-between  account-display-text text-center full-width">
       <div class="full-width row justify-between">
         <div class="col-auto">
           <div v-if="chainId" class="full-width">

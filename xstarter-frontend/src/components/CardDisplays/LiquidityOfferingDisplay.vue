@@ -1,5 +1,5 @@
 <template >
-  <q-card v-if="!selectedILO || selectedILO.proposalAddr === anILO.proposalAddr" flat square class=" display-card q-py-md q-mb-lg q-px-lg q-gutter-y-sm" clickable>
+  <q-card v-if="!selectedILO || isSelected" flat square class=" display-card q-py-md q-mb-lg q-px-lg q-gutter-y-sm" clickable>
     <div class="display-card-date-text" v-html="startLiveOrEndDisplay" />
     <div class="display-card-date-text">Start Timestamp {{ startTimestamp / 1000 }} | End TimeStamp {{ endTimestamp / 1000}} </div>
     <q-card-section horizontal class="justify-between">
@@ -60,7 +60,7 @@
     </q-card-section>
     <q-card-actions align="stretch" class="q-gutter-y-md q-py-md">
       <q-btn rounded class="full-width" outline :label="isSelected ? 'Back': 'View more'" @click="viewMoreCallBack"/>
-      <q-btn rounded class="full-width" outline v-if="isSelected && connectedAndPermissioned"  label="Join"  @click="viewModal = true"/>
+      <q-btn rounded class="full-width" outline v-if="isSelected && connectedAndPermissioned"  :label="joinOrReview"  @click="viewModal = true"/>
     </q-card-actions>
 
     <ILOInteractionModal
@@ -79,9 +79,23 @@ import {defineComponent, inject, ref} from 'vue'
 import LiquidityDisplayDuration from "components/CardDisplays/LiquidityDisplayDuration";
 import {SUPPORTED_FUNDING_TOKENS} from "src/constants";
 import ILOInteractionModal from "components/Modals/ILOInteractionModal";
+import {ethers} from "boot/ethers";
+import xStarterPoolPairCode from 'src/artifacts/contracts/xStarterPoolPairB.sol/xStarterPoolPairB.json'
+
 export default defineComponent( {
   name: "LiquidityOfferingDisplay",
   components: {ILOInteractionModal, LiquidityDisplayDuration},
+  setup(){
+    const connectedAndPermissioned = inject('$connectedAndPermissioned',)
+    const poolPairABI = xStarterPoolPairCode.abi
+    const blockInfo = inject('$blockInfo')
+    const viewModal = ref(false)
+    const getProvider = inject('$getProvider')
+    const currentContrib = ref(0)
+    const connectedAccount = inject('$connectedAccounts')
+
+    return {connectedAndPermissioned, viewModal, blockInfo, poolPairABI, currentContrib, connectedAccount, getProvider}
+  },
   props: {
     liquidityOffering: {
       type: Object,
@@ -100,14 +114,14 @@ export default defineComponent( {
       default: null
     }
   },
-  setup(){
-    const connectedAndPermissioned = inject('$connectedAndPermissioned',)
-    const blockInfo = inject('$blockInfo')
-    const viewModal = ref(false)
-
-    return {connectedAndPermissioned, viewModal, blockInfo}
-  },
   computed: {
+    ILOContract() {
+      // console.log('signeer for provider is', this.getProvider(),this.getSigner(), this.getSigner().getAddress(), this.connectedAccount[0])
+      return this.isSelected ?  new ethers.Contract(this.ILOInfo.ILOAddress, this.poolPairABI, this.getProvider()) : null
+    },
+    joinOrReview() {
+      return this.currentContrib > 0 ? 'Review Contributions' : 'Join'
+    },
     isSelected() {
       return !!this.selectedILO && this.anILO.proposalAddr === this.selectedILO.proposalAddr
     },
@@ -173,6 +187,9 @@ export default defineComponent( {
       }
       return amt
     },
+    currentAddress() {
+      return this.connectedAccount[0]
+    },
     ILOStatus() {
       // const now = Date.now()
       // use block timestamp
@@ -225,6 +242,14 @@ export default defineComponent( {
   },
   methods: {
 
+  },
+  watch: {
+    isSelected: async function (value)  {
+      console.log('is selected')
+      if (value) {
+        this.currentContrib = this.$helper.weiBigNumberToFloatEther(await this.ILOContract.fundingTokenBalanceOfFunder(this.currentAddress))
+      }
+    }
   }
 })
 </script>
