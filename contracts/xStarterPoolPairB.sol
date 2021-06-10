@@ -452,6 +452,12 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
         return block.timestamp < _liqPairTimeLock || block.number < _liqPairBlockLock;
     }
     
+    function getTimeLocks() public view returns (uint, uint, uint, uint, uint, uint) {
+        
+        return ( _contribTimeStampLock, _contribBlockLock, _projTimeLock, _projBlockLock, _liqPairTimeLock, _liqPairBlockLock);
+        
+    }
+    
     function endTime() public view returns (uint48) {
         return _endTime;
     }

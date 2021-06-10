@@ -16,11 +16,11 @@
       </q-bar>
 
 <!--  TITLE    -->
-      <q-card-section>
-        <div class="text-center">
+      <q-card-section class="row" style="font-size: 20px;">
+        <div class="text-center col-12 segoe-bold">
           Interacting With: &nbsp; {{ ILOName }} Initial Liquidity Offering
         </div>
-        <div class="text-center">
+        <div class="text-center col-12 segoe-bold text-wr">
           At Contract Address: &nbsp; {{ ILOInfo.ILOAddress }}
         </div>
       </q-card-section>
@@ -37,41 +37,17 @@
           :currentNativeTokenBalance="currentNativeTokenBalance"
           :currentShareOfProjectTokenBalance="currentShareOfProjectTokenBalance"
           :currentShareOfLPTokenBalance="currentShareOfLPTokenBalance"
+          :projectTokenBlockLockForContributors="projectTokenBlockLockForContributors"
+          :projectTokenTimeLockForContributors="projectTokenTimeLockForContributors"
+          :LPTokenTimeLockForContributors="LPTokenTimeLockForContributors"
+          :LPTokenBlockLockForContributors="LPTokenBlockLockForContributors"
         />
       </q-card-section>
-<!--      <q-card-section align="center">-->
-<!--        <div>-->
-<!--          Current Wallet Address: &nbsp; {{ connectedAccount[0] }}-->
-<!--        </div>-->
-<!--        <div>-->
-<!--          Maximum Contribution Per Address: &nbsp; {{ maxPerAddr }} {{ fundingTokenSymbol }}-->
-<!--        </div>-->
-
-<!--        <div>-->
-<!--        Minimum Contribution Allowed Per Address: &nbsp; {{ minPerAddr }} {{ fundingTokenSymbol }}-->
-<!--        </div>-->
-
-<!--        <div>-->
-<!--          Current Contribution: &nbsp; {{ currentContrib }} {{ fundingTokenSymbol }}-->
-<!--        </div>-->
-
-<!--        <div>-->
-<!--          Current ETH Balance: &nbsp; {{ currentNativeTokenBalance }}-->
-<!--        </div>-->
-
-<!--        <div>-->
-<!--          Calculated Share Of {{ ILOName }} Tokens: &nbsp; {{ currentShareOfProjectTokenBalance ? currentShareOfProjectTokenBalance.toLocaleString(): 'Not Available' }}-->
-<!--        </div>-->
-
-<!--        <div>-->
-<!--          Calculated Share Of {{ ILOName }} LP Tokens: &nbsp; {{ currentShareOfLPTokenBalance ? currentShareOfLPTokenBalance.toLocaleString(): 'Not Available' }}-->
-<!--        </div>-->
-
-<!--      </q-card-section>-->
 
       <q-card-actions align="center">
-        <q-btn outline rounded label="Contribute" @click="toggleContributeForm"/>
-        <q-btn outline rounded label="Withdraw" @click="toggleWithdrawForm" />
+        <q-btn :disable="ILOStatus !== 'live'" outline class="btn-less-round" label="Contribute" @click="toggleContributeForm" />
+        <q-btn outline class="btn-less-round" rounded label="Withdraw Project Tokens" @click="toggleWithdrawContributionForm" />
+        <q-btn outline class="btn-less-round" rounded label="Withdraw LP Tokens" @click="toggleWithdrawLPForm" />
       </q-card-actions>
       <q-card-section>
         <div>
@@ -108,6 +84,7 @@ import ABIGeneratedForm from "components/ABIGenerated/ABIGeneratedForm";
 import xStarterProposalCode from 'src/artifacts/contracts/xStarterProposal.sol/xStarterProposal.json'
 import xStarterPoolPairCode from 'src/artifacts/contracts/xStarterPoolPairB.sol/xStarterPoolPairB.json'
 import ILOInteractionInfoDisplay from "components/CardDisplays/ILOInteractionInfoDisplay";
+import {ILO_STATUS} from "src/constants";
 
 
 
@@ -138,7 +115,8 @@ export default defineComponent( {
       currentSuccessCallback: null,
       currentCloseCallBack: null,
       formType: null,
-      updatedILO: null
+      updatedILO: null,
+      timeLocks: null
     }
   },
   props: {
@@ -177,6 +155,22 @@ export default defineComponent( {
     },
     ILOProcessStatus() {
       return this.ILOMoreInfo.ILOStatus
+    },
+    ILOProcessStatusText() {
+      return ILO_STATUS[this.ILOProcessStatus]
+    },
+    projectTokenTimeLockForContributors() {
+      return this.timeLocks ? this.timeLocks[0].toNumber() : 0
+    },
+    projectTokenBlockLockForContributors() {
+      return this.timeLocks ? this.timeLocks[1].toNumber() : 0
+    },
+
+    LPTokenTimeLockForContributors() {
+      return this.timeLocks ? this.timeLocks[4].toNumber() : 0
+    },
+    LPTokenBlockLockForContributors() {
+      return this.timeLocks ? this.timeLocks[5].toNumber() : 0
     },
     proposalAddress() {
       return this.anILO.proposalAddr
@@ -297,7 +291,7 @@ export default defineComponent( {
       this.currentCloseCallBack = this.toggleFinalizeILOForm
     },
 
-    toggleWithdrawForm() {
+    toggleWithdrawContributionForm() {
       if (this.formType) {
         this.clearForm()
         return
@@ -309,13 +303,31 @@ export default defineComponent( {
       this.formType = 'withdraw'
       this.currentConnectedContract = this.ILOContract.connect(this.getSigner())
       this.currentSuccessCallback = this.refreshBalances
-      this.currentCloseCallBack = this.toggleWithdrawForm
+      this.currentCloseCallBack = this.toggleWithdrawContributionForm
+    },
+
+    toggleWithdrawLPForm() {
+      if (this.formType) {
+        this.clearForm()
+        return
+      }
+      // native token so no need to create allowance in funding token
+      this.currentABI = this.poolPairABI
+      this.formTitle.name = `Withdraw Your Share Of ${this.ILOName} LP Tokens`
+      this.currentFunctionName = 'withdrawLiquidityTokens'
+      this.formType = 'withdrawLiquidityTokens'
+      this.currentConnectedContract = this.ILOContract.connect(this.getSigner())
+      this.currentSuccessCallback = this.refreshBalances
+      this.currentCloseCallBack = this.toggleWithdrawLPForm
     },
 
     async refreshBalances() {
       this.currentContrib = this.$helper.weiBigNumberToFloatEther(await this.ILOContract.fundingTokenBalanceOfFunder(this.currentAddress))
       this.currentNativeTokenBalance = this.$helper.weiBigNumberToFloatEther(await this.getSigner().getBalance())
-      await this.refreshILOInfo()
+      if (this.ILOProcessStatus < 6) {
+        await this.refreshILOInfo()
+      }
+
       if (this.ILOProcessStatus >= 3) {
         // check project token share
         this.currentShareOfProjectTokenBalance = this.$helper.weiBigNumberToFloatEther(await this.ILOContract.projectTokenBalanceOfFunder(this.currentAddress))
@@ -327,10 +339,16 @@ export default defineComponent( {
     },
     async refreshILOInfo() {
       this.updatedILO = await this.ILOProposalContract.getCompactInfo()
+    },
+    async getTimeLocks() {
+      this.timeLocks = await this.ILOContract.getTimeLocks()
+      console.log('timelocks are: ', this.timeLocks)
+
     }
   },
   async mounted() {
     await this.refreshBalances()
+    await this.getTimeLocks()
   },
   watch: {
     connectedAccount: async function () {
@@ -340,6 +358,10 @@ export default defineComponent( {
 })
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+
+.btn-less-round {
+  border-radius: 5px;
+}
 
 </style>

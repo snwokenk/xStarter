@@ -137,7 +137,7 @@ export default defineComponent( {
         }
       }catch (e) {
         console.log('caught error', e)
-        this.errorMessage = e.data.message
+        this.errorMessage = e.data && e.data.message ? e.data.message : e.message
         this.callAfterExecute()
       }
 
