@@ -23,6 +23,12 @@
         <div class="text-center col-12 segoe-bold text-wr">
           At Contract Address: &nbsp; {{ ILOInfo.ILOAddress }}
         </div>
+        <div class="text-center col-12 segoe-bold text-wr">
+          {{ ILOName }} Token Address: &nbsp; {{ ILOMoreInfo.projectToken }}
+        </div>
+        <div class="text-center col-12 segoe-bold text-wr">
+          {{ ILOName }} LP Token Address: &nbsp; {{ ILOMoreInfo.liqPairAddr }}
+        </div>
       </q-card-section>
 <!--  Contribution Info    -->
       <q-card-section class="justify-center row" >
@@ -41,13 +47,14 @@
           :projectTokenTimeLockForContributors="projectTokenTimeLockForContributors"
           :LPTokenTimeLockForContributors="LPTokenTimeLockForContributors"
           :LPTokenBlockLockForContributors="LPTokenBlockLockForContributors"
+          :ILOMoreInfo="ILOMoreInfo"
         />
       </q-card-section>
 
       <q-card-actions align="center">
         <q-btn :disable="ILOStatus !== 'live'" outline class="btn-less-round" label="Contribute" @click="toggleContributeForm" />
-        <q-btn outline class="btn-less-round" rounded label="Withdraw Project Tokens" @click="toggleWithdrawContributionForm" />
-        <q-btn outline class="btn-less-round" rounded label="Withdraw LP Tokens" @click="toggleWithdrawLPForm" />
+        <q-btn outline :disable="currentShareOfProjectTokenBalance === 0" class="btn-less-round" rounded label="Withdraw Project Tokens" @click="toggleWithdrawContributionForm" />
+        <q-btn outline :disable="currentShareOfLPTokenBalance === 0" class="btn-less-round" rounded label="Withdraw LP Tokens" @click="toggleWithdrawLPForm" />
       </q-card-actions>
       <q-card-section>
         <div>
@@ -77,6 +84,7 @@
 </template>
 
 <script>
+// todo: https://docs.metamask.io/guide/registering-your-token.html#code-free-example
 import {defineComponent, inject} from "vue";
 import { abiUtils } from "boot/abiGenerator";
 import { ethers } from 'boot/ethers'

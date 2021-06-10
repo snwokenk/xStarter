@@ -51,7 +51,7 @@
 
         <div  class="col-12 row col-lg-6 text-left">
           <div class="col-12">Your Calculated Share Of {{ ILOName }} Tokens:</div>
-          <div class="segoe-bold col-12 text-positive">{{ currentShareOfProjectTokenBalance ? currentShareOfProjectTokenBalance.toLocaleString(): 'Not Available' }}</div>
+          <div class="segoe-bold col-12 text-positive">{{ currentShareOfProjectTokenBalanceDisplay }}</div>
         </div>
       </div>
 
@@ -59,7 +59,7 @@
 
         <div  class="col-12 row col-lg-6 text-left">
           <div class="col-12">Your Calculated Share Of {{ ILOName }} LP Tokens:</div>
-          <div class="segoe-bold col-12 text-positive">{{ currentShareOfLPTokenBalance ? currentShareOfLPTokenBalance.toLocaleString(): 'Not Available' }}</div>
+          <div class="segoe-bold col-12 text-positive">{{ currentShareOfLPTokenBalanceDisplay }}</div>
         </div>
 
         <div  class="col-12 row col-lg-6 text-left">
@@ -109,6 +109,7 @@ export default defineComponent( {
   props: [
     'ILOName',
     'ILOInfo',
+    'ILOMoreInfo',
     'ILOStatus',
     'maxPerAddr',
     'fundingTokenSymbol',
@@ -138,6 +139,25 @@ export default defineComponent( {
     chainIdName() {
       return !CHAIN_ID_TO_NAME[this.chainId] ? this.chainId : CHAIN_ID_TO_NAME[this.chainId]
     },
+    currentShareOfProjectTokenBalanceDisplay() {
+      if (this.currentShareOfProjectTokenBalance) {
+        return this.currentShareOfProjectTokenBalance.toLocaleString()
+      }else if (this.ILOMoreInfo.ILOStatus >= 6) {
+        return 0
+      } else {
+        return 'Not Available'
+      }
+    },
+
+    currentShareOfLPTokenBalanceDisplay() {
+      if (this.currentShareOfLPTokenBalance) {
+        return this.currentShareOfLPTokenBalance.toLocaleString()
+      }else if (this.ILOMoreInfo.ILOStatus >= 6) {
+        return 0
+      } else {
+        return 'Not Available'
+      }
+    },
     acceptedChain() {
       return Boolean(ACCEPTED_CHAINS[this.chainId])
     },
@@ -163,7 +183,7 @@ export default defineComponent( {
       }else if (this.blockInfo.timestamp >= this.projectTokenTimeLockForContributors) {
         return `Timestamp Unlocked Waiting For Block ${this.projectTokenBlockLockForContributors}`
       }
-      return this.projectTokenTimeLockForContributors
+      return new Date(this.projectTokenTimeLockForContributors * 1000)
     },
     LPTokensLockedDisplay() {
       if (!this.LPTokenBlockLockForContributors) {
@@ -184,7 +204,7 @@ export default defineComponent( {
       }else if (this.blockInfo.timestamp >= this.LPTokenTimeLockForContributors) {
         return `Timestamp Unlocked Waiting For Block ${this.LPTokenBlockLockForContributors}`
       }
-      return this.LPTokenTimeLockForContributors
+      return new Date(this.LPTokenTimeLockForContributors * 1000)
     }
   }
 })

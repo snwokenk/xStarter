@@ -33,6 +33,7 @@ interface IERC20Custom {
     // function owner() external view  returns (address);
     function allowance(address owner_, address spender) external view returns (uint256);
     function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
+    function transfer(address recipient, uint256 amount) external returns (bool);
     function approve(address spender, uint256 amount) external returns (bool);
     function balanceOf(address) external view returns (uint256);
     function decimals() external view returns (uint8);
@@ -40,6 +41,7 @@ interface IERC20Custom {
 
 interface IERC20Uni {
     function approve(address spender, uint256 amount) external returns (bool);
+    function transfer(address to, uint value) external returns (bool);
 }
 interface IUniswapRouter {
         function addLiquidity(
@@ -801,7 +803,8 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
         // require(funder.fundingTokenAmount > 0, "Did Not Contribute");
         require(amount_ > 0, 'amount must be greater than 0');
         //funder.projectTokenAmount = funder.projectTokenAmount.sub(amount_);
-        success = IERC20Custom(_projectToken).approve(_msgSender(), amount_);
+        // success = IERC20Custom(_projectToken).approve(_msgSender(), amount_);
+        success = IERC20Custom(_projectToken).transfer(_msgSender(), amount_);
          _tokensHeld = _tokensHeld.sub(amount_);
         
         _allowWithdraw();
@@ -869,7 +872,7 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
                 
         }else {
                 // or if funding token wasn't native, send ERC20 token
-                success = IERC20Custom(i._fundingToken).approve(_msgSender(), amount_);
+                success = IERC20Custom(i._fundingToken).transfer(_msgSender(), amount_);
         }
         emit FundingTokenForTeamWithdrawn(_msgSender(), amount_, i._percentTokensForTeam, _fundingTokenTotal);
     }
@@ -886,7 +889,7 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
             _adminBalance = 0;
             uint amount_ = _tokensHeld;
             _tokensHeld = 0;
-            success = IERC20Custom(_projectToken).approve(_msgSender(), amount_);
+            success = IERC20Custom(_projectToken).transfer(_msgSender(), amount_);
             emit WithdrawnOnFailure(_msgSender(), _projectToken, amount_, true);
             
         }else{
@@ -905,7 +908,7 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
                 
             }else {
                 // or if funding token wasn't native, send ERC20 token
-                success = IERC20Custom(i._fundingToken).approve(_msgSender(), amount_);
+                success = IERC20Custom(i._fundingToken).transfer(_msgSender(), amount_);
                 emit WithdrawnOnFailure(_msgSender(), i._fundingToken, amount_, false);
             }
         }
@@ -926,7 +929,7 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
         
         require(LPAmount_ > 0 && LPAmount_ <= _availLPTokens, "not enough lp tokens");
         _availLPTokens = _availLPTokens.sub(LPAmount_);
-        success = IERC20Uni(_liquidityPairAddress).approve(_msgSender(), LPAmount_);
+        success = IERC20Uni(_liquidityPairAddress).transfer(_msgSender(), LPAmount_);
         _allowWithdraw();
         emit WithdrawnLiquidityToken(_msgSender(), LPAmount_);
         
@@ -939,7 +942,7 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
         uint amount_ = _adminBalance;
         _adminBalance = 0;
         _tokensHeld = _tokensHeld.sub(amount_);
-        success = IERC20Custom(_projectToken).approve(_admin, amount_);
+        success = IERC20Custom(_projectToken).transfer(_admin, amount_);
         _allowWithdraw();
     }
     
