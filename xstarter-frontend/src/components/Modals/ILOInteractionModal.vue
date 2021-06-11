@@ -52,7 +52,8 @@
       </q-card-section>
 
       <q-card-actions align="center">
-        <q-btn :disable="ILOStatus !== 'live'" outline class="btn-less-round" label="Contribute" @click="toggleContributeForm" />
+<!--        <q-btn :disable="ILOStatus !== 'live'" outline class="btn-less-round" label="Contribute" @click="toggleContributeForm" />-->
+        <q-btn outline class="btn-less-round" label="Contribute" @click="toggleContributeForm" />
         <q-btn outline :disable="currentShareOfProjectTokenBalance === 0" class="btn-less-round" rounded label="Withdraw Project Tokens" @click="toggleWithdrawContributionForm" />
         <q-btn outline :disable="currentShareOfLPTokenBalance === 0" class="btn-less-round" rounded label="Withdraw LP Tokens" @click="toggleWithdrawLPForm" />
       </q-card-actions>
@@ -67,15 +68,19 @@
         <q-btn :disable="ILOProcessStatus > 4" outline rounded label="Create Liquidity Pool" @click="toggleCreateLiquidityPoolForm"/>
         <q-btn :disable="ILOProcessStatus > 5" outline rounded label="Finalize ILO" @click="toggleFinalizeILOForm"/>
       </q-card-actions>
-      <ABIGeneratedForm
-        v-if="currentFunctionName && currentABI"
-        :abi="currentABI"
-        :title="formTitle"
-        :function-name="currentFunctionName"
-        :connected-contract="currentConnectedContract"
-        :success-call-back="currentSuccessCallback"
-        :close-btn-callback="currentCloseCallBack"
-      />
+      <div class="row justify-center q-my-xl">
+        <ABIGeneratedForm
+          class="col-12 col-lg-9"
+          v-if="currentFunctionName && currentABI"
+          :abi="currentABI"
+          :title="formTitle"
+          :function-name="currentFunctionName"
+          :connected-contract="currentConnectedContract"
+          :success-call-back="currentSuccessCallback"
+          :close-btn-callback="currentCloseCallBack"
+        />
+      </div>
+
     </q-card>
 
 
@@ -110,7 +115,7 @@ export default defineComponent( {
   data() {
     return {
       formFields: {},
-      formTitle: {class:'', style: '', name: ''},
+      formTitle: {class:'form-title text-center', style: 'font-size: 41px;', name: ''},
       currentFunctionName: '',
       currentConnectedContract: null,
       balanceChecked: false,
