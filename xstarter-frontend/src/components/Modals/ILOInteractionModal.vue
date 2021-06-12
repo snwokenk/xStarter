@@ -52,21 +52,27 @@
       </q-card-section>
 
       <q-card-actions align="center">
-<!--        <q-btn :disable="ILOStatus !== 'live'" outline class="btn-less-round" label="Contribute" @click="toggleContributeForm" />-->
-        <q-btn outline class="btn-less-round" label="Contribute" @click="toggleContributeForm" />
+        <q-btn :disable="ILOStatus !== 'live'" outline class="btn-less-round" label="Contribute" @click="toggleContributeForm" />
+<!--        <q-btn outline class="btn-less-round" label="Contribute" @click="toggleContributeForm" />-->
         <q-btn outline :disable="currentShareOfProjectTokenBalance === 0" class="btn-less-round" rounded label="Withdraw Project Tokens" @click="toggleWithdrawContributionForm" />
         <q-btn outline :disable="currentShareOfLPTokenBalance === 0" class="btn-less-round" rounded label="Withdraw LP Tokens" @click="toggleWithdrawLPForm" />
       </q-card-actions>
       <q-card-section>
         <div>
-          ILO Has Ended Status is: {{ ILOProcessStatus }}
+          <div class="text-center" v-if="ILOProcessStatus < 6">
+            ILO Has Ended. To Finalize The ILO, Click and Execute the Buttons Below
+          </div>
+          <div class="text-center">
+            ILO Has Ended Status is: <span class="text-bold">{{ ILOProcessStatusText }}</span>
+          </div>
+
         </div>
       </q-card-section>
       <q-card-actions v-if="ILOStatus === 'ended'"  align="center">
-        <q-btn :disable="ILOProcessStatus > 2"  outline rounded label="Validate" @click="toggleValidateForm"/>
-        <q-btn :disable="ILOProcessStatus > 3" outline rounded label="Approve Tokens For Liquidity" @click="toggleApproveTokensForLiquidityForm"/>
-        <q-btn :disable="ILOProcessStatus > 4" outline rounded label="Create Liquidity Pool" @click="toggleCreateLiquidityPoolForm"/>
-        <q-btn :disable="ILOProcessStatus > 5" outline rounded label="Finalize ILO" @click="toggleFinalizeILOForm"/>
+        <q-btn v-if="ILOProcessStatus  === 2 "  outline rounded label="Validate 1" @click="toggleValidateForm"/>
+        <q-btn v-if="ILOProcessStatus === 3" outline rounded label="Approve Tokens For Liquidity 2" @click="toggleApproveTokensForLiquidityForm"/>
+        <q-btn v-if="ILOProcessStatus === 4" outline rounded label="Create Liquidity Pool 3" @click="toggleCreateLiquidityPoolForm"/>
+        <q-btn v-if="ILOProcessStatus === 5" outline rounded label="Finalize ILO 4" @click="toggleFinalizeILOForm"/>
       </q-card-actions>
       <div class="row justify-center q-my-xl ">
         <ABIGeneratedForm
@@ -112,7 +118,9 @@ export default defineComponent( {
     const getProvider = inject('$getProvider')
     const getSigner = inject('$getSigner')
     const connectedAccount = inject('$connectedAccounts')
-    return {proposalABI, poolPairABI, getProvider, getSigner, connectedAccount}
+    const ethereumProvider = inject('$ethereumProvider')
+    const metaMaskAssetAddRequest = inject('$metaMaskAssetAddRequest')
+    return {proposalABI, poolPairABI, getProvider, getSigner, connectedAccount, ethereumProvider, metaMaskAssetAddRequest}
   },
   data() {
     return {
@@ -363,6 +371,11 @@ export default defineComponent( {
     async refreshILOInfo() {
       this.updatedILO = await this.ILOProposalContract.getCompactInfo()
     },
+    async suggestToAddTokenAndILO() {
+      if (this.currentShareOfProjectTokenBalance > 0) {
+        await this.metaMaskAssetAddRequest(this.ILOMoreInfo.projectToken, this.ILOInfo.tokenSymbol, '')
+      }
+    },
     async getTimeLocks() {
       this.timeLocks = await this.ILOContract.getTimeLocks()
       console.log('timelocks are: ', this.timeLocks)
@@ -372,6 +385,7 @@ export default defineComponent( {
   async mounted() {
     await this.refreshBalances()
     await this.getTimeLocks()
+    // await this.suggestToAddTokenAndILO()
   },
   watch: {
     connectedAccount: async function () {

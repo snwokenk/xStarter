@@ -29,9 +29,9 @@
 
 
 
-      <div v-if="connectedAndPermissioned" class="q-mt-lg">
-        <q-btn outline rounded label="Create An Initial Liquidity Offering" />
-      </div>
+<!--      <div v-if="connectedAndPermissioned" class="q-mt-lg">-->
+<!--        <q-btn outline rounded label="Create An Initial Liquidity Offering" />-->
+<!--      </div>-->
 
 
     </q-card-section>

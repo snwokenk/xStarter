@@ -11,35 +11,52 @@
           </div>
         </q-toolbar-title>
         <div class="q-gutter-x-sm">
-          <q-btn-dropdown
+
+          <q-btn
             rounded
             outline
             size="md"
             :label="connectBtnLabel"
-            :disable-dropdown="!connectedAndPermissioned"
             :icon="metamaskInstalled ? undefined : 'error_outline'"
             :color="metamaskInstalled ? darkLightText: 'negative'"
             :disable="!metamaskInstalled"
             @click="connectEthereum"
-          >
-            <q-list>
-              <q-item clickable v-close-popup >
-                <q-item-section>
-                  <q-item-label>Create ILO</q-item-label>
-                </q-item-section>
-              </q-item>
-            </q-list>
+          />
 
-          </q-btn-dropdown>
-          <q-btn outline :color="darkLightText" label="sign"  @click="callContract"/>
+
+<!--          <q-btn-dropdown-->
+<!--            rounded-->
+<!--            outline-->
+<!--            size="md"-->
+<!--            :label="connectBtnLabel"-->
+<!--            :disable-dropdown="!connectedAndPermissioned"-->
+<!--            :icon="metamaskInstalled ? undefined : 'error_outline'"-->
+<!--            :color="metamaskInstalled ? darkLightText: 'negative'"-->
+<!--            :disable="!metamaskInstalled"-->
+<!--            @click="connectEthereum"-->
+<!--          >-->
+<!--            <q-list>-->
+<!--              <q-item clickable v-close-popup >-->
+<!--                <q-item-section>-->
+<!--                  <q-item-label>Create ILO</q-item-label>-->
+<!--                </q-item-section>-->
+<!--              </q-item>-->
+<!--            </q-list>-->
+
+<!--          </q-btn-dropdown>-->
+<!--          <q-btn outline :color="darkLightText" label="sign"  @click="callContract"/>-->
           <q-btn round flat :color="darkLightText" :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'" @click="setDarkMode"/>
         </div>
       </q-toolbar>
 
       <q-tabs align="center" :class="{'text-dark': !$q.dark.isActive, 'text-light': $q.dark.isActive}">
         <q-route-tab to="/" label="ILO"  />
-        <q-route-tab to="/page2" label="Governance" :disable="true" />
-        <q-route-tab to="/page3" label="NFT" disabled />
+        <q-route-tab to="/page2" label="Governance" disable>
+          <q-badge label="Coming Soon" :color="darkLightText" :text-color="darkLightTextReverse" style="font-size: 8px;" floating />
+        </q-route-tab>
+        <q-route-tab to="/page3" label="NFT" disable>
+          <q-badge label="Coming Soon" :color="darkLightText" :text-color="darkLightTextReverse" style="font-size: 8px;" floating />
+        </q-route-tab>
       </q-tabs>
     </q-header>
 
@@ -72,7 +89,7 @@
 // https://docs.metamask.io/guide/ethereum-provider.html#methods
 // https://ethereum.stackexchange.com/questions/97693/what-is-the-correct-way-to-deploy-a-react-app-that-uses-metamask
 
-import { defineComponent, ref, watch, onMounted, provide } from 'vue'
+import {defineComponent, ref, watch, onMounted, provide, inject} from 'vue'
 import { useQuasar } from 'quasar'
 import { ethers } from 'boot/ethers'
 import { abiUtils } from "boot/abiGenerator";
@@ -104,6 +121,7 @@ export default defineComponent({
     let launchPadLoaded = ref(false)
     provide('$launchPadLoaded', launchPadLoaded)
     const ethereumProvider = ref(undefined)
+    provide('$ethereumProvider', ethereumProvider)
     let chainId = ref(undefined)
     provide('$chainId', chainId)
     let blockInfo = ref({timestamp: 0, blockNumber: 0})
@@ -137,6 +155,33 @@ export default defineComponent({
       }
 
     }
+    const metaMaskAssetAddRequest = async (tokenAddress, tokenSymbol, tokenImage) => {
+      try {
+        // wasAdded is a boolean. Like any RPC method, an error may be thrown.
+        const wasAdded = await ethereumProvider.value.request({
+          method: 'wallet_watchAsset',
+          params: {
+            type: 'ERC20', // Initially only supports ERC20, but eventually more!
+            options: {
+              address: tokenAddress, // The address that the token is at.
+              symbol: tokenSymbol, // A ticker symbol or shorthand, up to 5 chars.
+              decimals: 18, // The number of decimals in the token
+              image: tokenImage, // A string url of the token logo
+            },
+          },
+        });
+
+        if (wasAdded) {
+          console.log('was added');
+        } else {
+          console.log('not added');
+        }
+      } catch (error) {
+        console.log(error);
+      }
+
+    }
+    provide('$metaMaskAssetAddRequest', metaMaskAssetAddRequest)
     const connectUsingWebProvider = async (accountsChanged = null) => {
       if (metamaskInstalled.value) {
         console.log('meta mask installed')
@@ -284,6 +329,9 @@ export default defineComponent({
   computed: {
     darkLightText(){
       return this.$q.dark.isActive ? 'light' : 'dark'
+    },
+    darkLightTextReverse(){
+      return this.$q.dark.isActive ? 'dark' : 'light'
     },
 
     connectBtnLabel() {
