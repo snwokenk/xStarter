@@ -38,8 +38,8 @@
 
       <q-tabs align="center" :class="{'text-dark': !$q.dark.isActive, 'text-light': $q.dark.isActive}">
         <q-route-tab to="/" label="ILO"  />
-        <q-route-tab to="/page2" label="Governance" />
-        <q-route-tab to="/page3" label="NFT" />
+        <q-route-tab to="/page2" label="Governance" :disable="true" />
+        <q-route-tab to="/page3" label="NFT" disabled />
       </q-tabs>
     </q-header>
 

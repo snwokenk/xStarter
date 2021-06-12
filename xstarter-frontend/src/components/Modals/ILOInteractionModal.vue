@@ -68,9 +68,9 @@
         <q-btn :disable="ILOProcessStatus > 4" outline rounded label="Create Liquidity Pool" @click="toggleCreateLiquidityPoolForm"/>
         <q-btn :disable="ILOProcessStatus > 5" outline rounded label="Finalize ILO" @click="toggleFinalizeILOForm"/>
       </q-card-actions>
-      <div class="row justify-center q-my-xl">
+      <div class="row justify-center q-my-xl ">
         <ABIGeneratedForm
-          class="col-12 col-lg-9"
+          class="col-12 col-lg-9 q-pa-xl accountDisplayCard display-card"
           v-if="currentFunctionName && currentABI"
           :abi="currentABI"
           :title="formTitle"
@@ -78,6 +78,8 @@
           :connected-contract="currentConnectedContract"
           :success-call-back="currentSuccessCallback"
           :close-btn-callback="currentCloseCallBack"
+          :input-styling="{class: 'q-pl-sm', style: 'border: 2px Solid; border-radius: 10px;'}"
+          :key="formKey"
         />
       </div>
 
@@ -129,7 +131,8 @@ export default defineComponent( {
       currentCloseCallBack: null,
       formType: null,
       updatedILO: null,
-      timeLocks: null
+      timeLocks: null,
+      formKey: 0
     }
   },
   props: {
@@ -225,7 +228,7 @@ export default defineComponent( {
       this.currentCloseCallBack = null
     },
     toggleContributeForm() {
-      if (this.formType) {
+      if (this.formType === 'contribute') {
         this.clearForm()
         return
       }
@@ -242,10 +245,11 @@ export default defineComponent( {
       } else {
         console.log('funding token is not native must call allowance')
       }
+      this.formKey++
 
     },
     toggleValidateForm() {
-      if (this.formType) {
+      if (this.formType === 'validateILO') {
         this.clearForm()
         return
       }
@@ -257,10 +261,11 @@ export default defineComponent( {
       this.currentConnectedContract = this.ILOContract.connect(this.getSigner())
       this.currentSuccessCallback = this.refreshBalances
       this.currentCloseCallBack = this.toggleValidateForm
+      this.formKey++
     },
 
     toggleApproveTokensForLiquidityForm() {
-      if (this.formType) {
+      if (this.formType === 'approveTokensForLiquidityPair') {
         this.clearForm()
         return
       }
@@ -272,10 +277,11 @@ export default defineComponent( {
       this.currentConnectedContract = this.ILOContract.connect(this.getSigner())
       this.currentSuccessCallback = this.refreshBalances
       this.currentCloseCallBack = this.toggleApproveTokensForLiquidityForm
+      this.formKey++
     },
 
     toggleCreateLiquidityPoolForm() {
-      if (this.formType) {
+      if (this.formType === 'createLiquidityPool') {
         this.clearForm()
         return
       }
@@ -287,10 +293,11 @@ export default defineComponent( {
       this.currentConnectedContract = this.ILOContract.connect(this.getSigner())
       this.currentSuccessCallback = this.refreshBalances
       this.currentCloseCallBack = this.toggleCreateLiquidityPoolForm
+      this.formKey++
     },
 
     toggleFinalizeILOForm() {
-      if (this.formType) {
+      if (this.formType === 'finalizeILO') {
         this.clearForm()
         return
       }
@@ -302,10 +309,11 @@ export default defineComponent( {
       this.currentConnectedContract = this.ILOContract.connect(this.getSigner())
       this.currentSuccessCallback = this.refreshBalances
       this.currentCloseCallBack = this.toggleFinalizeILOForm
+      this.formKey++
     },
 
     toggleWithdrawContributionForm() {
-      if (this.formType) {
+      if (this.formType === 'withdraw') {
         this.clearForm()
         return
       }
@@ -317,10 +325,11 @@ export default defineComponent( {
       this.currentConnectedContract = this.ILOContract.connect(this.getSigner())
       this.currentSuccessCallback = this.refreshBalances
       this.currentCloseCallBack = this.toggleWithdrawContributionForm
+      this.formKey++
     },
 
     toggleWithdrawLPForm() {
-      if (this.formType) {
+      if (this.formType === 'withdrawLiquidityTokens') {
         this.clearForm()
         return
       }
@@ -332,6 +341,7 @@ export default defineComponent( {
       this.currentConnectedContract = this.ILOContract.connect(this.getSigner())
       this.currentSuccessCallback = this.refreshBalances
       this.currentCloseCallBack = this.toggleWithdrawLPForm
+      this.formKey++
     },
 
     async refreshBalances() {

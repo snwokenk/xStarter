@@ -1,6 +1,6 @@
 <template>
   <q-form>
-    <div :class="title.class" :style="title.style">
+    <div style="margin-bottom: 50px;" :class="title.class" :style="title.style">
       {{ title.name}}
     </div>
 
@@ -16,14 +16,15 @@
           Success! TX hash: {{ successMessage }}
         </div>
         <div v-if="funcABI.stateMutability === 'payable'">
-          <q-input :class="inputStyling.class" :style="inputStyling.style" v-model="payableValue" label="Ethers to send"/>
+          <q-input  :class="inputStyling.class" :style="inputStyling.style" v-model="payableValue" label="Ethers to send"/>
         </div>
-        <div v-if="funcABI.inputs.length === 0 && funcABI.stateMutability === 'nonpayable'">
+        <div class="q-pl-xs" v-if="funcABI.inputs.length === 0 && funcABI.stateMutability === 'nonpayable'">
           No Inputs required. Click Execute to call function
         </div>
-        <div class="row">
-          <q-btn class="col-6" label="execute" @click="execute" />
-          <q-btn v-if="closeBtnCallback" class="col-6" label="cancel" @click="closeBtnCallback"/>
+        <div class="row q-mt-lg">
+          <q-btn rounded outline class="col-5" label="execute" @click="execute" />
+          <div class="col-1"/>
+          <q-btn rounded outline v-if="closeBtnCallback" class="col-6" label="cancel" @click="closeBtnCallback"/>
         </div>
         <div v-if="waitingOnTx" class="row text-positive justify-center q-my-lg">
           <div class="col-auto">
@@ -102,6 +103,12 @@ export default defineComponent( {
     successCallBack: {
       type: Function,
       required: false
+    },
+    inputStyling: {
+      type: Object,
+      default: () => {
+        return {class: '', style: ''}
+      }
     }
   },
   methods: {
