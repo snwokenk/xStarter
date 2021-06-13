@@ -54,8 +54,8 @@
       <q-card-actions align="center">
         <q-btn :disable="ILOStatus !== 'live'" outline class="btn-less-round" label="Contribute" @click="toggleContributeForm" />
 <!--        <q-btn outline class="btn-less-round" label="Contribute" @click="toggleContributeForm" />-->
-        <q-btn outline :disable="currentShareOfProjectTokenBalance === 0" class="btn-less-round" rounded label="Withdraw Project Tokens" @click="toggleWithdrawContributionForm" />
-        <q-btn outline :disable="currentShareOfLPTokenBalance === 0" class="btn-less-round" rounded label="Withdraw LP Tokens" @click="toggleWithdrawLPForm" />
+        <q-btn outline :disable="!currentShareOfProjectTokenBalance" class="btn-less-round" rounded label="Withdraw Project Tokens" @click="toggleWithdrawContributionForm" />
+        <q-btn outline :disable="!currentShareOfLPTokenBalance" class="btn-less-round" rounded label="Withdraw LP Tokens" @click="toggleWithdrawLPForm" />
       </q-card-actions>
       <q-card-section>
         <div>
@@ -362,6 +362,7 @@ export default defineComponent( {
       if (this.ILOProcessStatus >= 3) {
         // check project token share
         this.currentShareOfProjectTokenBalance = this.$helper.weiBigNumberToFloatEther(await this.ILOContract.projectTokenBalanceOfFunder(this.currentAddress))
+        console.log('project token is', this.currentShareOfProjectTokenBalance)
       }
       if (this.ILOProcessStatus >= 5) {
         this.currentShareOfLPTokenBalance = this.$helper.weiBigNumberToFloatEther(await this.ILOContract.projectLPTokenBalanceOfFunder(this.currentAddress))

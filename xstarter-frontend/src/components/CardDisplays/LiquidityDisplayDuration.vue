@@ -1,7 +1,7 @@
 <template>
   <div  v-if="offeringStatus === 'starting'" class="q-gutter-y-md">
-    <div class="display-card-duration-container display-card-duration-container__ended display-card-duration-text"> Duration 2 days</div>
-    <div class="display-card-duration-container display-card-duration-text"> Starts in 21 days</div>
+    <div class="display-card-duration-container display-card-duration-container__ended display-card-duration-text"> Duration {{ durationDisplay }}</div>
+    <div class="display-card-duration-container display-card-duration-text"> Starts in {{ startsInDisplay }}</div>
   </div>
   <div v-else-if="offeringStatus === 'live'" class="q-gutter-y-sm">
     <div class="display-card-duration-container display-card-duration-container__succeed display-card-duration-text display-card-duration-text__succeed row">
@@ -56,7 +56,32 @@ export default defineComponent({
   },
   computed: {
     nowToEndDate() {
-      return `${this.getDateDisplay(this.blockInfo.timestamp * 1000, this.endTime)} hours`
+      let units = 'hours'
+      let duration = this.getDateDisplay(this.blockInfo.timestamp * 1000, this.endTime, units)
+      if (duration > 48) {
+        units = 'days'
+        duration = this.getDateDisplay(this.blockInfo.timestamp * 1000, this.endTime, units)
+      }
+      return `${duration} ${units}`
+    },
+    durationDisplay() {
+
+      let units = 'hours'
+      let duration = this.getDateDisplay(this.startTime, this.endTime, units)
+      if (duration > 48) {
+        units = 'days'
+        duration = this.getDateDisplay(this.startTime, this.endTime, units)
+      }
+      return `${duration} ${units}`
+    },
+    startsInDisplay() {
+      let units = 'hours'
+      let duration = this.getDateDisplay(this.blockInfo.timestamp * 1000, this.startTime, units)
+      if (duration > 48) {
+        units = 'days'
+        duration = this.getDateDisplay(this.blockInfo.timestamp * 1000, this.startTime, units)
+      }
+      return `${duration} ${units}`
     }
   }
 })
