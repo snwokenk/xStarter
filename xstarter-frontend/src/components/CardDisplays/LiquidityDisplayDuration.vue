@@ -52,36 +52,36 @@ export default defineComponent({
   methods: {
     getDateDisplay(lesserDate, greaterDate, unit = 'hours') {
       return date.getDateDiff(new Date(greaterDate), new Date(lesserDate), unit)
+    },
+
+    getDateDisplayUnitsDeterminedDisplay(lesserDate, greaterDate) {
+      let unit = 'minutes'
+      let duration = date.getDateDiff(new Date(greaterDate), new Date(lesserDate), unit)
+      // if less than 60 minutes then return else display in hours
+      if (duration <= 60) {
+        return `${duration} ${unit}`
+      }
+      unit = 'hours'
+      duration = date.getDateDiff(new Date(greaterDate), new Date(lesserDate), unit)
+      // if duration less than 48 hours return else display in days
+      if (duration <= 48) {
+        return `${duration} ${unit}`
+      }
+      unit = 'days'
+      duration = date.getDateDiff(new Date(greaterDate), new Date(lesserDate), unit)
+      return `${duration} ${unit}`
+
     }
   },
   computed: {
     nowToEndDate() {
-      let units = 'hours'
-      let duration = this.getDateDisplay(this.blockInfo.timestamp * 1000, this.endTime, units)
-      if (duration > 48) {
-        units = 'days'
-        duration = this.getDateDisplay(this.blockInfo.timestamp * 1000, this.endTime, units)
-      }
-      return `${duration} ${units}`
+      return this.getDateDisplayUnitsDeterminedDisplay(this.blockInfo.timestamp * 1000, this.endTime)
     },
     durationDisplay() {
-
-      let units = 'hours'
-      let duration = this.getDateDisplay(this.startTime, this.endTime, units)
-      if (duration > 48) {
-        units = 'days'
-        duration = this.getDateDisplay(this.startTime, this.endTime, units)
-      }
-      return `${duration} ${units}`
+      return this.getDateDisplayUnitsDeterminedDisplay(this.startTime, this.endTime)
     },
     startsInDisplay() {
-      let units = 'hours'
-      let duration = this.getDateDisplay(this.blockInfo.timestamp * 1000, this.startTime, units)
-      if (duration > 48) {
-        units = 'days'
-        duration = this.getDateDisplay(this.blockInfo.timestamp * 1000, this.startTime, units)
-      }
-      return `${duration} ${units}`
+      return this.getDateDisplayUnitsDeterminedDisplay(this.blockInfo.timestamp * 1000, this.startTime)
     }
   }
 })

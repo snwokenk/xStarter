@@ -32,7 +32,9 @@
 <!--      <div v-if="connectedAndPermissioned" class="q-mt-lg">-->
 <!--        <q-btn outline rounded label="Create An Initial Liquidity Offering" />-->
 <!--      </div>-->
-
+      <div class="text-center q-mt-lg text-uppercase text-negative">
+        TODO: add dropdown that allows changing of chain!!!
+      </div>
 
     </q-card-section>
   </q-card>

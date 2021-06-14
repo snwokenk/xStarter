@@ -128,7 +128,12 @@ export default defineComponent( {
       let response;
       try {
         if (this.funcABI.stateMutability === 'payable' && this.payableValue){
-          response = await this.connectedContract[this.functionName]({value: this.$ethers.utils.parseEther(this.payableValue)})
+
+          let nonce = Date.now()
+          console.log("calling nonce", nonce)
+          response = await this.connectedContract[this.functionName]({
+            value: this.$ethers.utils.parseEther(this.payableValue),
+            gasPrice: this.$ethers.utils.parseEther('0.000000001')})
         } else {
           response = await this.connectedContract[this.functionName]()
         }

@@ -75,7 +75,7 @@
 </template>
 
 <script>
-import {defineComponent, inject, ref} from 'vue'
+import {defineComponent, inject, provide, ref} from 'vue'
 import LiquidityDisplayDuration from "components/CardDisplays/LiquidityDisplayDuration";
 import {SUPPORTED_FUNDING_TOKENS} from "src/constants";
 import ILOInteractionModal from "components/Modals/ILOInteractionModal";
@@ -92,9 +92,14 @@ export default defineComponent( {
     const viewModal = ref(false)
     const getProvider = inject('$getProvider')
     const currentContrib = ref(0)
+    provide('$currentContrib', currentContrib)
+    const changeCurrentContrib = (val) => {
+      currentContrib.value = val
+    }
+    provide('$changeCurrentContrib', changeCurrentContrib)
     const connectedAccount = inject('$connectedAccounts')
 
-    return {connectedAndPermissioned, viewModal, blockInfo, poolPairABI, currentContrib, connectedAccount, getProvider}
+    return {connectedAndPermissioned, viewModal, blockInfo, poolPairABI, currentContrib, connectedAccount, getProvider, changeCurrentContrib}
   },
   props: {
     liquidityOffering: {
@@ -247,7 +252,7 @@ export default defineComponent( {
     isSelected: async function (value)  {
       console.log('is selected')
       if (value) {
-        this.currentContrib = this.$helper.weiBigNumberToFloatEther(await this.ILOContract.fundingTokenBalanceOfFunder(this.currentAddress))
+        this.changeCurrentContrib(this.$helper.weiBigNumberToFloatEther(await this.ILOContract.fundingTokenBalanceOfFunder(this.currentAddress)))
       }
     }
   }

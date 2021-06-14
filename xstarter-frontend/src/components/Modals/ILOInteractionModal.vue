@@ -58,14 +58,13 @@
         <q-btn outline :disable="!currentShareOfLPTokenBalance" class="btn-less-round" rounded label="Withdraw LP Tokens" @click="toggleWithdrawLPForm" />
       </q-card-actions>
       <q-card-section>
-        <div>
-          <div class="text-center" v-if="ILOProcessStatus < 6">
+        <div v-if="ILOProcessStatus < 6 && ILOStatus === 'ended'">
+          <div class="text-center" >
             ILO Has Ended. To Finalize The ILO, Click and Execute the Buttons Below
           </div>
           <div class="text-center">
-            ILO Has Ended Status is: <span class="text-bold">{{ ILOProcessStatusText }}</span>
+            ILO Status is: <span class="text-bold">{{ ILOProcessStatusText }}</span>
           </div>
-
         </div>
       </q-card-section>
       <q-card-actions v-if="ILOStatus === 'ended'"  align="center">
@@ -98,7 +97,7 @@
 
 <script>
 // todo: https://docs.metamask.io/guide/registering-your-token.html#code-free-example
-import {defineComponent, inject} from "vue";
+import {defineComponent, inject, provide, ref} from "vue";
 import { abiUtils } from "boot/abiGenerator";
 import { ethers } from 'boot/ethers'
 import ABIGeneratedForm from "components/ABIGenerated/ABIGeneratedForm";
@@ -120,7 +119,9 @@ export default defineComponent( {
     const connectedAccount = inject('$connectedAccounts')
     const ethereumProvider = inject('$ethereumProvider')
     const metaMaskAssetAddRequest = inject('$metaMaskAssetAddRequest')
-    return {proposalABI, poolPairABI, getProvider, getSigner, connectedAccount, ethereumProvider, metaMaskAssetAddRequest}
+    const currentContrib = inject('$currentContrib')
+    const changeCurrentContrib = inject('$changeCurrentContrib')
+    return {proposalABI, poolPairABI, getProvider, getSigner, currentContrib, connectedAccount, ethereumProvider, metaMaskAssetAddRequest, changeCurrentContrib}
   },
   data() {
     return {
@@ -129,7 +130,7 @@ export default defineComponent( {
       currentFunctionName: '',
       currentConnectedContract: null,
       balanceChecked: false,
-      currentContrib: 0,
+      // currentContrib: 0,
       currentNativeTokenBalance: null,
       currentProjectTokenBalance: null,
       currentShareOfProjectTokenBalance: null,
@@ -353,7 +354,7 @@ export default defineComponent( {
     },
 
     async refreshBalances() {
-      this.currentContrib = this.$helper.weiBigNumberToFloatEther(await this.ILOContract.fundingTokenBalanceOfFunder(this.currentAddress))
+      this.changeCurrentContrib(this.$helper.weiBigNumberToFloatEther(await this.ILOContract.fundingTokenBalanceOfFunder(this.currentAddress)))
       this.currentNativeTokenBalance = this.$helper.weiBigNumberToFloatEther(await this.getSigner().getBalance())
       if (this.ILOProcessStatus < 6) {
         await this.refreshILOInfo()
