@@ -54,13 +54,14 @@
       <q-card-actions align="center">
         <q-btn :disable="ILOStatus !== 'live'" outline class="btn-less-round" label="Contribute" @click="toggleContributeForm" />
 <!--        <q-btn outline class="btn-less-round" label="Contribute" @click="toggleContributeForm" />-->
+<!--  todo: withdraw tokens should be disabled until unlocked      -->
         <q-btn outline :disable="!currentShareOfProjectTokenBalance" class="btn-less-round" rounded label="Withdraw Project Tokens" @click="toggleWithdrawContributionForm" />
         <q-btn outline :disable="!currentShareOfLPTokenBalance" class="btn-less-round" rounded label="Withdraw LP Tokens" @click="toggleWithdrawLPForm" />
       </q-card-actions>
       <q-card-section>
         <div v-if="ILOProcessStatus < 6 && ILOStatus === 'ended'">
           <div class="text-center" >
-            ILO Has Ended. To Finalize The ILO, Click and Execute the Buttons Below
+            ILO Has Ended. To Finalize The ILO, Click and Execute the Button Below In A 4 step process
           </div>
           <div class="text-center">
             ILO Status is: <span class="text-bold">{{ ILOProcessStatusText }}</span>
@@ -68,10 +69,10 @@
         </div>
       </q-card-section>
       <q-card-actions v-if="ILOStatus === 'ended'"  align="center">
-        <q-btn v-if="ILOProcessStatus  === 2 "  outline rounded label="Validate 1" @click="toggleValidateForm"/>
-        <q-btn v-if="ILOProcessStatus === 3" outline rounded label="Approve Tokens For Liquidity 2" @click="toggleApproveTokensForLiquidityForm"/>
-        <q-btn v-if="ILOProcessStatus === 4" outline rounded label="Create Liquidity Pool 3" @click="toggleCreateLiquidityPoolForm"/>
-        <q-btn v-if="ILOProcessStatus === 5" outline rounded label="Finalize ILO 4" @click="toggleFinalizeILOForm"/>
+        <q-btn v-if="ILOProcessStatus  === 2 "  outline rounded label="Step 1: Validate " @click="toggleValidateForm"/>
+        <q-btn v-if="ILOProcessStatus === 3" outline rounded label="Step 2: Approve Tokens For Liquidity" @click="toggleApproveTokensForLiquidityForm"/>
+        <q-btn v-if="ILOProcessStatus === 4" outline rounded label="Step 3: Create Liquidity Pool" @click="toggleCreateLiquidityPoolForm"/>
+        <q-btn v-if="ILOProcessStatus === 5" outline rounded label="Step 4: Finalize ILO" @click="toggleFinalizeILOForm"/>
       </q-card-actions>
       <div class="row justify-center q-my-xl ">
         <ABIGeneratedForm
@@ -398,9 +399,5 @@ export default defineComponent( {
 </script>
 
 <style lang="scss" scoped>
-
-.btn-less-round {
-  border-radius: 5px;
-}
 
 </style>

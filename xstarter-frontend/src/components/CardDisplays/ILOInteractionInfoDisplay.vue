@@ -183,7 +183,7 @@ export default defineComponent( {
       }else if (this.blockInfo.timestamp >= this.projectTokenTimeLockForContributors) {
         return `Timestamp Unlocked Waiting For Block ${this.projectTokenBlockLockForContributors}`
       }
-      return new Date(this.projectTokenTimeLockForContributors * 1000)
+      return (new Date(this.projectTokenTimeLockForContributors * 1000)).toLocaleString()
     },
     LPTokensLockedDisplay() {
       if (!this.LPTokenBlockLockForContributors) {
@@ -204,7 +204,7 @@ export default defineComponent( {
       }else if (this.blockInfo.timestamp >= this.LPTokenTimeLockForContributors) {
         return `Timestamp Unlocked Waiting For Block ${this.LPTokenBlockLockForContributors}`
       }
-      return new Date(this.LPTokenTimeLockForContributors * 1000)
+      return (new Date(this.LPTokenTimeLockForContributors * 1000)).toLocaleString()
     }
   }
 })

@@ -32,8 +32,8 @@
 <!--      <div v-if="connectedAndPermissioned" class="q-mt-lg">-->
 <!--        <q-btn outline rounded label="Create An Initial Liquidity Offering" />-->
 <!--      </div>-->
-      <div class="text-center q-mt-lg text-uppercase text-negative">
-        TODO: add dropdown that allows changing of chain!!!
+      <div v-if="chainId !== 100" class="text-center q-mt-lg text-uppercase">
+        <q-btn outline rounded label="Switch To xDai Chain to Metamask" @click="addXDai" />
       </div>
 
     </q-card-section>
@@ -41,7 +41,7 @@
 </template>
 
 <script>
-import {defineComponent, inject} from "vue";
+import {defineComponent, inject, provide} from "vue";
 import {ACCEPTED_CHAINS, CHAIN_ID_TO_NAME} from "src/constants";
 
 export default defineComponent( {
@@ -50,10 +50,12 @@ export default defineComponent( {
     const chainId = inject('$chainId')
     const blockInfo = inject('$blockInfo')
     const connectedAndPermissioned = inject('$connectedAndPermissioned',)
+    const metaMaskEthereumChainAddRequest = inject('$metaMaskEthereumChainAddRequest') // function
     return {
       chainId,
       blockInfo,
-      connectedAndPermissioned
+      connectedAndPermissioned,
+      metaMaskEthereumChainAddRequest
     }
   },
   computed: {
@@ -65,6 +67,19 @@ export default defineComponent( {
     },
     currentBlockDate() {
       return new Date(this.blockInfo.timestamp * 1000)
+    }
+  },
+  methods: {
+    async addXDai() {
+      await this.metaMaskEthereumChainAddRequest(
+        '0x64',
+        'xDai',
+        'xDai',
+        'xDai',
+        ['https://rpc.xdaichain.com/', 'https://xdai.poanetwork.dev/', 'https://dai.poa.network/'],
+        ['https://blockscout.com/xdai/mainnet/'],
+        ['']
+      )
     }
   }
 })

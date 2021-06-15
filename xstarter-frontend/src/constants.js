@@ -22,6 +22,10 @@ export const  ACCEPTED_CHAINS = {
   100: true
 }
 
+export const ACCEPTED_CHAINS_CHOICES = [
+  {label: 'xDai', value: 100 }
+]
+
 export const JSON_RPC_ENDPOINT = process.env.PROD ? 'https://rpc.xdaichain.com/' : 'http://127.0.0.1:8545'
 
 export const ILO_STATUS = {

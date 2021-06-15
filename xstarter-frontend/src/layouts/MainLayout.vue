@@ -88,6 +88,7 @@
 // https://docs.metamask.io/guide/getting-started.html#basic-considerations
 // https://docs.metamask.io/guide/ethereum-provider.html#methods
 // https://ethereum.stackexchange.com/questions/97693/what-is-the-correct-way-to-deploy-a-react-app-that-uses-metamask
+// todo: use walletconnect for qr code connecting https://docs.walletconnect.org/quick-start/dapps/web3-provider
 
 import {defineComponent, ref, watch, onMounted, provide, inject} from 'vue'
 import { useQuasar } from 'quasar'
@@ -182,6 +183,43 @@ export default defineComponent({
 
     }
     provide('$metaMaskAssetAddRequest', metaMaskAssetAddRequest)
+
+    const metaMaskEthereumChainAddRequest = async (
+      chainId,
+      chainName,
+      currencyName,
+      currencySymbol,
+      rpcArray,
+      blockExplorerArray,
+      iconUrlArray,
+    ) => {
+      try {
+        const wasAdded = await ethereumProvider.value.request({
+          method: 'wallet_addEthereumChain',
+          params: [{
+            chainId: chainId, // A 0x-prefixed hexadecimal string
+            chainName: chainName,
+            nativeCurrency: {
+              name: currencyName,
+              symbol: currencySymbol, // 2-6 characters long
+              decimals: 18,
+            },
+            rpcUrls: rpcArray,
+            blockExplorerUrls: blockExplorerArray,
+            iconUrls: iconUrlArray, // Currently ignored.
+          }],
+        })
+
+        if (wasAdded) {
+          console.log('chain was added');
+        } else {
+          console.log('chain not added');
+        }
+      }catch (error) {
+        console.log(error);
+      }
+    }
+    provide('$metaMaskEthereumChainAddRequest', metaMaskEthereumChainAddRequest)
     const connectUsingWebProvider = async (accountsChanged = null) => {
       if (metamaskInstalled.value) {
         console.log('meta mask installed')
@@ -312,6 +350,7 @@ export default defineComponent({
       getSigner,
       getLaunchPadContract,
       connectUsingJsonRPCProvider,
+      metaMaskEthereumChainAddRequest,
       metamaskInstalled,
       ethereumProvider,
       connectedAccounts,

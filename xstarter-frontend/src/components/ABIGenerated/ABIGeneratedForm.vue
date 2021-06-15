@@ -133,9 +133,12 @@ export default defineComponent( {
           console.log("calling nonce", nonce)
           response = await this.connectedContract[this.functionName]({
             value: this.$ethers.utils.parseEther(this.payableValue),
-            gasPrice: this.$ethers.utils.parseEther('0.000000001')})
+            gasPrice: this.$ethers.utils.parseEther('0.000000001')
+          })
         } else {
-          response = await this.connectedContract[this.functionName]()
+          response = await this.connectedContract[this.functionName]( {
+            gasPrice: this.$ethers.utils.parseEther('0.000000001') // 1 gwei
+          })
         }
         let tx = await response.wait()
         console.log('tx is', tx)
