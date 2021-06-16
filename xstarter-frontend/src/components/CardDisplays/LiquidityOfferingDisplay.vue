@@ -200,6 +200,9 @@ export default defineComponent( {
       // use block timestamp
       const now = this.blockInfo.timestamp * 1000
       console.log('now in status is', now, this.startTimestamp)
+      if (this.amtRaisedProgress >= 1) {
+        return `ended`
+      }
       if (this.startTimestamp === 0) {
         return 'tbd'
       }
