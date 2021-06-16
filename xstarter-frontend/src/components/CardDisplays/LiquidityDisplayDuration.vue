@@ -1,7 +1,7 @@
 <template>
   <div  v-if="offeringStatus === 'starting'" class="q-gutter-y-md">
     <div class="display-card-duration-container display-card-duration-container__ended display-card-duration-text"> Duration {{ durationDisplay }}</div>
-    <div class="display-card-duration-container display-card-duration-text"> Starts in {{ startsInDisplay }}</div>
+    <div class="display-card-duration-container display-card-duration-text">{{ startsInDisplay.toLowerCase() === 'soon' ? 'Starting Soon' : 'Starts in' }}  {{ startsInDisplay }}</div>
   </div>
   <div v-else-if="offeringStatus === 'live'" class="q-gutter-y-sm">
     <div class="display-card-duration-container display-card-duration-container__succeed display-card-duration-text display-card-duration-text__succeed row">
@@ -58,6 +58,9 @@ export default defineComponent({
       let unit = 'minutes'
       let duration = date.getDateDiff(new Date(greaterDate), new Date(lesserDate), unit)
       // if less than 60 minutes then return else display in hours
+      if (duration <= 1) {
+        return 'Soon'
+      }
       if (duration <= 60) {
         return `${duration} ${unit}`
       }

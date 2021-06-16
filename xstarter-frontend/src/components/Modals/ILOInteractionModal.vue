@@ -86,6 +86,7 @@
           :close-btn-callback="currentCloseCallBack"
           :input-styling="{class: 'q-pl-sm', style: 'border: 2px Solid; border-radius: 10px;'}"
           :key="formKey"
+          :default-values="formDefaultValues"
         />
       </div>
 
@@ -104,6 +105,7 @@ import { ethers } from 'boot/ethers'
 import ABIGeneratedForm from "components/ABIGenerated/ABIGeneratedForm";
 import xStarterProposalCode from 'src/artifacts/contracts/xStarterProposal.sol/xStarterProposal.json'
 import xStarterPoolPairCode from 'src/artifacts/contracts/xStarterPoolPairB.sol/xStarterPoolPairB.json'
+import ERC20Code from 'src/artifacts/contracts/xStarterPoolPairB.sol/ProjectBaseToken.json'
 import ILOInteractionInfoDisplay from "components/CardDisplays/ILOInteractionInfoDisplay";
 import {ILO_STATUS} from "src/constants";
 
@@ -115,6 +117,7 @@ export default defineComponent( {
   setup() {
     const proposalABI = xStarterProposalCode.abi
     const poolPairABI = xStarterPoolPairCode.abi
+    const ERC20ABI = ERC20Code.abi
     const getProvider = inject('$getProvider')
     const getSigner = inject('$getSigner')
     const connectedAccount = inject('$connectedAccounts')
@@ -122,7 +125,7 @@ export default defineComponent( {
     const metaMaskAssetAddRequest = inject('$metaMaskAssetAddRequest')
     const currentContrib = inject('$currentContrib')
     const changeCurrentContrib = inject('$changeCurrentContrib')
-    return {proposalABI, poolPairABI, getProvider, getSigner, currentContrib, connectedAccount, ethereumProvider, metaMaskAssetAddRequest, changeCurrentContrib}
+    return {proposalABI, poolPairABI, ERC20ABI, getProvider, getSigner, currentContrib, connectedAccount, ethereumProvider, metaMaskAssetAddRequest, changeCurrentContrib}
   },
   data() {
     return {
@@ -142,6 +145,7 @@ export default defineComponent( {
       formType: null,
       updatedILO: null,
       timeLocks: null,
+      formDefaultValues: {},
       formKey: 0
     }
   },
@@ -217,6 +221,14 @@ export default defineComponent( {
       console.log('signeer for provider is', this.getProvider(),this.getSigner(), this.getSigner().getAddress(), this.connectedAccount[0])
       return new ethers.Contract(this.ILOInfo.ILOAddress, this.poolPairABI, this.getProvider());
     },
+    ERC20FundingContract() {
+      console.log('signeer for provider is', this.getProvider(),this.getSigner(), this.getSigner().getAddress(), this.connectedAccount[0])
+      if (this.ILOInfo.fundingToken !== this.$ethers.constants.AddressZero) {
+        return new ethers.Contract(this.ILOInfo.fundingToken, this.ERC20ABI, this.getProvider());
+      }
+      return null
+
+    },
     ILOProposalContract() {
       return new ethers.Contract(this.proposalAddress, this.proposalABI, this.getProvider());
     },
@@ -245,6 +257,21 @@ export default defineComponent( {
 
       if (this.ILOInfo.fundingToken === this.$ethers.constants.AddressZero) {
         // native token so no need to create allowance in funding token
+        this.toggleContributeNativeForm()
+      } else {
+        this.toggleContributeERC20()
+      }
+      this.formKey++
+
+    },
+    toggleContributeNativeForm() {
+      if (this.formType === 'contribute') {
+        this.clearForm()
+        return
+      }
+
+      if (this.ILOInfo.fundingToken === this.$ethers.constants.AddressZero) {
+        // native token so no need to create allowance in funding token
         this.currentABI = this.poolPairABI
         this.formTitle.name = 'Contribute To ILO'
         this.currentFunctionName = 'contributeNativeToken'
@@ -258,6 +285,69 @@ export default defineComponent( {
       this.formKey++
 
     },
+
+    toggleContributeERC20() {
+      if (this.formType === 'contribute') {
+        this.clearForm()
+        return
+      }
+
+      if (this.ILOInfo.fundingToken !== this.$ethers.constants.AddressZero) {
+        // native token so no need to create allowance in funding token
+        this.toggleApproveFundingERC20()
+      }
+
+    },
+    // step 1
+    toggleApproveFundingERC20() {
+      if (this.formType === 'approveFundingToken') {
+        this.clearForm()
+        return
+      }
+
+      // TODO: check if there's already approval of tokens then call this.toggleContributeFundingToken
+      // TODO: also have the ability to change Approval
+
+      if (this.ILOInfo.fundingToken !== this.$ethers.constants.AddressZero) {
+        // native token so no need to create allowance in funding token
+        this.currentABI = this.ERC20ABI
+        this.formTitle.name = 'Contribute To ILO: Approve Amount Of Tokens To Contribute'
+        this.currentFunctionName = 'approve'
+        this.formType = 'approveFundingToken'
+        this.currentConnectedContract = this.ERC20FundingContract.connect(this.getSigner())
+        this.currentSuccessCallback = this.toggleContributeFundingToken
+        this.currentCloseCallBack = this.toggleApproveFundingERC20
+        this.formDefaultValues = {
+          spender: {defaultValue: this.ILOInfo.ILOAddress, readOnly: true},
+        }
+      }
+      this.formKey++
+
+    },
+    // step 2
+    toggleContributeFundingToken() {
+      if (this.formType === 'contributeFunding') {
+        this.clearForm()
+        return
+      }
+
+      if (this.ILOInfo.fundingToken !== this.$ethers.constants.AddressZero) {
+        // native token so no need to create allowance in funding token
+        this.currentABI = this.poolPairABI
+        this.formTitle.name = 'Contribute To ILO: Execute To Deposit Previously Approved Tokens'
+        this.currentFunctionName = 'contributeFundingToken'
+        this.formType = 'contributeFunding'
+        this.currentConnectedContract = this.ILOContract.connect(this.getSigner())
+        this.currentSuccessCallback = this.refreshBalances
+        this.currentCloseCallBack = this.toggleContributeFundingToken
+      } else {
+        console.log('funding token is not native must call allowance')
+      }
+      this.formKey++
+
+    },
+
+
     toggleValidateForm() {
       if (this.formType === 'validateILO') {
         this.clearForm()

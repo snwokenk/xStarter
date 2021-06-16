@@ -5,8 +5,8 @@
     </div>
 
     <div class="full-width q-gutter-y-md">
-      <div v-for="(obj, ind) in funcABI.inputs" :key="ind" >
-        <q-input v-model="formFields[obj.name]" :label="!displayNames[obj.name] ? obj.name : displayNames[obj.name]"  />
+      <div v-for="(obj, ind) in funcInputs" :key="ind" >
+        <q-input :readonly="readOnlyObjs[obj.name]" :class="inputStyling.class" :style="inputStyling.style" v-model="formFields[obj.name]" :label="!displayNames[obj.name] ? obj.name : displayNames[obj.name]"  />
       </div>
       <div>
         <div v-if="errorMessage" class="text-negative">
@@ -62,7 +62,10 @@ export default defineComponent( {
       successMessage: '',
       waitingOnTx: false,
       payableValue: '',
-      funcABI: {inputs: [], stateMutability: ''}
+      funcABI: {inputs: [], stateMutability: ''},
+      funcInputs: [],
+      readOnlyObjs: {}, // value: bool
+      hideObjs: {}
     }
   },
   props: {
@@ -91,6 +94,11 @@ export default defineComponent( {
     displayNames: {
       type: Object,
       default: () => {return {}}  // {functionParameter: 'Display names'}
+    },
+
+    defaultValues: {
+      type: Object,
+      default: () => {return {}}  // {functionParameter: {defaultValue: value, readOnly: bool, show: bool}
     },
     connectedContract: {
       type: Object,
@@ -123,20 +131,34 @@ export default defineComponent( {
     callAfterExecute() {
       this.waitingOnTx = false
     },
+    convertFieldToEther() {
+      // todo: have a way of deciding which to use
+      const fieldsForm = {...this.formFields}
+      if (this.formFields.value) {
+        fieldsForm.value = this.$ethers.utils.parseEther(this.formFields.value)
+      }
+      return fieldsForm
+    },
     async execute() {
       this.callBeforeExecute()
       let response;
       try {
+        // to convert field sto ether
+        const formFields = this.convertFieldToEther()
         if (this.funcABI.stateMutability === 'payable' && this.payableValue){
 
           let nonce = Date.now()
           console.log("calling nonce", nonce)
-          response = await this.connectedContract[this.functionName]({
+          response = await this.connectedContract[this.functionName](
+            ...Object.values(formFields),
+            {
             value: this.$ethers.utils.parseEther(this.payableValue),
             gasPrice: this.$ethers.utils.parseEther('0.000000001')
           })
         } else {
-          response = await this.connectedContract[this.functionName]( {
+          console.log('formfields', formFields)
+
+          response = await this.connectedContract[this.functionName]( ...Object.values(formFields),{
             gasPrice: this.$ethers.utils.parseEther('0.000000001') // 1 gwei
           })
         }
@@ -168,6 +190,23 @@ export default defineComponent( {
     }
 
     console.log('func abi', funcABI)
+  },
+  watch: {
+    funcABI: async function(val)  {
+      // Add Defaults
+      // {functionParameter: {defaultValue: value, readOnly: bool, hide: bool
+      this.funcInputs = val.inputs
+      console.log('defaultVaue is', this.defaultValues)
+      for (const inputObj of val.inputs) {
+        this.formFields[inputObj.name] = ''
+        const defaultObj = this.defaultValues[inputObj.name]
+        if (defaultObj) {
+          this.formFields[inputObj.name] = !!defaultObj.defaultValue ? defaultObj.defaultValue : ''
+          this.readOnlyObjs[inputObj.name] = !!defaultObj.readOnly
+          this.hideObjs[inputObj.name] = !!defaultObj.hide
+        }
+      }
+    }
   }
 } )
 </script>

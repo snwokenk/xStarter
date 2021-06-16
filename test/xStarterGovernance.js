@@ -663,7 +663,7 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
     let projectTokenFactory;
     let fundingTokenInst;
     let initialStartTime = 60
-    let initialEndTime = 300;
+    let initialEndTime = 7200;
 
 
     // // quickswap
@@ -855,7 +855,7 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
                 utils.parseEther('0.10'),
                 utils.parseEther('1'),
                 utils.parseEther('1'),
-                utils.parseEther('2'),
+                utils.parseEther('4'),
                 20
                 )).wait()
 
