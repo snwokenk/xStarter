@@ -9,6 +9,8 @@ interface iXstarterProposal {
     function setTokenAndLPAddr(address projectToken_, address liqPairAddr_) external returns(bool);
      function getTokenAndLPAddr() external view returns(address, address);
     function setAmountRaised(uint amountRaised_) external returns(bool);
+    function getILOInfo1() external view returns(ILOProposal memory);
+    function getILOInfo2() external view returns(ILOAdditionalInfo memory);
     function getILOInfo() external view returns(ILOProposal memory, ILOAdditionalInfo memory);
     function getCompactInfo() external view returns(CompactInfo memory);
     function isDeployed() external view returns(bool);

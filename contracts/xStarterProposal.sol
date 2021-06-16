@@ -80,6 +80,12 @@ contract xStarterProposal {
     function getLaunchpadAddress() external  view returns(address) {
         return _xStarterLaunchpad;
     }
+    function getILOInfo1() external view returns(ILOProposal memory) {
+        return _i;
+    }
+    function getILOInfo2() external view returns(ILOAdditionalInfo memory) {
+        return _a;
+    }
     function getILOInfo() external view returns(ILOProposal memory, ILOAdditionalInfo memory) {
         return (_i, _a);
     }

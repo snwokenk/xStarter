@@ -1,4 +1,4 @@
-const { ALCHEMYURL, XDAIURL, XDAIURL2, XDAIBLOCKSCOUTARCHIVE, mnemonicTest } = require('./ignored_constants');
+const { ALCHEMYURL, XDAIURL, XDAIURL2,  XDAIBLOCKSCOUTARCHIVE, mnemonicTest } = require('./ignored_constants');
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
