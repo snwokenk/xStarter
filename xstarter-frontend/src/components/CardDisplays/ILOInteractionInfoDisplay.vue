@@ -13,7 +13,7 @@
         <div class="col-12 text-center text-uppercase text-bold text-h6">Wallet Info</div>
         <div  class="row col-12 col-lg-6 text-left">
           <div class="col-12">Your Current Wallet Address:</div>
-          <div class="col-12 segoe-bold text-positive">{{ connectedAccount[0] }}</div>
+          <div class="col-12 segoe-bold text-positive text-address-font-size">{{ connectedAccount[0] }}</div>
         </div>
 
         <div  class="col-12 row col-lg-6 text-left">

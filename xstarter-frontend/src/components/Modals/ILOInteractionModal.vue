@@ -16,7 +16,8 @@
       </q-bar>
 
 <!--  TITLE    -->
-      <q-card-section class="row" style="font-size: 20px;">
+      <!--   TODO: adjust font size for mobile   -->
+      <q-card-section class="row modal-header-font">
         <div class="text-center col-12 segoe-bold">
           Interacting With: &nbsp; {{ ILOName }} Initial Liquidity Offering
         </div>

@@ -253,3 +253,18 @@ body.body--light {
 .btn-less-round {
   border-radius: 5px;
 }
+
+@media (max-width: $mobile-width2) {
+  .modal-header-font {
+    font-size: 13px;
+  }
+  .text-address-font-size {
+    font-size: 13px !important;
+  }
+}
+
+@media (min-width: $mobile-width2) {
+  .modal-header-font {
+    font-size: 20px;
+  }
+}

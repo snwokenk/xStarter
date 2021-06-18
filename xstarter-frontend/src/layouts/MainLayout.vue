@@ -12,6 +12,16 @@
         </q-toolbar-title>
         <div class="q-gutter-x-sm">
 
+<!--          <q-btn-->
+<!--            rounded-->
+<!--            outline-->
+<!--            size="md"-->
+<!--            :label="connectBtnLabel"-->
+<!--            :icon="metamaskInstalled ? undefined : 'error_outline'"-->
+<!--            :color="metamaskInstalled ? darkLightText: 'negative'"-->
+<!--            :disable="!metamaskInstalled"-->
+<!--            @click="connectEthereum"-->
+<!--          />-->
           <q-btn
             rounded
             outline
@@ -20,7 +30,7 @@
             :icon="metamaskInstalled ? undefined : 'error_outline'"
             :color="metamaskInstalled ? darkLightText: 'negative'"
             :disable="!metamaskInstalled"
-            @click="connectEthereum"
+            @click="showWalletConnectModal = !showWalletConnectModal"
           />
 
 
@@ -79,6 +89,7 @@
 
       </q-toolbar>
     </q-footer>
+    <WalletConnectModal v-if="!connectedAndPermissioned" v-model="showWalletConnectModal" />
 
   </q-layout>
 </template>
@@ -99,13 +110,14 @@ import {ILO_ADDRESS, JSON_RPC_ENDPOINT, LAUNCHPAD_ADDRESS} from "src/constants";
 // import data from 'src/artifacts/contracts/xStarterPoolPairB.sol/xStarterPoolPairB.json';
 import launchpadCode from 'src/artifacts/contracts/xStarterLaunchPad.sol/xStarterLaunchPad.json';
 import xStarterProposalCode from 'src/artifacts/contracts/xStarterLaunchPad.sol/xStarterLaunchPad.json'
+import WalletConnectModal from "components/Modals/WalletConnectModal";
 
 
 
 export default defineComponent({
   name: 'MainLayout',
 
-  components: {},
+  components: {WalletConnectModal},
 
   setup () {
     const $q = useQuasar()
@@ -128,6 +140,7 @@ export default defineComponent({
     let blockInfo = ref({timestamp: 0, blockNumber: 0})
     provide('$blockInfo', blockInfo)
     const metamaskInstalled = ref(false)
+    provide('$metamaskInstalled', metamaskInstalled)
     const connectedAccounts = ref([])
     provide('$connectedAccounts', connectedAccounts)
     const connectedAndPermissioned = ref(Boolean(metamaskInstalled.value && connectedAccounts.value.length > 0))
@@ -312,6 +325,8 @@ export default defineComponent({
       }
 
     }
+
+    provide('$connectEthereum', connectEthereum)
     const getProvider = () => {
       return provider
     }
@@ -363,6 +378,7 @@ export default defineComponent({
   },
   data() {
     return {
+      showWalletConnectModal: false,
     }
   },
   computed: {
