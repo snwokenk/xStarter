@@ -16,7 +16,6 @@
       </q-bar>
 
 <!--  TITLE    -->
-      <!--   TODO: adjust font size for mobile   -->
       <q-card-section class="row modal-header-font">
         <div class="text-center col-12 segoe-bold">
           Interacting With: &nbsp; {{ ILOName }} Initial Liquidity Offering
@@ -58,6 +57,7 @@
 <!--  todo: withdraw tokens should be disabled until unlocked      -->
         <q-btn outline :disable="!currentShareOfProjectTokenBalance" class="btn-less-round" rounded label="Withdraw Project Tokens" @click="toggleWithdrawContributionForm" />
         <q-btn outline :disable="!currentShareOfLPTokenBalance" class="btn-less-round" rounded label="Withdraw LP Tokens" @click="toggleWithdrawLPForm" />
+        <q-btn outline v-if="currentShareOfProjectTokenBalance || projectTokenBalanceOnERC20" class="btn-less-round" rounded label="Add Project Token To Wallet" @click="suggestToAddProjectToken"/>
       </q-card-actions>
       <q-card-section>
         <div v-if="ILOProcessStatus < 6 && ILOStatus === 'ended'">
@@ -139,6 +139,7 @@ export default defineComponent( {
       currentNativeTokenBalance: null,
       currentProjectTokenBalance: null,
       currentShareOfProjectTokenBalance: null,
+      projectTokenBalanceOnERC20: 0,
       currentShareOfLPTokenBalance: null,
       currentABI: null,
       currentSuccessCallback: null,
@@ -226,6 +227,14 @@ export default defineComponent( {
       console.log('signeer for provider is', this.getProvider(),this.getSigner(), this.getSigner().getAddress(), this.connectedAccount[0])
       if (this.ILOInfo.fundingToken !== this.$ethers.constants.AddressZero) {
         return new ethers.Contract(this.ILOInfo.fundingToken, this.ERC20ABI, this.getProvider());
+      }
+      return null
+
+    },
+    ERC20ProjectContract() {
+      console.log('signeer for provider is', this.getProvider(),this.getSigner(), this.getSigner().getAddress(), this.connectedAccount[0])
+      if (this.ILOMoreInfo.projectToken !== this.$ethers.constants.AddressZero) {
+        return new ethers.Contract(this.ILOMoreInfo.projectToken, this.ERC20ABI, this.getProvider());
       }
       return null
 
@@ -461,11 +470,15 @@ export default defineComponent( {
         this.currentShareOfLPTokenBalance = this.$helper.weiBigNumberToFloatEther(await this.ILOContract.projectLPTokenBalanceOfFunder(this.currentAddress))
       }
 
+      if (this.ILOProcessStatus >= 5 && this.ERC20ProjectContract) {
+        this.projectTokenBalanceOnERC20 = this.$helper.weiBigNumberToFloatEther(await this.ERC20ProjectContract.balanceOf(this.currentAddress))
+      }
+
     },
     async refreshILOInfo() {
       this.updatedILO = await this.ILOProposalContract.getCompactInfo()
     },
-    async suggestToAddTokenAndILO() {
+    async suggestToAddProjectToken() {
       if (this.currentShareOfProjectTokenBalance > 0) {
         await this.metaMaskAssetAddRequest(this.ILOMoreInfo.projectToken, this.ILOInfo.tokenSymbol, '')
       }
