@@ -39,3 +39,24 @@ export const ILO_STATUS = {
   5: 'ILO LIQUIDITY PAIR CREATED',
   6: 'ILO FINALIZED: LIQUIDITY POOL CREATED AND TIME LOCKS SET'
 }
+
+
+export const xStarter_ILO_Info = {
+  about: {
+    name: 'xStarter',
+    description: `xStarter is an ecosystem of smart contracts, that provides a decentralized way for businesses, of all sizes, to issue tokens and create a market for those tokens.`,
+    socialMediaLinks: [
+      {label: 'telegram', url: 'https://t.me/xStarterDev', icon: 'fab fa-telegram-plane' },
+      {label: 'twitter', url: 'https://www.twitter.com/xStarterdev', icon: 'fab fa-twitter' },
+      {label: 'discord', url: 'https://discord.com/invite/9rQCAkNy4e', icon: 'fab fa-discord' },
+      {label: 'facebook', url: '', icon: 'fab fa-facebook'},
+      {label: 'medium', url: 'https://medium.com/@xstarterdev', icon: 'fab fa-medium'},
+    ]
+    },
+  ILOInfo: {
+    access: 'Open to public',
+  },
+  tokenomics: 'xStarter tokens are used for governance and early access of ILOs launched on the xStarter Platform. xStarter tokens can also be used as a funding token for ILOs.'
+}
+
+export const xStarter_ILO_IPFS_CID = 'QmbesxZ1QQyWksXgLf6MY8okvzpcUFsFybdiSHtmKmahcX'

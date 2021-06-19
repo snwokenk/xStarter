@@ -25,7 +25,8 @@ module.exports = configure(function (ctx) {
       'i18n',
       'axios',
       'ethers',
-      'abiGenerator'
+      'abiGenerator',
+      'ipfs_utils'
     ],
 
     // https://v2.quasar.dev/quasar-cli/quasar-conf-js#Property%3A-css
@@ -50,6 +51,10 @@ module.exports = configure(function (ctx) {
     // Full list of options: https://v2.quasar.dev/quasar-cli/quasar-conf-js#Property%3A-build
     build: {
       vueRouterMode: 'hash', // available values: 'hash', 'history'
+      env: {
+        NODE_DEBUG: ctx.DEBUGGING,
+        DUMP_SESSION_KEYS: ctx.DEBUGGING
+      },
 
       // transpile: false,
 

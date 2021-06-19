@@ -165,6 +165,12 @@ export default defineComponent({
         if (launchPadContract) {
           launchPadLoaded.value = true
         }
+
+        provider.on("block", async (blockNumber) => {
+          console.log('received block event')
+          const block = await  provider.getBlock()
+          blockInfo.value = {timestamp: block.timestamp, blockNumber: blockNumber}
+        })
         // chainId.value = (await provider.getNetwork())['chainId']
       }
 
@@ -431,6 +437,8 @@ export default defineComponent({
   },
   mounted() {
     console.log('get provider', this.getProvider())
+    // console.log('process env', process.env)
+    // console.log('ipfs utils', this.$ipfs_utils.addILOAbout('xStarter', 'xStarter is a ', {facebook: 'httpsskfd'}))
   }
 })
 </script>

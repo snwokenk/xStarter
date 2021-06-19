@@ -6,7 +6,13 @@
           <div v-if="chainId" class="full-width">
             You're connected to <span class="text-bold" :class="{'text-positive': acceptedChain, 'text-negative': !acceptedChain}">{{ chainIdName }}</span>
           </div>
-          <div v-if="!acceptedChain" class="text-warning text-center full-width">
+          <div v-if="!metamaskInstalled" class="text-warning text-center full-width">
+            Please Install Metamask
+          </div>
+          <div v-else-if="!connectedAndPermissioned" class="text-warning text-center full-width">
+            Click the Connect Button to connect your Metamask wallet to xStarter
+          </div>
+          <div v-else-if="!acceptedChain" class="text-warning text-center full-width">
             Please connect to the xDai Layer 2 chain on metamask
           </div>
         </div>
@@ -32,7 +38,7 @@
 <!--      <div v-if="connectedAndPermissioned" class="q-mt-lg">-->
 <!--        <q-btn outline rounded label="Create An Initial Liquidity Offering" />-->
 <!--      </div>-->
-      <div v-if="chainId !== 100" class="text-center q-mt-lg text-uppercase">
+      <div v-if="chainId !== 100 && connectedAndPermissioned" class="text-center q-mt-lg text-uppercase">
         <q-btn outline rounded label="Switch To xDai Chain to Metamask" @click="addXDai" />
       </div>
 
@@ -51,8 +57,10 @@ export default defineComponent( {
     const blockInfo = inject('$blockInfo')
     const connectedAndPermissioned = inject('$connectedAndPermissioned',)
     const metaMaskEthereumChainAddRequest = inject('$metaMaskEthereumChainAddRequest') // function
+    const metamaskInstalled = inject('$metamaskInstalled')
     return {
       chainId,
+      metamaskInstalled,
       blockInfo,
       connectedAndPermissioned,
       metaMaskEthereumChainAddRequest

@@ -254,7 +254,7 @@ export default defineComponent( {
   watch: {
     isSelected: async function (value)  {
       console.log('is selected')
-      if (value) {
+      if (value && this.currentAddress) {
         this.changeCurrentContrib(this.$helper.weiBigNumberToFloatEther(await this.ILOContract.fundingTokenBalanceOfFunder(this.currentAddress)))
       }
     }

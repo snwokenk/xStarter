@@ -108,7 +108,7 @@ import xStarterProposalCode from 'src/artifacts/contracts/xStarterProposal.sol/x
 import xStarterPoolPairCode from 'src/artifacts/contracts/xStarterPoolPairB.sol/xStarterPoolPairB.json'
 import ERC20Code from 'src/artifacts/contracts/xStarterPoolPairB.sol/ProjectBaseToken.json'
 import ILOInteractionInfoDisplay from "components/CardDisplays/ILOInteractionInfoDisplay";
-import {ILO_STATUS} from "src/constants";
+import {ILO_STATUS, xStarter_ILO_Info, xStarter_ILO_IPFS_CID} from "src/constants";
 
 
 
@@ -490,6 +490,8 @@ export default defineComponent( {
     }
   },
   async mounted() {
+    // console.log('ipfs utils', this.$ipfs_utils.saveILOInfo(xStarter_ILO_Info))
+    console.log('ipfs utils getILO info', this.$ipfs_utils.getILOInfo(xStarter_ILO_IPFS_CID))
     await this.refreshBalances()
     await this.getTimeLocks()
     console.log('ilo status is', this.ILOStatus, this.ILOProcessStatus)
