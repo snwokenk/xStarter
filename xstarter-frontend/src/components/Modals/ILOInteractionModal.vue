@@ -491,7 +491,7 @@ export default defineComponent( {
   },
   async mounted() {
     // console.log('ipfs utils', this.$ipfs_utils.saveILOInfo(xStarter_ILO_Info))
-    console.log('ipfs utils getILO info', this.$ipfs_utils.getILOInfo(xStarter_ILO_IPFS_CID))
+    // console.log('ipfs utils getILO info', this.$ipfs_utils.getILOInfo(xStarter_ILO_IPFS_CID))
     await this.refreshBalances()
     await this.getTimeLocks()
     console.log('ilo status is', this.ILOStatus, this.ILOProcessStatus)

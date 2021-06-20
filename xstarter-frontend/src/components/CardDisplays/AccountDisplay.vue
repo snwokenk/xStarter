@@ -41,6 +41,9 @@
       <div v-if="chainId !== 100 && connectedAndPermissioned" class="text-center q-mt-lg text-uppercase">
         <q-btn outline rounded label="Switch To xDai Chain to Metamask" @click="addXDai" />
       </div>
+      <div v-if="chainId !== 77 && connectedAndPermissioned" class="text-center q-mt-lg text-uppercase">
+        <q-btn outline rounded label="Switch To SPOA TEST network to Metamask" @click="addSPOATest" />
+      </div>
 
     </q-card-section>
   </q-card>
@@ -86,6 +89,17 @@ export default defineComponent( {
         'xDai',
         ['https://rpc.xdaichain.com/', 'https://xdai.poanetwork.dev/', 'https://dai.poa.network/'],
         ['https://blockscout.com/xdai/mainnet/'],
+        ['']
+      )
+    },
+    async addSPOATest() {
+      await this.metaMaskEthereumChainAddRequest(
+        '0x4D',
+        'SPOA',
+        'SPOA',
+        'SPOA',
+        ['https://sokol.poa.network'],
+        ['https://blockscout.com/poa/sokol'],
         ['']
       )
     }

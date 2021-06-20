@@ -8,12 +8,25 @@
         :key="index"
         class="ILODisplayCard col-11 col-lg-5"
         :liquidity-offering="listOfLiquidityOffering"
-        :view-more-call-back="() => { changeSelectedILO(obj) }"
+        :view-more-call-back="(infoObj) => {
+          changeSelectedInfoData(infoObj);
+          changeSelectedILO(obj);
+
+        }"
       />
     </div>
 
     <div>
-      <ILOAdditionalInfoDisplay v-if="selectedILO" class="q-mt-md q-mb-lg" :backBtnHandler="() => { changeSelectedILO(selectedILO) }"  :selectedILO="selectedILO" />
+      <ILOAdditionalInfoDisplay
+        v-if="selectedILO"
+        class="q-mt-md q-mb-lg"
+        :backBtnHandler="() => {
+          changeSelectedInfoData(null)
+          changeSelectedILO(selectedILO)
+        }"
+        :selectedILO="selectedILO"
+        :info-data="selectedInfoData"
+      />
     </div>
   </div>
 
@@ -63,7 +76,8 @@ export default defineComponent( {
       ILOs: [],
       noOfILOs: 0,
       initialCheck: false,
-      selectedILO: null
+      selectedILO: null,
+      selectedInfoData: null,
     }
   },
   computed: {
@@ -81,6 +95,9 @@ export default defineComponent( {
   methods: {
     checkIt() {
       console.log('provider', this.getProvider())
+    },
+    changeSelectedInfoData(infoData) {
+      this.selectedInfoData = infoData
     },
     changeSelectedILO(ILOObj) {
       // if no selected ILO, then set to ILO obj, else set to null

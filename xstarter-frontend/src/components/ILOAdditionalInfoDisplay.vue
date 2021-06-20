@@ -25,9 +25,10 @@
             </div>
 
             <div class="col-11 segoe-regular q-mt-lg">
-              Circa 2021, xStarter is a Decentralized Ecosystem of Smart Contracts provided for
-              businesses world wide that are seeking to launch and maintain their
-              own crypto utility token.
+<!--              Circa 2021, xStarter is a Decentralized Ecosystem of Smart Contracts provided for-->
+<!--              businesses world wide that are seeking to launch and maintain their-->
+<!--              own crypto utility token.-->
+              {{ ILODescription }}
             </div>
 
             <div class="row col-11 q-mt-md">
@@ -57,7 +58,7 @@
               </div>
               <div class="col-auto">
                 <div class="segoe-bold info-text">
-                  Early Access For XSTN Holders / Open To Public
+                  {{ ILOAccess }}
                 </div>
                 <div class="segoe-regular info-label">
                   Access
@@ -284,8 +285,9 @@
                   Token Use Cases
                 </div>
                 <div class="segoe-regular info-text q-mt-md">
-                  xStarter tokens are used for governance and early access of ILOs launched on the xStarter Platform.
-                  xStarter tokens can also be used as a funding token for ILOs.
+<!--                  xStarter tokens are used for governance and early access of ILOs launched on the xStarter Platform.-->
+<!--                  xStarter tokens can also be used as a funding token for ILOs.-->
+                  {{ ILOUseCase }}
                 </div>
               </div>
             </div>
@@ -315,11 +317,16 @@ export default defineComponent( {
     backBtnHandler: {
       type: Function,
       required: true
+    },
+    infoData: {
+      type: Object,
+      required: true
     }
   },
   data() {
     return {
-      tab: 'about'
+      tab: 'about',
+
     }
   },
   computed: {
@@ -374,13 +381,41 @@ export default defineComponent( {
     listingPremium() {
       // percentTokensForTeam not greater than 20 or 20%
       return (this.percentOfFundingTokenForLiqudity * 2 ) - 100
+    },
+    ILODescription() {
+      if (this.infoData && this.infoData.about) {
+        return this.infoData.about.description ? this.infoData.about.description : ''
+      }
+      return ''
+    },
+    ILOAccess() {
+      if (this.infoData && this.infoData.ILOInfo) {
+        return this.infoData.ILOInfo.access ? this.infoData.ILOInfo.access : ''
+      }
+      return ''
+    },
+
+    ILOUseCase() {
+      if (this.infoData && this.infoData.tokenomics) {
+        return this.infoData.tokenomics.useCase ? this.infoData.tokenomics.useCase : ''
+      }
+      return ''
     }
+
+    // infoData() {
+    //   if (this.ILOInfo) {
+    //     console.log('iloinfo is', this.ILOInfo.infoURL)
+    //     return this.$ipfs_utils.getILOInfo(this.ILOInfo.infoURL)
+    //   }
+    //   return {}
+    // }
   },
   methods: {
 
   },
 
-  mounted() {
+
+  async mounted() {
     // handle back btn
     window.onpopstate = (event) => {
       window.onpopstate = null
@@ -388,6 +423,8 @@ export default defineComponent( {
       this.backBtnHandler()
 
     }
+    // console.log('info CID', this.ILOInfo.infoURL, this.ILOInfo)
+
   }
 })
 </script>

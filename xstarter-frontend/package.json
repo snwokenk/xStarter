@@ -12,6 +12,7 @@
   "dependencies": {
     "@metamask/detect-provider": "^1.2.0",
     "@quasar/extras": "^1.0.0",
+    "@quasar/icongenie": "^2.4.0",
     "axios": "^0.21.1",
     "core-js": "^3.6.5",
     "ethers": "^5.1.4",

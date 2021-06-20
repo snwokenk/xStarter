@@ -191,7 +191,7 @@ function sleep(ms) {
 //             xStarterProposalInst = await xStarterProposalFactory.deploy(
 //                 "xStarter", 
 //                 "XSTN", 
-//                 "QmbesxZ1QQyWksXgLf6MY8okvzpcUFsFybdiSHtmKmahcX", 
+//                 "QmUEMTSMYwqXZZNGm4T6UVec9igJssgeKQpajJiCrTN9DF", 
 //                 utils.parseEther('500000000'),
 //                 70,
 //                 zeroAddress,
@@ -841,7 +841,7 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
             xStarterProposalInst = await xStarterProposalFactory.deploy(
                 "xStarter", 
                 "XSTN", 
-                "QmbesxZ1QQyWksXgLf6MY8okvzpcUFsFybdiSHtmKmahcX", 
+                "QmUEMTSMYwqXZZNGm4T6UVec9igJssgeKQpajJiCrTN9DF", 
                 utils.parseEther('500000000'),
                 70,
                 fundingTokenInst.address,

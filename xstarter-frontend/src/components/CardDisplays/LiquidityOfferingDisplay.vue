@@ -5,7 +5,7 @@
     <q-card-section horizontal class="justify-between">
       <div>
         <q-avatar square size="4rem">
-          <img :src="liquidityOffering.logo_url">
+          <img :src="ILOLogoURL">
         </q-avatar>
       </div>
       <LiquidityDisplayDuration  :end-time="endTimestamp" :start-time="startTimestamp" :offering-status="ILOStatus"  :succeeded="ILOSuccess"/>
@@ -59,7 +59,7 @@
       </q-linear-progress>
     </q-card-section>
     <q-card-actions align="stretch" class="q-gutter-y-md q-py-md">
-      <q-btn rounded class="full-width" outline :label="isSelected ? 'Back': 'View more'" @click="viewMoreCallBack"/>
+      <q-btn rounded class="full-width" outline :label="isSelected ? 'Back': 'View more'" @click="callViewMoreAndPassInfoData"/>
       <q-btn rounded class="full-width" outline v-if="isSelected && connectedAndPermissioned"  :label="joinOrReview"  @click="viewModal = true"/>
     </q-card-actions>
 
@@ -117,6 +117,11 @@ export default defineComponent( {
     selectedILO: {
       type: Object,
       default: null
+    }
+  },
+  data() {
+    return {
+      infoData: {}
     }
   },
   computed: {
@@ -246,10 +251,22 @@ export default defineComponent( {
     ILOMoreInfo() {
       // struct ILOAdditionalInfo
       return this.anILO.moreInfo
+    },
+    ILOLogoURL() {
+      if (this.infoData && this.infoData.about) {
+        return this.infoData.about.logoURL ? this.infoData.about.logoURL : ''
+      }
+      return ''
     }
   },
   methods: {
-
+    callViewMoreAndPassInfoData() {
+      this.viewMoreCallBack(this.infoData)
+    }
+  },
+  async mounted() {
+    this.infoData = await this.$ipfs_utils.getILOInfo(this.ILOInfo.infoURL)
+    console.log('info data is', this.infoData)
   },
   watch: {
     isSelected: async function (value)  {

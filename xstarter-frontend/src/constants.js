@@ -1,5 +1,5 @@
 
-export const LAUNCHPAD_ADDRESS = '0x846B060463B32e254C82e90B52F2Df422C5DDa41'
+export const LAUNCHPAD_ADDRESS = '0x42C487204f1687fB82d662c6cfF6cD74258ea4fb'
 // export const GOVERNANCE_ADDRESS = '0xaB7B4c595d3cE8C85e16DA86630f2fc223B05057'
 export const ILO_ADDRESS = '0xAe2563b4315469bF6bdD41A6ea26157dE57Ed94e'
 
@@ -15,12 +15,14 @@ export const CHAIN_ID_TO_NAME = {
   31337: 'Hardhat Localhost',
   100: 'xDai Layer 2',
   56: 'Binance Smart Chain',
+  77: 'POA Sokol Testnet'
   // 137: 'Polygon Matic'
 }
 
 export const  ACCEPTED_CHAINS = {
   31337: true,
   100: true,
+  77: true
   // 137: true
 }
 
@@ -44,6 +46,7 @@ export const ILO_STATUS = {
 export const xStarter_ILO_Info = {
   about: {
     name: 'xStarter',
+    logoURL: 'https://ipfs.io/ipfs/QmR9MLmwXTyXJ5J9eJQ2hXeY3oKzuwsvWqtuS6aFaszsBS',
     description: `xStarter is an ecosystem of smart contracts, that provides a decentralized way for businesses, of all sizes, to issue tokens and create a market for those tokens.`,
     socialMediaLinks: [
       {label: 'telegram', url: 'https://t.me/xStarterDev', icon: 'fab fa-telegram-plane' },
@@ -56,7 +59,9 @@ export const xStarter_ILO_Info = {
   ILOInfo: {
     access: 'Open to public',
   },
-  tokenomics: 'xStarter tokens are used for governance and early access of ILOs launched on the xStarter Platform. xStarter tokens can also be used as a funding token for ILOs.'
+  tokenomics: {
+    useCase: 'xStarter tokens are used for governance and early access of ILOs launched on the xStarter Platform. xStarter tokens can also be used as a funding token for ILOs.'
+  }
 }
 
-export const xStarter_ILO_IPFS_CID = 'QmbesxZ1QQyWksXgLf6MY8okvzpcUFsFybdiSHtmKmahcX'
+export const xStarter_ILO_IPFS_CID = 'QmUEMTSMYwqXZZNGm4T6UVec9igJssgeKQpajJiCrTN9DF'
