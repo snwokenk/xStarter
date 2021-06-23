@@ -13,7 +13,7 @@
             Click the Connect Button to connect your Metamask wallet to xStarter
           </div>
           <div v-else-if="!acceptedChain" class="text-warning text-center full-width">
-            Please connect to the xDai Layer 2 chain on metamask
+            Please switch to the xDai Layer 2 chain Or the Goerli Test Network
           </div>
         </div>
 
@@ -39,10 +39,10 @@
 <!--        <q-btn outline rounded label="Create An Initial Liquidity Offering" />-->
 <!--      </div>-->
       <div v-if="chainId !== 100 && connectedAndPermissioned" class="text-center q-mt-lg text-uppercase">
-        <q-btn outline rounded label="Switch To xDai Chain to Metamask" @click="addXDai" />
+        <q-btn outline rounded label="Switch To xDai Chain" @click="addXDai" />
       </div>
-      <div v-if="chainId !== 77 && connectedAndPermissioned" class="text-center q-mt-lg text-uppercase">
-        <q-btn outline rounded label="Switch To SPOA TEST network to Metamask" @click="addSPOATest" />
+      <div v-if="chainId !== 5 && connectedAndPermissioned" class="text-center q-mt-lg text-uppercase">
+        <q-btn outline rounded label="Switch To GOERLI TEST network " @click="addGOERLITest" />
       </div>
 
     </q-card-section>
@@ -100,6 +100,17 @@ export default defineComponent( {
         'SPOA',
         ['https://sokol.poa.network'],
         ['https://blockscout.com/poa/sokol'],
+        ['']
+      )
+    },
+    async addGOERLITest() {
+      await this.metaMaskEthereumChainAddRequest(
+        '0x5',
+        'ETH',
+        'ETH',
+        'ETH',
+        ['https://goerli.prylabs.net/'],
+        ['https://goerli.etherscan.io'],
         ['']
       )
     }

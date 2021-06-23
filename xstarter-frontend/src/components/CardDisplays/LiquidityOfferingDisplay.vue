@@ -265,6 +265,7 @@ export default defineComponent( {
     }
   },
   async mounted() {
+    console.log('calling info data', this.infoData)
     this.infoData = await this.$ipfs_utils.getILOInfo(this.ILOInfo.infoURL)
     console.log('info data is', this.infoData)
   },

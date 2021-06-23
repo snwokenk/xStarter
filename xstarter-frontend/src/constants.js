@@ -1,5 +1,5 @@
 
-export const LAUNCHPAD_ADDRESS = '0x42C487204f1687fB82d662c6cfF6cD74258ea4fb'
+export const LAUNCHPAD_ADDRESS = '0xAA7B78D8F0c9f49380000E8b5e1ea8F579Dc5cA7'
 // export const GOVERNANCE_ADDRESS = '0xaB7B4c595d3cE8C85e16DA86630f2fc223B05057'
 export const ILO_ADDRESS = '0xAe2563b4315469bF6bdD41A6ea26157dE57Ed94e'
 
@@ -15,14 +15,15 @@ export const CHAIN_ID_TO_NAME = {
   31337: 'Hardhat Localhost',
   100: 'xDai Layer 2',
   56: 'Binance Smart Chain',
-  77: 'POA Sokol Testnet'
+  77: 'POA Sokol Testnet',
+  5: 'GOERLI Testnet'
   // 137: 'Polygon Matic'
 }
 
 export const  ACCEPTED_CHAINS = {
   31337: true,
   100: true,
-  77: true
+  5: true
   // 137: true
 }
 
