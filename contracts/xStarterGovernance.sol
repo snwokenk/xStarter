@@ -18,7 +18,7 @@ contract xStarterGovernance is Context, Interaction {
     using SafeMath for uint256;
     using Address for address;
     
-    bool private _isProd;
+    // bool private _isProd;
     bool _initialized;
     // todo: change in prod
     address _allowedCaller = 0xF4c8163B122fc28686990AC2777Fe090ca6b5357; // address of deployer
@@ -47,17 +47,23 @@ contract xStarterGovernance is Context, Interaction {
         _;
     }
     
-    function initialize(address xStarterToken_, address xStarterLaunchPad_, address xStarterNFT_, bool isProd_) external returns(bool) {
+    function initialize(address xStarterToken_, address xStarterLaunchPad_ ) external returns(bool) {
         require(!_initialized, "contract has already been initialized");
         require(_allowedCaller != address(0) && _msgSender() == _allowedCaller, 'Not authorized');
         _initialized = true;
-        _allowedCaller = address(0);
-        _isProd = isProd_;
-        
-        
+        // _isProd = isProd_;
         _xStarterToken = xStarterToken_;
-        _xStarterNFT = xStarterNFT_;
         _xStarterLaunchPad = xStarterLaunchPad_;
+        return true;
+        
+    }
+    
+    function addNFT(address xStarterNFT_)  external returns(bool) {
+        require(_initialized, "contract must be initialized");
+        require(_allowedCaller != address(0) && _msgSender() == _allowedCaller, 'Not authorized');
+        
+        _xStarterNFT = xStarterNFT_;
+        _allowedCaller = address(0);
         return true;
         
     }

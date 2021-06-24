@@ -48,7 +48,7 @@ contract xStarterProposal {
         
     }
     
-    function isALlowedCaller(address caller_) public view returns(bool) {
+    function isAllowedCaller(address caller_) public view returns(bool) {
         return allowedCallers[caller_];
     }
     function isLocked() public view returns(bool) {

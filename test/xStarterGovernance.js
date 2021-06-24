@@ -758,12 +758,12 @@ describe('xStarter LaunchPad to Governance to LaunchPad ILO registration Process
             
 
             // initialize
-            await (await xStarterNFTInst.initialize(
-                xStarterGovernanceInst.address,
-                xStarterTokenInst.address, 
-                xStarterLaunchPadInst.address, 
-                false
-            )).wait()
+            // await (await xStarterNFTInst.initialize(
+            //     xStarterGovernanceInst.address,
+            //     xStarterTokenInst.address, 
+            //     xStarterLaunchPadInst.address, 
+            //     false
+            // )).wait()
             await (await xStarterGovernanceInst.initialize(
                 xStarterTokenInst.address, 
                 xStarterLaunchPadInst.address,

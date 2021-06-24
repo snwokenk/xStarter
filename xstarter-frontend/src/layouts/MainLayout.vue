@@ -213,30 +213,44 @@ export default defineComponent({
       iconUrlArray,
     ) => {
       try {
-        const wasAdded = await ethereumProvider.value.request({
-          method: 'wallet_addEthereumChain',
-          params: [{
-            chainId: chainId, // A 0x-prefixed hexadecimal string
-            chainName: chainName,
-            nativeCurrency: {
-              name: currencyName,
-              symbol: currencySymbol, // 2-6 characters long
-              decimals: 18,
-            },
-            rpcUrls: rpcArray,
-            blockExplorerUrls: blockExplorerArray,
-            iconUrls: iconUrlArray, // Currently ignored.
-          }],
-        })
+        await ethereum.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: chainId }],
+        });
 
-        if (wasAdded) {
-          console.log('chain was added');
-        } else {
-          console.log('chain not added');
-        }
       }catch (error) {
-        console.log(error);
+        // if it was a switch error
+        if (error.code === 4902) {
+          try {
+            const wasAdded = await ethereumProvider.value.request({
+              method: 'wallet_addEthereumChain',
+              params: [{
+                chainId: chainId, // A 0x-prefixed hexadecimal string
+                chainName: chainName,
+                nativeCurrency: {
+                  name: currencyName,
+                  symbol: currencySymbol, // 2-6 characters long
+                  decimals: 18,
+                },
+                rpcUrls: rpcArray,
+                blockExplorerUrls: blockExplorerArray,
+                iconUrls: iconUrlArray, // Currently ignored.
+              }],
+            })
+
+            if (wasAdded) {
+              console.log('chain was added');
+            } else {
+              console.log('chain not added');
+            }
+          }catch (error) {
+            console.log(error);
+          }
+        }else {
+          console.log('non switch error', error)
+        }
       }
+
     }
     provide('$metaMaskEthereumChainAddRequest', metaMaskEthereumChainAddRequest)
     const connectUsingWebProvider = async (accountsChanged = null) => {

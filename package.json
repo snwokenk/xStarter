@@ -18,6 +18,9 @@
   },
   "scripts": {
     "test-with-local": "npx hardhat test --network localhost",
-    "start-node": "npx hardhat node"
+    "start-node": "npx hardhat node",
+    "deploy-hardhat": "XDAIDEX=true ISNETWORK=local npx hardhat run --network localhost scripts/deploy_initial_contracts.js",
+    "deploy-xdai": "XDAIDEX=true ISNETWORK=xdai npx hardhat run --network xdai scripts/deploy_initial_contracts.js",
+    "deploy-goerli": "XDAIDEX=false ISNETWORK=goerli blockTime=15 npx hardhat run --network goerli scripts/deploy_initial_contracts.js"
   }
 }

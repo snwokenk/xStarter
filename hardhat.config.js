@@ -52,7 +52,36 @@ module.exports = {
       },
       accounts: {
         mnemonic: mnemonicTest
-      }
+      },
+      timeout: 60000
+    },
+    spoa: {
+      chainID: 77,
+      url: 'https://sokol.poa.network',
+      gas: 'auto',
+      accounts: {
+        mnemonic: mnemonicTest
+      },
+      timeout: 60000
+    },
+    kovan: {
+      chainID: 42,
+      url: 'https://kovan.poa.network/',
+      gas: 'auto',
+      accounts: {
+        mnemonic: mnemonicTest
+      },
+      timeout: 60000
+    },
+    // ~ 15 second block time
+    goerli: {
+      chainID: 5,
+      url: 'https://rpc.slock.it/goerli',
+      gas: 'auto',
+      accounts: {
+        mnemonic: mnemonicTest
+      },
+      timeout: 60000
     },
   },
   paths: {
