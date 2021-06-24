@@ -29,8 +29,7 @@
             :label="connectBtnLabel"
             :icon="metamaskInstalled ? undefined : 'error_outline'"
             :color="metamaskInstalled ? darkLightText: 'negative'"
-            :disable="!metamaskInstalled"
-            @click="showWalletConnectModal = !showWalletConnectModal"
+            @click="connectOrInstallBtn"
           />
 
 
@@ -106,6 +105,7 @@ import { useQuasar } from 'quasar'
 import { ethers } from 'boot/ethers'
 import { abiUtils } from "boot/abiGenerator";
 import detectEthereumProvider from '@metamask/detect-provider';
+import MetaMaskOnboarding from '@metamask/onboarding';
 import {ILO_ADDRESS, JSON_RPC_ENDPOINT, LAUNCHPAD_ADDRESS} from "src/constants";
 // import data from 'src/artifacts/contracts/xStarterPoolPairB.sol/xStarterPoolPairB.json';
 import launchpadCode from 'src/artifacts/contracts/xStarterLaunchPad.sol/xStarterLaunchPad.json';
@@ -133,6 +133,8 @@ export default defineComponent({
     let launchPadContract = undefined
     let launchPadLoaded = ref(false)
     provide('$launchPadLoaded', launchPadLoaded)
+    let jsonRPCEndpoint = ref(JSON_RPC_ENDPOINT)
+    provide('$jsonRPCEndpoint', jsonRPCEndpoint)
     const ethereumProvider = ref(undefined)
     provide('$ethereumProvider', ethereumProvider)
     let chainId = ref(undefined)
@@ -157,8 +159,8 @@ export default defineComponent({
     }
     const connectUsingJsonRPCProvider = async () => {
 
-      console.log('connecting using json rpc', JSON_RPC_ENDPOINT)
-      provider  = await new ethers.providers.JsonRpcProvider(JSON_RPC_ENDPOINT);
+      console.log('connecting using json rpc', jsonRPCEndpoint.value)
+      provider  = await new ethers.providers.JsonRpcProvider(jsonRPCEndpoint.value);
       console.log('json rpc provider is', provider)
       if (provider) {
         launchPadContract = await new ethers.Contract(LAUNCHPAD_ADDRESS, launchpadCode.abi, provider)
@@ -212,17 +214,18 @@ export default defineComponent({
       blockExplorerArray,
       iconUrlArray,
     ) => {
+      let wasAdded = false
       try {
         await ethereum.request({
           method: 'wallet_switchEthereumChain',
           params: [{ chainId: chainId }],
         });
-
-      }catch (error) {
+        wasAdded = true
+      } catch (error) {
         // if it was a switch error
         if (error.code === 4902) {
           try {
-            const wasAdded = await ethereumProvider.value.request({
+            wasAdded = await ethereumProvider.value.request({
               method: 'wallet_addEthereumChain',
               params: [{
                 chainId: chainId, // A 0x-prefixed hexadecimal string
@@ -250,6 +253,7 @@ export default defineComponent({
           console.log('non switch error', error)
         }
       }
+      return wasAdded
 
     }
     provide('$metaMaskEthereumChainAddRequest', metaMaskEthereumChainAddRequest)
@@ -421,6 +425,17 @@ export default defineComponent({
     }
   },
   methods: {
+    connectOrInstallBtn() {
+      if (!this.connectedAndPermissioned) {
+        if (this.connectBtnLabel === 'Connect') {
+          this.showWalletConnectModal = !this.showWalletConnectModal
+        }else {
+          const onboarding = new MetaMaskOnboarding();
+          onboarding.startOnboarding()
+        }
+      }
+
+    },
     async signTx() {
       console.log('this signer', this.getSigner(), this.getProvider(), this.ethereumProvider.selectedAddress)
       console.log('connected accounts', this.connectedAccounts)
@@ -453,6 +468,12 @@ export default defineComponent({
     console.log('get provider', this.getProvider())
     // console.log('process env', process.env)
     // console.log('ipfs utils', this.$ipfs_utils.addILOAbout('xStarter', 'xStarter is a ', {facebook: 'httpsskfd'}))
+  },
+  watch: {
+    jsonRPCEndpoint: async function() {
+      await this.checkExisting(false)
+
+    }
   }
 })
 </script>

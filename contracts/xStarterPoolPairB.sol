@@ -226,6 +226,7 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
     // address of  dex liquidity token pair, this is the pair that issues liquidity tokens from uniswap or deriivatives
     address _liquidityPairAddress; 
     address _proposalAddr;
+    address _xStarterERCDeployer;
     
     address _xStarterToken;
     // Minimum  xstarter token required to participate during private sale
@@ -320,6 +321,7 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
         address addressOfDexFactory_,
         address xStarterToken_,
         address xstarterLP_,
+        address xStarterERCDeployer_,
         uint  minXSTN_,
         uint  minXSTNLP_
         
@@ -333,6 +335,7 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
             _proposalAddr = proposalAddr_;
             _xStarterToken = xStarterToken_;
             _xStarterLP = xstarterLP_;
+            _xStarterERCDeployer = xStarterERCDeployer_;
             _minXSTN = minXSTN_;
             _minXSTNLP = minXSTNLP_;
             
@@ -520,7 +523,6 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
     // Step 2
     function setUpPoolPair(
         address addressOfProjectToken,
-        address ercDeployer_,
         string memory tokenName_,
         string memory tokenSymbol_,
         uint totalTokenSupply_,
@@ -537,7 +539,7 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
             // if address of project token is 0 address deploy token for it
             if(address(0) == addressOfProjectToken) {
                     address[] memory defaultOperators_;
-                    _deployToken(ercDeployer_,tokenName_, tokenSymbol_, totalTokenSupply_, defaultOperators_);
+                    _deployToken(_xStarterERCDeployer,tokenName_, tokenSymbol_, totalTokenSupply_, defaultOperators_);
             } 
             else {
                 IERC20Custom existingToken = IERC20Custom(addressOfProjectToken);

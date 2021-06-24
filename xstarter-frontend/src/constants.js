@@ -1,5 +1,5 @@
 
-export const LAUNCHPAD_ADDRESS = '0xAA7B78D8F0c9f49380000E8b5e1ea8F579Dc5cA7'
+export const LAUNCHPAD_ADDRESS = '0x0A4818f7A374c49cBb79e3AF9856cD2360bE999A'
 // export const GOVERNANCE_ADDRESS = '0xaB7B4c595d3cE8C85e16DA86630f2fc223B05057'
 export const ILO_ADDRESS = '0xAe2563b4315469bF6bdD41A6ea26157dE57Ed94e'
 
@@ -31,7 +31,9 @@ export const ACCEPTED_CHAINS_CHOICES = [
   {label: 'xDai', value: 100 }
 ]
 
-export const JSON_RPC_ENDPOINT = process.env.PROD ? 'https://rpc.xdaichain.com/' : 'http://127.0.0.1:8545'
+console.log('process env')
+export const JSON_RPC_ENDPOINT = process.env.IS_NETWORK === 'xdai' ?
+  'https://rpc.xdaichain.com/' :  process.env.IS_NETWORK === 'goerli' ? 'https://rpc.slock.it/goerli' : 'http://127.0.0.1:8545'
 
 export const ILO_STATUS = {
   0: 'ILO PROPOSED',

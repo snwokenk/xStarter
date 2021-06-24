@@ -53,7 +53,8 @@ module.exports = configure(function (ctx) {
       vueRouterMode: 'hash', // available values: 'hash', 'history'
       env: {
         NODE_DEBUG: ctx.DEBUGGING,
-        DUMP_SESSION_KEYS: ctx.DEBUGGING
+        DUMP_SESSION_KEYS: ctx.DEBUGGING,
+        IS_NETWORK: ctx.IS_NETWORK
       },
 
       // transpile: false,

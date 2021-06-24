@@ -48,6 +48,7 @@ contract xStarterDeployer is BaseDeployer {
         address addressOfDexFactory_,
         address xStarterToken_,
         address xstarterLP_,
+        address xStarterERCDeployer_,
         uint  minXSTN_,
         uint  minXSTNLP_
         ) external onlyAllowedCaller returns(address ILO_) {
@@ -59,6 +60,7 @@ contract xStarterDeployer is BaseDeployer {
                 addressOfDexFactory_,
                 xStarterToken_,
                 xstarterLP_,
+                xStarterERCDeployer_,
                 minXSTN_,
                 minXSTNLP_
                 ));
@@ -79,6 +81,7 @@ interface iXstarterDeployer {
         address addressOfDexFactory_,
         address xStarterToken_,
         address xstarterLP_,
+        address xStarterERCDeployer_,
         uint  minXSTN_,
         uint  minXSTNLP_
         ) external returns(address ILO_);
@@ -299,6 +302,7 @@ contract xStarterLaunchPad is Administration, Interaction{
             _addressOfDexFactory, // contrib lock
             address(0), // xStarter token not yet distributed so should 
             address(0),
+            _xStarterERCDeployer,
             _minXSTN,
             _minXSTNLP
         );
@@ -359,6 +363,7 @@ contract xStarterLaunchPad is Administration, Interaction{
             _addressOfDexFactory, // contrib lock
             _xStarterToken,
             _xStarterLP,
+            _xStarterERCDeployer,
             _minXSTN,
             _minXSTNLP
         );

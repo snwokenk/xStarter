@@ -61,11 +61,13 @@ export default defineComponent( {
     const connectedAndPermissioned = inject('$connectedAndPermissioned',)
     const metaMaskEthereumChainAddRequest = inject('$metaMaskEthereumChainAddRequest') // function
     const metamaskInstalled = inject('$metamaskInstalled')
+    const jsonRPCEndpoint = inject('$jsonRPCEndpoint')
     return {
       chainId,
       metamaskInstalled,
       blockInfo,
       connectedAndPermissioned,
+      jsonRPCEndpoint,
       metaMaskEthereumChainAddRequest
     }
   },
@@ -91,6 +93,7 @@ export default defineComponent( {
         ['https://blockscout.com/xdai/mainnet/'],
         ['']
       )
+      this.jsonRPCEndpoint = 'https://rpc.xdaichain.com/'
     },
     async addSPOATest() {
       await this.metaMaskEthereumChainAddRequest(
@@ -113,6 +116,7 @@ export default defineComponent( {
         ['https://goerli.etherscan.io'],
         ['']
       )
+      this.jsonRPCEndpoint = 'https://rpc.slock.it/goerli'
     }
   }
 })

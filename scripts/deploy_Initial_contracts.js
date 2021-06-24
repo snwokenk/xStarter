@@ -32,19 +32,22 @@ async function main() {
     let uniswapRouter;
     let uniswapFactory;
     let WETH;
+    
 
     // for xStarter ILO
-    let contributionLockSeconds = process.env.ISNETWORK !== 'xdai' ? 86400 : 1209600  // on xdai prod 14 day lock
-    let liquidityPairLockSeconds = process.env.ISNETWORK !== 'xdai' ? 129600 : 31536000 // on xdai prod 365 days in seconds lock 
-    let minimumPerSwap = process.env.ISNETWORK !== 'xdai' ? utils.parseEther('0.001')  : utils.parseEther('50') // on xdai minimum per addr is 500 or 500 xdai ie $100 
-    let minimumPerAddress = process.env.ISNETWORK !== 'xdai' ? utils.parseEther('0.01')  : utils.parseEther('100') // on xdai minimum per addr is 500 or 500 xdai ie $100 
-    let maximumPerAddress = process.env.ISNETWORK !== 'xdai' ? utils.parseEther('0.03') : utils.parseEther('5000') // on xdai maximum per addr is 2500 or 2500 xdai ie $2500
-    let softcap = process.env.ISNETWORK !== 'xdai' ? utils.parseEther('0.03')  : utils.parseEther('500000') // on xdai softcap is 500000 or $500k
-    let hardcap = process.env.ISNETWORK !== 'xdai' ? utils.parseEther('0.05')  : utils.parseEther('1500000') // on xdai hardcap is 1.5 million or $1.5M
+    let contributionLockSeconds = process.env.IS_NETWORK !== 'xdai' ? 86400 : 1209600  // on xdai prod 14 day lock
+    let liquidityPairLockSeconds = process.env.IS_NETWORK !== 'xdai' ? 129600 : 31536000 // on xdai prod 365 days in seconds lock 
+    let minimumPerSwap = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('0.001')  : utils.parseEther('50') // on xdai minimum per addr is 500 or 500 xdai ie $100 
+    let minimumPerAddress = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('0.01')  : utils.parseEther('100') // on xdai minimum per addr is 500 or 500 xdai ie $100 
+    let maximumPerAddress = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('0.03') : utils.parseEther('5000') // on xdai maximum per addr is 2500 or 2500 xdai ie $2500
+    let softcap = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('0.03')  : utils.parseEther('500000') // on xdai softcap is 500000 or $500k
+    let hardcap = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('0.05')  : utils.parseEther('1500000') // on xdai hardcap is 1.5 million or $1.5M
+    let initialStartTime = 1800
+    let initialEndTime = 7200;
 
     // uses honeyswap address
-    console.log('process env is', process.env.XDAIDEX)
-    if(process.env.XDAIDEX) {
+    console.log('process env is', process.env.XDAI_DEX)
+    if(process.env.XDAI_DEX) {
         uniswapRouter = "0x1C232F01118CB8B424793ae03F870aa7D0ac7f77";
         uniswapFactory = "0xa818b4f111ccac7aa31d0bcc0806d64f2e0737d7";
         // this is really address for WXDAI on honeyswap xDai
@@ -168,6 +171,21 @@ async function main() {
                 xStarterProposalInst.address
             )).wait()
             console.log('xstarter proposal inst is after add more info', xStarterProposalInst.address)
+
+            let startTime = parseInt(Date.now() / 1000) + initialStartTime;
+            let endTime = parseInt(Date.now() / 1000) + initialEndTime;
+            let proposalInfo = await xStarterLaunchPadInst.getProposal(xStarterProposalInst.address)
+            xStarterPoolPairInst = poolPairFactory.attach(proposalInfo.info.ILOAddress)
+          //   const poolPairFromOther = poolPair.connect(addr2);
+            await (await xStarterPoolPairInst.setUpPoolPair(
+              xStarterTokenInst.address,
+            //   xStarterERCDeployerInst.address,
+              "xStarter", 
+              "XSTN", 
+              500000000,
+              startTime,
+              endTime,
+          )).wait()
 
 
 

@@ -495,6 +495,7 @@ export default defineComponent( {
     await this.refreshBalances()
     await this.getTimeLocks()
     console.log('ilo status is', this.ILOStatus, this.ILOProcessStatus)
+    console.log('process ')
     // await this.suggestToAddTokenAndILO()
   },
   watch: {
