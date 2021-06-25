@@ -9,8 +9,8 @@
     "lint": "eslint --ext .js,.vue ./",
     "test": "echo \"No test specified\" && exit 0",
     "build-for-local":  "IS_NETWORK=local quasar dev",
-    "build-for-xdai":  "IS_NETWORK=xdai quasar dev",
-    "build-for-goerli":  "IS_NETWORK=goerli quasar dev"
+    "build-for-xdai":  "IS_NETWORK=xdai quasar build",
+    "build-for-goerli":  "IS_NETWORK=goerli quasar build"
   },
   "dependencies": {
     "@metamask/detect-provider": "^1.2.0",
