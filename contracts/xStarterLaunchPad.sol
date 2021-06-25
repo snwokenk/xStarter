@@ -50,7 +50,8 @@ contract xStarterDeployer is BaseDeployer {
         address xstarterLP_,
         address xStarterERCDeployer_,
         uint  minXSTN_,
-        uint  minXSTNLP_
+        uint  minXSTNLP_,
+        uint blockTime_
         ) external onlyAllowedCaller returns(address ILO_) {
             
             address ILO = address(new xStarterPoolPairB(
@@ -62,7 +63,8 @@ contract xStarterDeployer is BaseDeployer {
                 xstarterLP_,
                 xStarterERCDeployer_,
                 minXSTN_,
-                minXSTNLP_
+                minXSTNLP_,
+                blockTime_
                 ));
             ILO_ = address(ILO);
         
@@ -83,7 +85,8 @@ interface iXstarterDeployer {
         address xstarterLP_,
         address xStarterERCDeployer_,
         uint  minXSTN_,
-        uint  minXSTNLP_
+        uint  minXSTNLP_,
+        uint blockTime_
         ) external returns(address ILO_);
 }
 
@@ -112,6 +115,7 @@ contract xStarterLaunchPad is Administration, Interaction{
     // minimum amount of xStarter tokens or xStarter lps needed to participate
     uint  _minXSTNLP;
     uint  _minXSTN;
+    uint _mineLen;
     address  _xStarterToken;
     address _xStarterLP;
     address  _xStarterGovernance;
@@ -140,6 +144,7 @@ contract xStarterLaunchPad is Administration, Interaction{
         uint depositPerProposal_,
         uint  minXSTN_,
         uint  minXSTNLP_,
+        uint blockTime_,
         address addressOfDex_,
         address addressOfDexFactory_,
         address admin_
@@ -154,6 +159,7 @@ contract xStarterLaunchPad is Administration, Interaction{
         _minXSTNLP = minXSTNLP_;
         _addressOfDex = addressOfDex_;
         _addressOfDexFactory = addressOfDexFactory_;
+        _mineLen = blockTime_;
         
     }
     
@@ -304,7 +310,8 @@ contract xStarterLaunchPad is Administration, Interaction{
             address(0),
             _xStarterERCDeployer,
             _minXSTN,
-            _minXSTNLP
+            _minXSTNLP,
+            _mineLen 
         );
         // allow newly created ILO pool pair to use erc20 deployer
         IXStarterERCDeployer(_xStarterERCDeployer).setAllowedCaller(ILO);
@@ -365,7 +372,8 @@ contract xStarterLaunchPad is Administration, Interaction{
             _xStarterLP,
             _xStarterERCDeployer,
             _minXSTN,
-            _minXSTNLP
+            _minXSTNLP,
+            _mineLen
         );
         
         // change proposal state

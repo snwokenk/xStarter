@@ -32,18 +32,24 @@ async function main() {
     let uniswapRouter;
     let uniswapFactory;
     let WETH;
+    let mineLen = process.env.IS_NETWORK !== 'goerli' ? 5 : 15;
     
 
     // for xStarter ILO
-    let contributionLockSeconds = process.env.IS_NETWORK !== 'xdai' ? 86400 : 1209600  // on xdai prod 14 day lock
-    let liquidityPairLockSeconds = process.env.IS_NETWORK !== 'xdai' ? 129600 : 31536000 // on xdai prod 365 days in seconds lock 
+    // let contributionLockSeconds = process.env.IS_NETWORK !== 'xdai' ? 86400 : 1209600  // on xdai prod 14 day lock
+    // let liquidityPairLockSeconds = process.env.IS_NETWORK !== 'xdai' ? 129600 : 31536000 // on xdai prod 365 days in seconds lock 
+    // let initialStartTime = 1800
+    // let initialEndTime = 7200;
     let minimumPerSwap = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('0.001')  : utils.parseEther('50') // on xdai minimum per addr is 500 or 500 xdai ie $100 
     let minimumPerAddress = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('0.01')  : utils.parseEther('100') // on xdai minimum per addr is 500 or 500 xdai ie $100 
     let maximumPerAddress = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('0.03') : utils.parseEther('5000') // on xdai maximum per addr is 2500 or 2500 xdai ie $2500
     let softcap = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('0.03')  : utils.parseEther('500000') // on xdai softcap is 500000 or $500k
     let hardcap = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('0.05')  : utils.parseEther('1500000') // on xdai hardcap is 1.5 million or $1.5M
-    let initialStartTime = 1800
-    let initialEndTime = 7200;
+    
+    let initialStartTime = 180
+    let initialEndTime = 600;
+    let contributionLockSeconds = 300  // on xdai prod 14 day lock
+    let liquidityPairLockSeconds = 600// on xdai prod 365 days in seconds lock 
 
     // uses honeyswap address
     console.log('process env is', process.env.XDAI_DEX)
@@ -97,7 +103,7 @@ async function main() {
 
             console.log('erc deployer inst is', xStarterERCDeployerInst.address)
             
-
+            console.log('mineLen', mineLen)
             // deploy launchpad
             xStarterLaunchPadFactory = await ethers.getContractFactory("xStarterLaunchPad")
             xStarterLaunchPadInst = await xStarterLaunchPadFactory.deploy(
@@ -107,6 +113,7 @@ async function main() {
                 utils.parseEther('5000'),
                 utils.parseEther('50000'), // 5000 tokens required  OR
                 utils.parseEther('50'), // 50 LP tokens
+                mineLen,
                 uniswapRouter,
                 uniswapFactory,
                 owner.address,
@@ -186,6 +193,8 @@ async function main() {
               startTime,
               endTime,
           )).wait()
+          await (await xStarterTokenInst.approve(xStarterPoolPairInst.address, utils.parseEther('500000000'))).wait()
+          await (await xStarterPoolPairInst.depositAllTokenSupply()).wait()
 
 
 

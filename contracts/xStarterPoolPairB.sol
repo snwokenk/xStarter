@@ -166,8 +166,8 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
     using SafeMath for uint256;
     using Address for address;
     
-    // this is for xDai chain. if deploying to other chains check the length of block creation, some are faster
-    uint constant MINE_LEN = 5 seconds;
+    // this is for xDai chain it's 5 seconds, goerli is 15 seconds. if deploying to other chains check the length of block creation, some are faster
+    uint MINE_LEN;
     
     struct FunderInfo {
     uint fundingTokenAmount;
@@ -323,7 +323,8 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
         address xstarterLP_,
         address xStarterERCDeployer_,
         uint  minXSTN_,
-        uint  minXSTNLP_
+        uint  minXSTNLP_,
+        uint blockTime_
         
         ) Administration(adminAddress) {
             // require(percentOfTokensForILO_ > 0 && percentOfTokensForILO_ <= 100, "percent of tokens must be between 1 and 100");
@@ -331,6 +332,8 @@ contract xStarterPoolPairB is  Administration, IERC777Recipient, IERC777Sender {
             // require(softcap_ > 0, "No softcap set");
             
             (ILOProposal memory i_, ILOAdditionalInfo memory a_) = iXstarterProposal(proposalAddr_).getILOInfo();
+            
+            MINE_LEN = blockTime_;
             
             _proposalAddr = proposalAddr_;
             _xStarterToken = xStarterToken_;
