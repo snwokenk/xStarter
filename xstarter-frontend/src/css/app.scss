@@ -175,7 +175,8 @@ body.body--light {
   }
   .display-card-duration-container {
     width: 100px;
-    height: 20px;
+    min-height: 20px;
+    max-height: 50px;
     border-radius: 7.5px;
   }
   .display-card-duration-text {

@@ -21,6 +21,16 @@ interface iXstarterProposal {
     function approved() external view returns(bool);
     function getLaunchpadAddress() external  view returns(address);
     function getMainInfo() external view returns(string memory tokenName, string memory tokenSymbol, string memory infoURL, uint totalSupply, uint8 percentOfTokensForILO, address fundingToken);
+    function addMoreInfo(
+        uint48 contribTimeLock_,
+        uint48 liqPairLockLen_,
+        uint minPerSwap_,
+        uint minPerAddr_,
+        uint maxPerAddr_,
+        uint softcap_,
+        uint hardcap_,
+        uint8 percentTokensForTeam_ 
+        ) external returns(bool);
 }
 
 interface iXstarterGovernance {

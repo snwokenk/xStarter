@@ -7,7 +7,7 @@
             You're connected to <span class="text-bold" :class="{'text-positive': acceptedChain, 'text-negative': !acceptedChain}">{{ chainIdName }}</span>
           </div>
           <div v-if="!metamaskInstalled" class="text-warning text-center full-width">
-            Please Install Metamask
+            Please Install And Connect To Metamask For A Faster Experience
           </div>
           <div v-else-if="!connectedAndPermissioned" class="text-warning text-center full-width">
             Click the Connect Button to connect your Metamask wallet to xStarter

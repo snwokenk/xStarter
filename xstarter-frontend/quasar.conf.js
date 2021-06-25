@@ -54,7 +54,7 @@ module.exports = configure(function (ctx) {
       env: {
         NODE_DEBUG: ctx.DEBUGGING,
         DUMP_SESSION_KEYS: ctx.DEBUGGING,
-        IS_NETWORK: ctx.IS_NETWORK
+        IS_NETWORK: process.env.IS_NETWORK
       },
 
       // transpile: false,

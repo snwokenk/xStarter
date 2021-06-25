@@ -1,4 +1,4 @@
-const { ALCHEMYURL, XDAIURL, XDAIURL2,  XDAIBLOCKSCOUTARCHIVE, mnemonicTest } = require('./ignored_constants');
+const { ALCHEMYURL, ALCHEMYGOERLIURL, XDAIURL, XDAIURL2,  XDAIBLOCKSCOUTARCHIVE, mnemonicTest, privateKey } = require('./ignored_constants');
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
@@ -76,12 +76,10 @@ module.exports = {
     // ~ 15 second block time
     goerli: {
       chainID: 5,
-      url: 'https://rpc.slock.it/goerli',
-      gas: 'auto',
-      accounts: {
-        mnemonic: mnemonicTest
-      },
-      timeout: 60000
+      url: ALCHEMYGOERLIURL,
+      gasPrice: 2000000000,
+      // url: 'https://services.fault.dev/',
+      accounts:[`0x${privateKey}`]
     },
   },
   paths: {

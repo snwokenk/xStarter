@@ -1,10 +1,16 @@
 
-export const LAUNCHPAD_ADDRESS = '0xe9AE31a4e284A5f7572836a6086A813374b13CF5'
-// export const GOVERNANCE_ADDRESS = '0xaB7B4c595d3cE8C85e16DA86630f2fc223B05057'
-export const ILO_ADDRESS = '0xAe2563b4315469bF6bdD41A6ea26157dE57Ed94e'
+const DEFAULT_CHAIN = process.env.IS_NETWORK === 'goerli' ? 5 : process.env.IS_NETWORK === 'xdai' ? 100 :  31337
+export const LAUNCHPAD_ADDRESS = {
+  // default: '0x684097E38F2d7D848cD9E66a4947d749a9E098cC',
+  5: '0x684097E38F2d7D848cD9E66a4947d749a9E098cC',
+  31337: '0xe9AE31a4e284A5f7572836a6086A813374b13CF5',
+  100: ''
+}
+LAUNCHPAD_ADDRESS.default = LAUNCHPAD_ADDRESS[DEFAULT_CHAIN]
 
 export const  CHAIN_ID = '31337'
 
+// todo: make this dynamic based n change
 export const SUPPORTED_FUNDING_TOKENS = {
   '0x0000000000000000000000000000000000000000': CHAIN_ID === '100' ? 'xDai' : 'ETH'
   // add xstarter token
@@ -33,7 +39,7 @@ export const ACCEPTED_CHAINS_CHOICES = [
 
 console.log('process env')
 export const JSON_RPC_ENDPOINT = process.env.IS_NETWORK === 'xdai' ?
-  'https://rpc.xdaichain.com/' :  process.env.IS_NETWORK === 'goerli' ? 'https://rpc.slock.it/goerli' : 'http://127.0.0.1:8545'
+  'https://rpc.xdaichain.com/' :  process.env.IS_NETWORK === 'goerli' ? 'https://rpc.goerli.mudit.blog/' : 'http://127.0.0.1:8545'
 
 export const ILO_STATUS = {
   0: 'ILO PROPOSED',

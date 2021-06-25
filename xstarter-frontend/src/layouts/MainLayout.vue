@@ -106,7 +106,7 @@ import { ethers } from 'boot/ethers'
 import { abiUtils } from "boot/abiGenerator";
 import detectEthereumProvider from '@metamask/detect-provider';
 import MetaMaskOnboarding from '@metamask/onboarding';
-import {ILO_ADDRESS, JSON_RPC_ENDPOINT, LAUNCHPAD_ADDRESS} from "src/constants";
+import { JSON_RPC_ENDPOINT, LAUNCHPAD_ADDRESS} from "src/constants";
 // import data from 'src/artifacts/contracts/xStarterPoolPairB.sol/xStarterPoolPairB.json';
 import launchpadCode from 'src/artifacts/contracts/xStarterLaunchPad.sol/xStarterLaunchPad.json';
 import xStarterProposalCode from 'src/artifacts/contracts/xStarterLaunchPad.sol/xStarterLaunchPad.json'
@@ -159,11 +159,11 @@ export default defineComponent({
     }
     const connectUsingJsonRPCProvider = async () => {
 
-      console.log('connecting using json rpc', jsonRPCEndpoint.value)
+      console.log('connecting using json rpc', jsonRPCEndpoint.value, process.env.IS_NETWORK)
       provider  = await new ethers.providers.JsonRpcProvider(jsonRPCEndpoint.value);
       console.log('json rpc provider is', provider)
       if (provider) {
-        launchPadContract = await new ethers.Contract(LAUNCHPAD_ADDRESS, launchpadCode.abi, provider)
+        launchPadContract = await new ethers.Contract(LAUNCHPAD_ADDRESS.default, launchpadCode.abi, provider)
         if (launchPadContract) {
           launchPadLoaded.value = true
         }
@@ -272,8 +272,9 @@ export default defineComponent({
         if (connectedAndPermissioned.value) {
           provider = new ethers.providers.Web3Provider(ethereumProvider.value)
           signer = provider.getSigner()
-          launchPadContract = await new ethers.Contract(LAUNCHPAD_ADDRESS, launchpadCode.abi, signer)
+
           chainId.value = (await provider.getNetwork())['chainId'] // getNetwork = {chain id, chain name}
+          launchPadContract = await new ethers.Contract(LAUNCHPAD_ADDRESS[chainId.value] || '', launchpadCode.abi, signer)
           if (launchPadContract) {
             launchPadLoaded.value = true
           }
