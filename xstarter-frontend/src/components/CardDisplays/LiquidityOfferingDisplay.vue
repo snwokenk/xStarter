@@ -69,6 +69,7 @@
       :anILO="anILO"
       :ILOName="ILOInfo.tokenName"
       :ILOStatus="ILOStatus"
+      :succeeded="ILOSuccess"
       :fundingTokenSymbol="fundingTokenSymbol"
     />
   </q-card>

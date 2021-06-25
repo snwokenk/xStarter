@@ -55,9 +55,10 @@
         <q-btn :disable="ILOStatus !== 'live'" outline class="btn-less-round" label="Contribute" @click="toggleContributeForm" />
 <!--        <q-btn outline class="btn-less-round" label="Contribute" @click="toggleContributeForm" />-->
 <!--  todo: withdraw tokens should be disabled until unlocked      -->
-        <q-btn outline :disable="!currentShareOfProjectTokenBalance" class="btn-less-round" rounded label="Withdraw Project Tokens" @click="toggleWithdrawContributionForm" />
-        <q-btn outline :disable="!currentShareOfLPTokenBalance" class="btn-less-round" rounded label="Withdraw LP Tokens" @click="toggleWithdrawLPForm" />
-        <q-btn outline v-if="currentShareOfProjectTokenBalance || projectTokenBalanceOnERC20" class="btn-less-round" rounded label="Add Project Token To Wallet" @click="suggestToAddProjectToken"/>
+        <q-btn outline :disable="(!currentShareOfProjectTokenBalance && ILOInfo.admin.toLowerCase() !== currentAddress.toLowerCase()) || succeeded" class="btn-less-round" rounded label="Get Refund" @click="toggleRefundOnFailure" />
+        <q-btn outline :disable="!currentShareOfProjectTokenBalance || !succeeded" class="btn-less-round" rounded label="Withdraw Project Tokens" @click="toggleWithdrawContributionForm" />
+        <q-btn outline :disable="!currentShareOfLPTokenBalance || !succeeded" class="btn-less-round" rounded label="Withdraw LP Tokens" @click="toggleWithdrawLPForm" />
+        <q-btn outline :disable="!succeeded" v-if="currentShareOfProjectTokenBalance || projectTokenBalanceOnERC20" class="btn-less-round" rounded label="Add Project Token To Wallet" @click="suggestToAddProjectToken"/>
       </q-card-actions>
       <q-card-section>
         <div v-if="ILOProcessStatus < 6 && ILOStatus === 'ended'">
@@ -71,9 +72,9 @@
       </q-card-section>
       <q-card-actions v-if="ILOStatus === 'ended'"  align="center">
         <q-btn v-if="ILOProcessStatus  === 2 "  outline rounded label="Step 1: Validate " @click="toggleValidateForm"/>
-        <q-btn v-if="ILOProcessStatus === 3" outline rounded label="Step 2: Approve Tokens For Liquidity" @click="toggleApproveTokensForLiquidityForm"/>
-        <q-btn v-if="ILOProcessStatus === 4" outline rounded label="Step 3: Create Liquidity Pool" @click="toggleCreateLiquidityPoolForm"/>
-        <q-btn v-if="ILOProcessStatus === 5" outline rounded label="Step 4: Finalize ILO" @click="toggleFinalizeILOForm"/>
+        <q-btn v-if="ILOProcessStatus === 3 && succeeded" outline rounded label="Step 2: Approve Tokens For Liquidity" @click="toggleApproveTokensForLiquidityForm"/>
+        <q-btn v-if="ILOProcessStatus === 4 && succeeded" outline rounded label="Step 3: Create Liquidity Pool" @click="toggleCreateLiquidityPoolForm"/>
+        <q-btn v-if="ILOProcessStatus === 5 && succeeded" outline rounded label="Step 4: Finalize ILO" @click="toggleFinalizeILOForm"/>
       </q-card-actions>
       <div class="row justify-center q-my-xl ">
         <ABIGeneratedForm
@@ -158,6 +159,10 @@ export default defineComponent( {
     },
     ILOStatus: {
       type: String,
+      required: true
+    },
+    succeeded: {
+      type: Boolean,
       required: true
     },
     anILO: {
@@ -354,6 +359,23 @@ export default defineComponent( {
         console.log('funding token is not native must call allowance')
       }
       this.formKey++
+
+    },
+    toggleRefundOnFailure() {
+      if (this.formType === 'withdrawOnFailure') {
+        this.clearForm()
+        return
+      }
+
+        // native token so no need to create allowance in funding token
+        this.currentABI = this.poolPairABI
+        this.formTitle.name = 'ILO Failed: Get Refund'
+        this.currentFunctionName = 'withdrawOnFailure'
+        this.formType = 'withdrawOnFailure'
+        this.currentConnectedContract = this.ILOContract.connect(this.getSigner())
+        this.currentSuccessCallback = this.refreshBalances
+        this.currentCloseCallBack = this.toggleRefundOnFailure
+        this.formKey++
 
     },
 

@@ -46,8 +46,8 @@ async function main() {
     let softcap = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('0.03')  : utils.parseEther('500000') // on xdai softcap is 500000 or $500k
     let hardcap = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('0.05')  : utils.parseEther('1500000') // on xdai hardcap is 1.5 million or $1.5M
     
-    let initialStartTime = 180
-    let initialEndTime = 600;
+    let initialStartTime = 60
+    let initialEndTime = 180;
     let contributionLockSeconds = 300  // on xdai prod 14 day lock
     let liquidityPairLockSeconds = 600// on xdai prod 365 days in seconds lock 
 
