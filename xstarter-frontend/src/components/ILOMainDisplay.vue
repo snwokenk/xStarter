@@ -14,6 +14,10 @@
 
         }"
       />
+      <div v-if="!ILOs.length" class="full-width row justify-center">
+        <q-spinner class="col-auto" size="10em" :thickness="10"/>
+      </div>
+
     </div>
 
     <div>

@@ -220,10 +220,13 @@ export default defineComponent({
           method: 'wallet_switchEthereumChain',
           params: [{ chainId: chainId }],
         });
+        console.log("no error")
         wasAdded = true
       } catch (error) {
+        console.log("error is", error)
+        // alert(`${error.code} | ${error.message} | ${error.code === -32601}`)
         // if it was a switch error
-        if (error.code === 4902) {
+        if (error.code === 4902 || error.code === -32601) {
           try {
             wasAdded = await ethereumProvider.value.request({
               method: 'wallet_addEthereumChain',
@@ -251,6 +254,7 @@ export default defineComponent({
           }
         }else {
           console.log('non switch error', error)
+          alert(`${error.code} | ${error.message} | ${error.code === -32601}`)
         }
       }
       return wasAdded
