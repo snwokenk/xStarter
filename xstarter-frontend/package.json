@@ -11,8 +11,9 @@
     "build-for-local":  "IS_NETWORK=local quasar dev",
     "build-for-xdai":  "IS_NETWORK=xdai quasar build",
     "build-for-goerli":  "IS_NETWORK=goerli quasar build",
-    "create_github_pages_worktree": "git worktree add xstarter-frontend/github_pages_dir github_pages",
-    "build-and-copy-goerli": "npm run build-for-goerli && cp dist/spa/js github_pages_dir"
+    "create-github-pages-worktree": "git worktree add github_pages_dir github_pages",
+    "build-and-copy-goerli": "npm run build-for-goerli && rsync -a --delete --exclude-from='excluded-file' dist/spa/ github_pages_dir/",
+    "build-and-copy-xdai": "npm run build-for-xdai && rsync -a --delete --exclude-from='excluded-file' dist/spa/ github_pages_dir/"
   },
   "dependencies": {
     "@metamask/detect-provider": "^1.2.0",

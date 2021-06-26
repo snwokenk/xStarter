@@ -22,7 +22,6 @@
     "deploy-hardhat": "XDAI_DEX=true IS_NETWORK=local npx hardhat run --network localhost scripts/deploy_initial_contracts.js",
     "deploy-xdai": "XDAI_DEX=true IS_NETWORK=xdai npx hardhat run --network xdai scripts/deploy_initial_contracts.js",
     "deploy-goerli": "XDAI_DEX=false IS_NETWORK=goerli blockTime=15 npx hardhat run --network goerli scripts/deploy_initial_contracts.js",
-    "get-from-github-pages": "git subtree pull --prefix xstarter-frontend/dist/spa origin github_pages --squash",
-    "move-to-github-pages": "git subtree push --prefix xstarter-frontend/dist/spa origin github_pages"
+    "create-github-pages-worktree": "git worktree add xstarter-frontend/github_pages_dir github_pages"
   }
 }
