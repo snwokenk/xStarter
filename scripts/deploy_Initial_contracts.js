@@ -38,10 +38,10 @@ async function main() {
     
 
     // for xStarter ILO
-    let contributionLockSeconds = process.env.IS_NETWORK !== 'xdai' ? 86400 : 1209600  // on xdai prod 14 day lock
-    let liquidityPairLockSeconds = process.env.IS_NETWORK !== 'xdai' ? 129600 : 31536000 // on xdai prod 365 days in seconds lock 
-    let initialStartTime = 1800
-    let initialEndTime = 7200;
+    let contributionLockSeconds = process.env.IS_NETWORK !== 'xdai' ? 3600 : 1209600  // on xdai prod 14 day lock
+    let liquidityPairLockSeconds = process.env.IS_NETWORK !== 'xdai' ? 3600+1800 : 31536000 // on xdai prod 365 days in seconds lock 
+    let initialStartTime = process.env.IS_NETWORK !== 'xdai' ? 36000 : 432000
+    let initialEndTime = process.env.IS_NETWORK !== 'xdai' ? 72000 : 1036800
     let minimumPerSwap = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('0.001')  : utils.parseEther('50') // on xdai minimum per addr is 500 or 500 xdai ie $100 
     let minimumPerAddress = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('0.01')  : utils.parseEther('100') // on xdai minimum per addr is 500 or 500 xdai ie $100 
     let maximumPerAddress = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('0.03') : utils.parseEther('5000') // on xdai maximum per addr is 2500 or 2500 xdai ie $2500

@@ -89,6 +89,24 @@
       </q-toolbar>
     </q-footer>
     <WalletConnectModal v-if="!connectedAndPermissioned" v-model="showWalletConnectModal" />
+    <GeneralModal v-if="chainId !== 5"  v-model="showSwitchChainManual">
+      <div  class="col-12 q-pa-md segoe-bold text-wr text-center">
+        <div>
+          Please Manually Switch To The Goerli Network
+        </div>
+        <div>
+          For More Info On How To Switch Manually Click
+          <q-btn
+            flat
+            type="a"
+            label="HERE"
+            style="text-decoration: underline"
+            href="https://metamask.zendesk.com/hc/en-us/articles/360043227612-How-to-add-custom-Network-RPC-and-or-Block-Explorer"
+            target="_blank"
+          />
+        </div>
+      </div>
+    </GeneralModal>
 
   </q-layout>
 </template>
@@ -111,13 +129,14 @@ import { JSON_RPC_ENDPOINT, LAUNCHPAD_ADDRESS} from "src/constants";
 import launchpadCode from 'src/artifacts/contracts/xStarterLaunchPad.sol/xStarterLaunchPad.json';
 import xStarterProposalCode from 'src/artifacts/contracts/xStarterLaunchPad.sol/xStarterLaunchPad.json'
 import WalletConnectModal from "components/Modals/WalletConnectModal";
+import GeneralModal from "components/Modals/GeneralModal";
 
 
 
 export default defineComponent({
   name: 'MainLayout',
 
-  components: {WalletConnectModal},
+  components: {GeneralModal, WalletConnectModal},
 
   setup () {
     const $q = useQuasar()
@@ -132,6 +151,7 @@ export default defineComponent({
     let signer = undefined
     let launchPadContract = undefined
     let launchPadLoaded = ref(false)
+    const showSwitchChainManual = ref(false)
     provide('$launchPadLoaded', launchPadLoaded)
     let jsonRPCEndpoint = ref(JSON_RPC_ENDPOINT)
     provide('$jsonRPCEndpoint', jsonRPCEndpoint)
@@ -220,10 +240,13 @@ export default defineComponent({
           method: 'wallet_switchEthereumChain',
           params: [{ chainId: chainId }],
         });
+        console.log("no error")
         wasAdded = true
       } catch (error) {
+        console.log("error is", error)
+        // alert(`${error.code} | ${error.message} | ${error.code === -32601}`)
         // if it was a switch error
-        if (error.code === 4902) {
+        if (error.code === 4902 || error.code === -32601) {
           try {
             wasAdded = await ethereumProvider.value.request({
               method: 'wallet_addEthereumChain',
@@ -248,9 +271,12 @@ export default defineComponent({
             }
           }catch (error) {
             console.log(error);
+            // alert(`${error.code} | ${error.message} | ${error.code === -32601}`)
+            showSwitchChainManual.value = true
           }
         }else {
           console.log('non switch error', error)
+
         }
       }
       return wasAdded
@@ -398,7 +424,8 @@ export default defineComponent({
       launchPadContract,
       launchPadLoaded,
       chainId,
-      blockInfo
+      blockInfo,
+      showSwitchChainManual
     }
   },
   data() {
