@@ -2,9 +2,8 @@
   <q-card flat square class="display-card accountDisplayCard q-py-md q-mb-lg q-px-lg q-gutter-y-sm" clickable>
     <q-card-section class="justify-between  account-display-text text-center full-width">
       <div class="full-width row justify-between">
-        <div v-if="chainId !== 5" class="col-12 q-pa-md text-positive text-center">
-          Live Public Testing on the Goerli test Network. Switch to the Goerli test network to participate.
-          get Test (Fake ether) from
+        <div v-if="chainId !== 5" class="col-12 q-pa-md q-mb-sm text-positive text-center">
+           <q-btn outline rounded label="Public Testing Is Now Live!" @click="showLiveTestingModal = !showLiveTestingModal" />
 
         </div>
         <div class="col-auto">
@@ -56,17 +55,28 @@
       <div v-if="chainId !== 5 && connectedAndPermissioned" class="text-center q-mt-lg text-uppercase">
         <q-btn outline rounded label="Switch To GOERLI TEST network " @click="addGOERLITest" />
       </div>
-
+      <GeneralModal v-model="showLiveTestingModal">
+        <div v-if="chainId !== 5" class="col-12 q-pa-md segoe-bold text-wr text-center">
+          <div>
+            Live Public Testing on the Goerli test Network. Switch to the GOERLI TEST NETWORK to participate.
+          </div>
+          <div>
+            Get Test Ethers from <q-btn flat type="a" label="HERE" style="text-decoration: underline" href="https://goerli-faucet.slock.it/" target="_blank" />
+          </div>
+        </div>
+      </GeneralModal>
     </q-card-section>
   </q-card>
 </template>
 
 <script>
-import {defineComponent, inject, provide} from "vue";
+import {defineComponent, inject, provide, ref} from "vue";
 import {ACCEPTED_CHAINS, CHAIN_ID_TO_NAME} from "src/constants";
+import GeneralModal from "components/Modals/GeneralModal";
 
 export default defineComponent( {
   name: "AccountDisplay",
+  components: {GeneralModal},
   setup() {
     const chainId = inject('$chainId')
     const blockInfo = inject('$blockInfo')
@@ -74,12 +84,14 @@ export default defineComponent( {
     const metaMaskEthereumChainAddRequest = inject('$metaMaskEthereumChainAddRequest') // function
     const metamaskInstalled = inject('$metamaskInstalled')
     const jsonRPCEndpoint = inject('$jsonRPCEndpoint')
+    const showLiveTestingModal = ref(false)
     return {
       chainId,
       metamaskInstalled,
       blockInfo,
       connectedAndPermissioned,
       jsonRPCEndpoint,
+      showLiveTestingModal,
       metaMaskEthereumChainAddRequest
     }
   },
