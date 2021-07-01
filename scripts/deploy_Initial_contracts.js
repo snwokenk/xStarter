@@ -54,10 +54,11 @@ async function main() {
     // let liquidityPairLockSeconds = 600// on xdai prod 365 days in seconds lock 
 
     // uses honeyswap address
-    console.log('process env is', process.env.XDAI_DEX)
-    if(process.env.XDAI_DEX) {
+    
+    if(process.env.XDAI_DEX !== 'false') {
         uniswapRouter = "0x1C232F01118CB8B424793ae03F870aa7D0ac7f77";
         uniswapFactory = "0xa818b4f111ccac7aa31d0bcc0806d64f2e0737d7";
+
         // this is really address for WXDAI on honeyswap xDai
         WETH = '0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d'
     }else {
@@ -67,6 +68,9 @@ async function main() {
         WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
 
     }
+
+    console.log('dex address and factory', uniswapRouter, uniswapFactory)
+    
     
     const getAccounts = async () => {
         [owner, addr1, addr2, addr3, ...addrs] = await ethers.getSigners();

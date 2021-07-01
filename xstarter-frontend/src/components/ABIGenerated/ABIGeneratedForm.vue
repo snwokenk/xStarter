@@ -9,7 +9,7 @@
         <q-input :readonly="readOnlyObjs[obj.name]" :class="inputStyling.class" :style="inputStyling.style" v-model="formFields[obj.name]" :label="!displayNames[obj.name] ? obj.name : displayNames[obj.name]"  />
       </div>
       <div>
-        <div v-if="errorMessage" class="text-negative">
+        <div v-if="errorMessage" class="text-negative ">
           {{ errorMessage }}
         </div>
         <div v-if="successMessage" class="text-positive">

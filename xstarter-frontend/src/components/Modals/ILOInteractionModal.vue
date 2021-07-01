@@ -14,26 +14,49 @@
           <q-tooltip class="bg-white text-primary">Close</q-tooltip>
         </q-btn>
       </q-bar>
-
-<!--  TITLE    -->
-      <q-card-section class="row modal-header-font">
+      <q-card-section class="row modal-header-font ">
         <div class="text-center col-12 segoe-bold">
           Interacting With: &nbsp; {{ ILOName }} Initial Liquidity Offering
         </div>
-        <div class="text-center col-12 segoe-bold text-wr">
-          At Contract Address: &nbsp; {{ ILOInfo.ILOAddress }}
-        </div>
-        <div class="text-center col-12 segoe-bold text-wr">
-          {{ ILOName }} Token Address: &nbsp; {{ ILOMoreInfo.projectToken }}
-        </div>
-        <div class="text-center col-12 segoe-bold text-wr">
-          {{ ILOName }} LP Token Address: &nbsp; {{ ILOMoreInfo.liqPairAddr }}
-        </div>
       </q-card-section>
+
+<!--  TITLE    -->
+<!--      <div class="row justify-center full-width">-->
+<!--        <q-expansion-item label="ILO Information" class="display-card col-lg-7 col-11 accountDisplayCard" default-opened>-->
+<!--          <q-card-section class="row modal-header-font ">-->
+<!--            <div class="text-center col-12 segoe-bold">-->
+<!--              Interacting With: &nbsp; {{ ILOName }} Initial Liquidity Offering-->
+<!--            </div>-->
+<!--            <div class="text-center col-12 segoe-bold text-wr">-->
+<!--              At Contract Address: &nbsp; {{ ILOInfo.ILOAddress }}-->
+<!--            </div>-->
+<!--            <div class="text-center col-12 segoe-bold text-wr">-->
+<!--              {{ ILOName }} Token Address: &nbsp; {{ ILOMoreInfo.projectToken }}-->
+<!--            </div>-->
+<!--            <div class="text-center col-12 segoe-bold text-wr">-->
+<!--              {{ ILOName }} LP Token Address: &nbsp; {{ ILOMoreInfo.liqPairAddr }}-->
+<!--            </div>-->
+<!--          </q-card-section>-->
+<!--        </q-expansion-item>-->
+<!--      </div>-->
+      <q-card-section class="justify-center row full-width" >
+        <ILOInteractionAddressesInfoDisplay
+          class="col-lg-7 col-11"
+          header-class="text-bold text-uppercase text-h6 text-center"
+          default-opened
+          :ILOName="ILOName"
+          :ILOInfo="ILOInfo"
+          :ILOMoreInfo="ILOMoreInfo"
+          :ILOStatus="ILOStatus"
+        />
+      </q-card-section>
+
+
 <!--  Contribution Info    -->
-      <q-card-section class="justify-center row" >
+      <q-card-section class="justify-center row full-width" >
         <ILOInteractionInfoDisplay
-          class="col-auto"
+          header-class="text-bold text-uppercase text-h5 text-center"
+          class="col-lg-7 col-11"
           :ILOName="ILOName"
           :ILOInfo="ILOInfo"
           :maxPerAddr="maxPerAddr"
@@ -110,12 +133,13 @@ import xStarterPoolPairCode from 'src/artifacts/contracts/xStarterPoolPairB.sol/
 import ERC20Code from 'src/artifacts/contracts/xStarterPoolPairB.sol/ProjectBaseToken.json'
 import ILOInteractionInfoDisplay from "components/CardDisplays/ILOInteractionInfoDisplay";
 import {ILO_STATUS, xStarter_ILO_Info, xStarter_ILO_IPFS_CID} from "src/constants";
+import ILOInteractionAddressesInfoDisplay from "components/CardDisplays/ILOInteractionAddressesInfoDisplay";
 
 
 
 export default defineComponent( {
   name: "ILOInteractionModal",
-  components: {ILOInteractionInfoDisplay, ABIGeneratedForm},
+  components: {ILOInteractionAddressesInfoDisplay, ILOInteractionInfoDisplay, ABIGeneratedForm},
   setup() {
     const proposalABI = xStarterProposalCode.abi
     const poolPairABI = xStarterPoolPairCode.abi

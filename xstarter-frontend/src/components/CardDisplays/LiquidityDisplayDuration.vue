@@ -62,17 +62,17 @@ export default defineComponent({
         return 'Soon'
       }
       if (duration <= 60) {
-        return `${duration} ${unit}`
+        return `${duration} ${duration === 1 ? 'minute' : unit}`
       }
       unit = 'hours'
       duration = date.getDateDiff(new Date(greaterDate), new Date(lesserDate), unit)
       // if duration less than 48 hours return else display in days
       if (duration <= 48) {
-        return `${duration} ${unit}`
+        return `${duration} ${duration === 1 ? 'hour' : unit}`
       }
       unit = 'days'
       duration = date.getDateDiff(new Date(greaterDate), new Date(lesserDate), unit)
-      return `${duration} ${unit}`
+      return `${duration} ${duration === 1 ? 'day' : unit}}`
 
     }
   },
