@@ -39,10 +39,10 @@
 
       <q-tabs align="center" :class="{'text-dark': !$q.dark.isActive, 'text-light': $q.dark.isActive}">
         <q-route-tab to="/" label="ILO"  />
-        <q-route-tab to="/page2" label="Governance" disable>
+        <q-route-tab to="/gov" label="Governance">
           <q-badge label="Coming Soon" :color="darkLightText" :text-color="darkLightTextReverse" style="font-size: 8px;" floating />
         </q-route-tab>
-        <q-route-tab to="/page3" label="NFT" disable>
+        <q-route-tab to="/nft" label="NFT">
           <q-badge label="Coming Soon" :color="darkLightText" :text-color="darkLightTextReverse" style="font-size: 8px;" floating />
         </q-route-tab>
       </q-tabs>

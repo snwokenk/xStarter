@@ -254,6 +254,10 @@ body.body--light {
 .btn-less-round {
   border-radius: 5px;
 }
+.wrap-word {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
 
 @media (max-width: $mobile-width2) {
   .modal-header-font {
@@ -269,3 +273,4 @@ body.body--light {
     font-size: 20px;
   }
 }
+
