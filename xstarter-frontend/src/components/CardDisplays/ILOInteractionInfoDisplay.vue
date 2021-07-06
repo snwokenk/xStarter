@@ -18,7 +18,7 @@
           </div>
 
           <div  class="col-12 row col-lg-6 text-left">
-            <div class="col-12">Your Current ETH Balance</div>
+            <div class="col-12">Your Current {{ fundingTokenSymbol }} Balance</div>
             <div class="segoe-bold col-12 text-positive">{{ currentNativeTokenBalance }}</div>
           </div>
 

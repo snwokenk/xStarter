@@ -90,6 +90,7 @@ export default defineComponent( {
     const connectedAndPermissioned = inject('$connectedAndPermissioned',)
     const poolPairABI = xStarterPoolPairCode.abi
     const blockInfo = inject('$blockInfo')
+    let chainId = inject('$chainId')
     const viewModal = ref(false)
     const getProvider = inject('$getProvider')
     const currentContrib = ref(0)
@@ -100,7 +101,7 @@ export default defineComponent( {
     provide('$changeCurrentContrib', changeCurrentContrib)
     const connectedAccount = inject('$connectedAccounts')
 
-    return {connectedAndPermissioned, viewModal, blockInfo, poolPairABI, currentContrib, connectedAccount, getProvider, changeCurrentContrib}
+    return {connectedAndPermissioned, viewModal, blockInfo, chainId, poolPairABI, currentContrib, connectedAccount, getProvider, changeCurrentContrib}
   },
   props: {
     liquidityOffering: {
@@ -140,8 +141,9 @@ export default defineComponent( {
       return parseInt(this.ILOMoreInfo.startTime) * 1000
     },
     fundingTokenSymbol() {
-      if (SUPPORTED_FUNDING_TOKENS[this.ILOInfo.fundingToken]) {
-        return SUPPORTED_FUNDING_TOKENS[this.ILOInfo.fundingToken]
+      let fundingSymbol = SUPPORTED_FUNDING_TOKENS[this.ILOInfo.fundingToken + '-' + this.chainId]
+      if (fundingSymbol) {
+        return fundingSymbol
       }
       return 'Custom Token'
     },

@@ -4,7 +4,7 @@ export const LAUNCHPAD_ADDRESS = {
   // default: '0x684097E38F2d7D848cD9E66a4947d749a9E098cC',
   5: '0xF42b3Fc47e00eB1f484359A16Cb2055Ee855cCa8',
   31337: '0x533428A47CD6e1D0E5221E76B0bd82029662b938',
-  100: ''
+  100: '0xC8C501d934Ca36f044971c0453A71296e46EB6e3'
 }
 LAUNCHPAD_ADDRESS.default = LAUNCHPAD_ADDRESS[DEFAULT_CHAIN]
 
@@ -12,7 +12,9 @@ export const  CHAIN_ID = '31337'
 
 // todo: make this dynamic based n change
 export const SUPPORTED_FUNDING_TOKENS = {
-  '0x0000000000000000000000000000000000000000': CHAIN_ID === '100' ? 'xDai' : 'ETH'
+  '0x0000000000000000000000000000000000000000-100': 'xDai',
+  '0x0000000000000000000000000000000000000000-31337': 'ETH',
+  '0x0000000000000000000000000000000000000000-5': 'ETH'
   // add xstarter token
 }
 
@@ -56,7 +58,8 @@ export const xStarter_ILO_Info = {
   about: {
     name: 'xStarter',
     logoURL: 'https://ipfs.io/ipfs/QmR9MLmwXTyXJ5J9eJQ2hXeY3oKzuwsvWqtuS6aFaszsBS',
-    description: `xStarter is an ecosystem of smart contracts, that provides a decentralized way for businesses, of all sizes, to issue tokens and create a market for those tokens.`,
+    description: `xStarter is an ecosystem of smart contracts, that provides a decentralized way for businesses, of all sizes, to issue tokens and create a market for those tokens.
+    xStarter also allows the creation, storage and sale of NFTs using the xDai Blockchain and a decentralized storage system like IPFS`,
     socialMediaLinks: [
       {label: 'telegram', url: 'https://t.me/xStarterDev', icon: 'fab fa-telegram-plane' },
       {label: 'twitter', url: 'https://www.twitter.com/xStarterdev', icon: 'fab fa-twitter' },

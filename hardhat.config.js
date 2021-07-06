@@ -1,4 +1,4 @@
-const { ALCHEMYURL, ALCHEMYGOERLIURL, XDAIURL, XDAIURL2,  XDAIBLOCKSCOUTARCHIVE, mnemonicTest, privateKey } = require('./ignored_constants');
+const { ALCHEMYURL, ALCHEMYGOERLIURL, ANKR_XDAI_API_URL, XDAIURL2,  XDAIBLOCKSCOUTARCHIVE, mnemonicTest, privateKey } = require('./ignored_constants');
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
@@ -81,6 +81,13 @@ module.exports = {
       // url: 'https://services.fault.dev/',
       accounts:[`0x${privateKey}`]
     },
+    xdai: {
+      chainID: 100,
+      url: ANKR_XDAI_API_URL,
+      gasPrice: 6000000000,
+      accounts:[`0x${privateKey}`]
+
+    }
   },
   paths: {
     artifacts: './xstarter-frontend/src/artifacts'

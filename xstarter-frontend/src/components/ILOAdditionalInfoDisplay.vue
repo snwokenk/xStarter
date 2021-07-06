@@ -304,11 +304,15 @@
 </template>
 
 <script>
-import {defineComponent} from "vue";
+import {defineComponent, inject} from "vue";
 import {SUPPORTED_FUNDING_TOKENS} from "src/constants";
 
 export default defineComponent( {
   name: "ILOAdditionalInfoDisplay",
+  setup() {
+    let chainId = inject('$chainId')
+    return {chainId}
+  },
   props: {
     selectedILO: {
       type: Object,
@@ -345,8 +349,9 @@ export default defineComponent( {
       return this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.hardcap)
     },
     fundingTokenSymbol() {
-      if (SUPPORTED_FUNDING_TOKENS[this.ILOInfo.fundingToken]) {
-        return SUPPORTED_FUNDING_TOKENS[this.ILOInfo.fundingToken]
+      let fundingSymbol = SUPPORTED_FUNDING_TOKENS[this.ILOInfo.fundingToken + '-' + this.chainId]
+      if (fundingSymbol) {
+        return fundingSymbol
       }
       return 'Custom Token'
     },

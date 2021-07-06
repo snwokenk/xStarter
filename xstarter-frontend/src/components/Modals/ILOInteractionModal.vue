@@ -74,7 +74,7 @@
         />
       </q-card-section>
 
-      <q-card-actions align="center">
+      <q-card-actions align="center" class="q-gutter-y-md">
         <q-btn :disable="ILOStatus !== 'live'" outline class="btn-less-round" label="Contribute" @click="toggleContributeForm" />
 <!--        <q-btn outline class="btn-less-round" label="Contribute" @click="toggleContributeForm" />-->
 <!--  todo: withdraw tokens should be disabled until unlocked      -->
