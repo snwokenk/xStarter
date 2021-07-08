@@ -7,7 +7,7 @@
     transition-hide="slide-down"
     @update:model-value="minimize"
   >
-    <q-card>
+    <q-card class="scroll">
       <q-bar>
         <q-space />
         <q-btn dense flat icon="close" v-close-popup>
@@ -102,9 +102,10 @@
       <div class="row justify-center q-my-xl ">
         <ABIGeneratedForm
           class="col-12 col-lg-9 q-pa-xl accountDisplayCard display-card"
-          v-if="currentFunctionName && currentABI"
+          v-if="showABIForm"
           :abi="currentABI"
           :title="formTitle"
+          :native-currency-symbol="fundingTokenSymbol"
           :function-name="currentFunctionName"
           :connected-contract="currentConnectedContract"
           :success-call-back="currentSuccessCallback"
@@ -113,6 +114,7 @@
           :key="formKey"
           :default-values="formDefaultValues"
         />
+        <div ref="#abiForm"></div>
       </div>
 
     </q-card>
@@ -134,6 +136,9 @@ import ERC20Code from 'src/artifacts/contracts/xStarterPoolPairB.sol/ProjectBase
 import ILOInteractionInfoDisplay from "components/CardDisplays/ILOInteractionInfoDisplay";
 import {ILO_STATUS, xStarter_ILO_Info, xStarter_ILO_IPFS_CID} from "src/constants";
 import ILOInteractionAddressesInfoDisplay from "components/CardDisplays/ILOInteractionAddressesInfoDisplay";
+
+import { scroll } from 'quasar'
+const { getScrollTarget, setVerticalScrollPosition } = scroll
 
 
 
@@ -203,6 +208,9 @@ export default defineComponent( {
     }
   },
   computed: {
+    showABIForm() {
+      return this.currentFunctionName && this.currentABI
+    },
     usingILO() {
       return this.updatedILO ? this.updatedILO : this.anILO
     },
@@ -276,6 +284,20 @@ export default defineComponent( {
     }
   },
   methods: {
+    scrollToElement (el) {
+      console.log('ele in scroll is', el)
+      const target = getScrollTarget(el)
+      const offset = el.offsetTop
+      const duration = 500
+      setVerticalScrollPosition(target, offset, duration)
+      console.log(target, offset, duration)
+    },
+    scrollToForm() {
+      var element = this.$refs['#abiForm']
+      var top = element.offsetTop
+      window.scrollTo(0, top)
+      console.log(element, top)
+    },
     minimize() {
       this.$emit('update:modelValue', !this.modelValue)
     },
@@ -547,6 +569,13 @@ export default defineComponent( {
   watch: {
     connectedAccount: async function () {
       await this.refreshBalances()
+    },
+    showABIForm: function (boolVal) {
+      if (boolVal) {
+        console.log('abi element', this.$refs['#abiForm'])
+        this.scrollToElement(this.$refs['#abiForm'])
+        // this.scrollToForm()
+      }
     }
   }
 })

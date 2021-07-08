@@ -81,13 +81,14 @@ module.exports = {
       // url: 'https://services.fault.dev/',
       accounts:[`0x${privateKey}`]
     },
-    xdai: {
-      chainID: 100,
-      url: ANKR_XDAI_API_URL,
-      gasPrice: 6000000000,
-      accounts:[`0x${privateKey}`]
+    /* uncomment when trying to deploy to xDai */
+    // xdai: {
+    //   chainID: 100,
+    //   url: ANKR_XDAI_API_URL,
+    //   gasPrice: 6000000000,
+    //   accounts:[`0x${privateKey}`]
 
-    }
+    // }
   },
   paths: {
     artifacts: './xstarter-frontend/src/artifacts'
