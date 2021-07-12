@@ -305,7 +305,7 @@
 
 <script>
 import {defineComponent, inject} from "vue";
-import {SUPPORTED_FUNDING_TOKENS} from "src/constants";
+import {DEFAULT_CHAIN_FUNDING_TOKEN, SUPPORTED_FUNDING_TOKENS} from "src/constants";
 
 export default defineComponent( {
   name: "ILOAdditionalInfoDisplay",
@@ -352,6 +352,8 @@ export default defineComponent( {
       let fundingSymbol = SUPPORTED_FUNDING_TOKENS[this.ILOInfo.fundingToken + '-' + this.chainId]
       if (fundingSymbol) {
         return fundingSymbol
+      }else if (!this.connectedAndPermissioned) {
+        return DEFAULT_CHAIN_FUNDING_TOKEN
       }
       return 'Custom Token'
     },

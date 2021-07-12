@@ -78,7 +78,7 @@
 <script>
 import {defineComponent, inject, provide, ref} from 'vue'
 import LiquidityDisplayDuration from "components/CardDisplays/LiquidityDisplayDuration";
-import {SUPPORTED_FUNDING_TOKENS} from "src/constants";
+import {DEFAULT_CHAIN_FUNDING_TOKEN, SUPPORTED_FUNDING_TOKENS} from "src/constants";
 import ILOInteractionModal from "components/Modals/ILOInteractionModal";
 import {ethers} from "boot/ethers";
 import xStarterPoolPairCode from 'src/artifacts/contracts/xStarterPoolPairB.sol/xStarterPoolPairB.json'
@@ -144,6 +144,8 @@ export default defineComponent( {
       let fundingSymbol = SUPPORTED_FUNDING_TOKENS[this.ILOInfo.fundingToken + '-' + this.chainId]
       if (fundingSymbol) {
         return fundingSymbol
+      }else if (!this.connectedAndPermissioned) {
+        return DEFAULT_CHAIN_FUNDING_TOKEN
       }
       return 'Custom Token'
     },
