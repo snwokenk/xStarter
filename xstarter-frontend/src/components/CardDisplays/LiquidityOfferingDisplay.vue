@@ -158,49 +158,24 @@ export default defineComponent( {
     amountRaised() {
       // const amtRaised = parseFloat(this.$ethers.utils.formatEther(this.ILOMoreInfo.amountRaised.toString()))
       const amtRaised = this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.amountRaised)
-      if ( amtRaised >= 1000000) {
-        return `${amtRaised}M`
-      } else if (amtRaised >= 1000) {
-        return `${amtRaised}K`
-      }
-      return amtRaised
+      return this.amountDisplay(amtRaised)
     },
     softCap() {
       const amt = this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.softcap)
-      if ( amt >= 1000000) {
-        return `${amt}M`
-      } else if (amt >= 1000) {
-        return `${amt}K`
-      }
-      return amt
+      return this.amountDisplay(amt)
     },
     hardCap() {
       const amt = this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.hardcap)
-      if ( amt >= 1000000) {
-        return `${amt}M`
-      } else if (amt >= 1000) {
-        return `${amt}K`
-      }
-      return amt
+      return this.amountDisplay(amt)
     },
 
     minPerAddr() {
       const amt = this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.minPerAddr)
-      if ( amt >= 1000000) {
-        return `${amt}M`
-      } else if (amt >= 1000) {
-        return `${amt}K`
-      }
-      return amt
+      return this.amountDisplay(amt)
     },
     maxPerAddr() {
       const amt = this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.maxPerAddr)
-      if ( amt >= 1000000) {
-        return `${amt}M`
-      } else if (amt >= 1000) {
-        return `${amt}K`
-      }
-      return amt
+      return this.amountDisplay(amt)
     },
     currentAddress() {
       return this.connectedAccount[0]
@@ -265,6 +240,14 @@ export default defineComponent( {
     }
   },
   methods: {
+    amountDisplay(amt) {
+      if ( amt >= 1000000) {
+        return `${amt / 1000000}M`
+      } else if (amt >= 1000) {
+        return `${amt / 1000}K`
+      }
+      return amt
+    },
     callViewMoreAndPassInfoData() {
       this.viewMoreCallBack(this.infoData)
     }

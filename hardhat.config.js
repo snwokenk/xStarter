@@ -51,7 +51,8 @@ module.exports = {
         interval: 5000
       },
       accounts: {
-        mnemonic: mnemonicTest
+        mnemonic: mnemonicTest,
+        accountsBalance: '10000000000000000000000000' // 1 million ethers for testing
       },
       timeout: 60000
     },
@@ -85,7 +86,7 @@ module.exports = {
     // xdai: {
     //   chainID: 100,
     //   url: ANKR_XDAI_API_URL,
-    //   gasPrice: 6000000000,
+    //   gasPrice: 3000000000,
     //   accounts:[`0x${privateKey}`]
 
     // }

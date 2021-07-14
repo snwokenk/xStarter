@@ -75,7 +75,7 @@
               </div>
               <div class="col-auto">
                 <div class="segoe-bold info-text">
-                  {{ softCapFullDisplay }} {{ fundingTokenSymbol}}
+                  {{ softCapFullDisplay.toLocaleString() }} {{ fundingTokenSymbol}}
                 </div>
                 <div class="segoe-regular info-label">
                   SoftCap
@@ -92,7 +92,7 @@
               </div>
               <div class="col-auto">
                 <div class="segoe-bold info-text">
-                  {{ hardCapFullDisplay }} {{ fundingTokenSymbol}}
+                  {{ hardCapFullDisplay.toLocaleString() }} {{ fundingTokenSymbol}}
                 </div>
                 <div class="segoe-regular info-label">
                   HardCap
@@ -108,7 +108,7 @@
               </div>
               <div class="col-auto">
                 <div class="segoe-bold info-text">
-                  {{ minPerAddr }} {{ fundingTokenSymbol}}
+                  {{ minPerAddr.toLocaleString() }} {{ fundingTokenSymbol}}
                 </div>
                 <div class="segoe-regular info-label">
                   Minimum Spend Per Address
@@ -124,7 +124,7 @@
               </div>
               <div class="col-auto">
                 <div class="segoe-bold info-text">
-                  {{ maxPerAddr }} {{ fundingTokenSymbol}}
+                  {{ maxPerAddr.toLocaleString() }} {{ fundingTokenSymbol}}
                 </div>
                 <div class="segoe-regular info-label">
                   Maximum Spend Per Address
@@ -141,7 +141,7 @@
               </div>
               <div class="col-auto">
                 <div v-if="hardCapFullDisplay" class="segoe-bold info-text">
-                  {{ softCapSwapRate }} tokens per 1 {{ fundingTokenSymbol }}
+                  {{ softCapSwapRate.toLocaleString() }} tokens per 1 {{ fundingTokenSymbol }}
                 </div>
                 <div v-else class="segoe-bold info-text">
                   TBD
@@ -160,7 +160,7 @@
               </div>
               <div class="col-auto">
                 <div v-if="hardCapFullDisplay" class="segoe-bold info-text">
-                  {{ hardCapSwapRate }} tokens per 1 {{ fundingTokenSymbol }}
+                  {{ hardCapSwapRate.toLocaleString() }} tokens per 1 {{ fundingTokenSymbol }}
                 </div>
                 <div v-else class="segoe-bold info-text">
                   TBD
@@ -198,7 +198,7 @@
               </div>
               <div class="col-auto">
                 <div v-if="hardCapFullDisplay" class="segoe-bold info-text">
-                  {{ listingPremium }}%  Above Swap ILO Swap Eate
+                  {{ listingPremium }}%  Above Swap ILO Swap Rate
                 </div>
                 <div v-else class="segoe-bold info-text">
                   TBD
@@ -374,11 +374,11 @@ export default defineComponent( {
       // return totalTokens
     },
     softCapSwapRate() {
-      return this.tokensForILO / this.softCapFullDisplay
+      return (this.tokensForILO * (this.percentOfFundingTokenForLiqudity / 100)) / this.softCapFullDisplay
     },
 
     hardCapSwapRate() {
-      return this.tokensForILO / this.hardCapFullDisplay
+      return (this.tokensForILO * (this.percentOfFundingTokenForLiqudity / 100)) / this.hardCapFullDisplay
     },
 
     percentOfFundingTokenForLiqudity() {

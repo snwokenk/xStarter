@@ -72,7 +72,7 @@ export default defineComponent({
       }
       unit = 'days'
       duration = date.getDateDiff(new Date(greaterDate), new Date(lesserDate), unit)
-      return `${duration} ${duration === 1 ? 'day' : unit}}`
+      return `${duration} ${duration === 1 ? 'day' : unit}`
 
     }
   },

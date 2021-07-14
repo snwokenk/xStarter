@@ -36,19 +36,19 @@ async function main() {
     let WETH;
     let mineLen = process.env.IS_NETWORK !== 'goerli' ? 5 : 15;
     let currNonce;
-    let gasPriceNeeded = '0.000000006'
+    let gasPriceNeeded = '0.000000003'
     
 
     // for xStarter ILO
-    let contributionLockSeconds = process.env.IS_NETWORK !== 'xdai' ? 3600 : 1209600  // on xdai prod 14 day lock
-    let liquidityPairLockSeconds = process.env.IS_NETWORK !== 'xdai' ? 3600+1800 : 31536000 // on xdai prod 365 days in seconds lock 
-    let initialStartTime = process.env.IS_NETWORK !== 'xdai' ? 900 : 432000
-    let initialEndTime = process.env.IS_NETWORK !== 'xdai' ? 7200 : 1036800
+    let contributionLockSeconds = process.env.IS_NETWORK !== 'xdai' ? 300 : 1209600  // on xdai prod 14 day lock
+    let liquidityPairLockSeconds = process.env.IS_NETWORK !== 'xdai' ? 450 : 63072000 // on xdai prod 365 days in seconds lock 
+    let initialStartTime = process.env.IS_NETWORK !== 'xdai' ? 600 : 2592000
+    let initialEndTime = process.env.IS_NETWORK !== 'xdai' ? 900 : 3801600
     let minimumPerSwap = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('0.001')  : utils.parseEther('50') // on xdai minimum per addr is 500 or 500 xdai ie $100 
     let minimumPerAddress = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('0.01')  : utils.parseEther('100') // on xdai minimum per addr is 500 or 500 xdai ie $100 
-    let maximumPerAddress = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('0.25') : utils.parseEther('5000') // on xdai maximum per addr is 2500 or 2500 xdai ie $2500
-    let softcap = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('0.50')  : utils.parseEther('500000') // on xdai softcap is 500000 or $500k
-    let hardcap = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('1')  : utils.parseEther('1500000') // on xdai hardcap is 1.5 million or $1.5M
+    let maximumPerAddress = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('500000') : utils.parseEther('10000') // on xdai maximum per addr is 2500 or 2500 xdai ie $2500
+    let softcap = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('200000')  : utils.parseEther('200000') // on xdai softcap is 500000 or $500k
+    let hardcap = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('2000000')  : utils.parseEther('2000000') // on xdai hardcap is 1.5 million or $1.5M
     
     // let initialStartTime = 60
     // let initialEndTime = 180;
@@ -209,7 +209,9 @@ async function main() {
             console.log('xstarter proposal inst is after add more info', xStarterProposalInst.address)
 
             let startTime = parseInt(Date.now() / 1000) + initialStartTime;
+            // let startTime = 1628899200; // AUG 14  12:00 AMGMT
             let endTime = parseInt(Date.now() / 1000) + initialEndTime;
+            // let endTime = 1630108800; // AUG 28 12:00 AM GMT
             let proposalInfo = await xStarterLaunchPadInst.getProposal(xStarterProposalInst.address)
             xStarterPoolPairInst = poolPairFactory.attach(proposalInfo.info.ILOAddress)
           //   const poolPairFromOther = poolPair.connect(addr2);
