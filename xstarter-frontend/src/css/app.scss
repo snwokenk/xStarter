@@ -259,6 +259,13 @@ body.body--light {
   word-wrap: break-word;
 }
 
+.modal-size {
+  max-width: 1000px;
+  max-height: 600px;
+  min-height: 400px;
+  min-width: 65%;
+}
+
 @media (max-width: $mobile-width2) {
   .modal-header-font {
     font-size: 13px;
