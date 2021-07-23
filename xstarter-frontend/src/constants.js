@@ -1,10 +1,12 @@
 
-const DEFAULT_CHAIN = process.env.IS_NETWORK === 'goerli' ? 5 : process.env.IS_NETWORK === 'xdai' ? 100 :  31337
+export const DEFAULT_CHAIN = process.env.IS_NETWORK === 'goerli' ? 5 : process.env.IS_NETWORK === 'xdai' ? 100 :  31337
+export const DEFAULT_CHAIN_FUNDING_TOKEN = process.env.IS_NETWORK === 'xdai' ? 'xDAI' :  'ETH'
 export const LAUNCHPAD_ADDRESS = {
   // default: '0x684097E38F2d7D848cD9E66a4947d749a9E098cC',
-  5: '0x4EB937e7523f8E64091f09B5B92846E005999b97',
-  31337: '0x052D9775D73623d96105DD6FB5e6fC906D261999',
-  100: ''
+  5: '0xF42b3Fc47e00eB1f484359A16Cb2055Ee855cCa8',
+  31337: '0xBB9803948dA155d5f2D79A3c12A7A7673EC00E62',
+  // 100: '0xfFA37CD8cE90a563Ca0DF9827195072a404bB58b'
+  100: '0xb12D04F51819BeF367b51afA4813e591a27d7072'
 }
 LAUNCHPAD_ADDRESS.default = LAUNCHPAD_ADDRESS[DEFAULT_CHAIN]
 
@@ -12,9 +14,13 @@ export const  CHAIN_ID = '31337'
 
 // todo: make this dynamic based n change
 export const SUPPORTED_FUNDING_TOKENS = {
-  '0x0000000000000000000000000000000000000000': CHAIN_ID === '100' ? 'xDai' : 'ETH'
+  '0x0000000000000000000000000000000000000000-100': 'xDAI',
+  '0x0000000000000000000000000000000000000000-31337': 'ETH',
+  '0x0000000000000000000000000000000000000000-5': 'ETH'
   // add xstarter token
 }
+
+
 
 export const CHAIN_ID_TO_NAME = {
   1: 'Ethereum Main Net',
@@ -56,7 +62,8 @@ export const xStarter_ILO_Info = {
   about: {
     name: 'xStarter',
     logoURL: 'https://ipfs.io/ipfs/QmR9MLmwXTyXJ5J9eJQ2hXeY3oKzuwsvWqtuS6aFaszsBS',
-    description: `xStarter is an ecosystem of smart contracts, that provides a decentralized way for businesses, of all sizes, to issue tokens and create a market for those tokens.`,
+    description: `xStarter is an ecosystem of smart contracts, that provides a decentralized way for businesses, of all sizes, to issue tokens and create a market for those tokens.
+    xStarter also allows the creation, storage and sale of NFTs using the xDai Blockchain and a decentralized storage system like IPFS`,
     socialMediaLinks: [
       {label: 'telegram', url: 'https://t.me/xStarterDev', icon: 'fab fa-telegram-plane' },
       {label: 'twitter', url: 'https://www.twitter.com/xStarterdev', icon: 'fab fa-twitter' },

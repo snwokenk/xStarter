@@ -9,14 +9,14 @@
         <q-input :readonly="readOnlyObjs[obj.name]" :class="inputStyling.class" :style="inputStyling.style" v-model="formFields[obj.name]" :label="!displayNames[obj.name] ? obj.name : displayNames[obj.name]"  />
       </div>
       <div>
-        <div v-if="errorMessage" class="text-negative">
+        <div v-if="errorMessage" class="text-negative ">
           {{ errorMessage }}
         </div>
         <div v-if="successMessage" class="text-positive">
           Success! TX hash: {{ successMessage }}
         </div>
         <div v-if="funcABI.stateMutability === 'payable'">
-          <q-input  :class="inputStyling.class" :style="inputStyling.style" v-model="payableValue" label="Ethers to send"/>
+          <q-input  :class="inputStyling.class" :style="inputStyling.style" v-model="payableValue" :label="`${nativeCurrencySymbol} to send`"/>
         </div>
         <div class="q-pl-xs" v-if="funcABI.inputs.length === 0 && funcABI.stateMutability === 'nonpayable'">
           No Inputs required. Click Execute to call function
@@ -80,6 +80,10 @@ export default defineComponent( {
     functionType: {
       type: String,
       default: 'function' // can be 'function', 'constructor'
+    },
+    nativeCurrencySymbol: {
+      type: String,
+      default: 'ETH'
     },
     abi: {
       type: Object,

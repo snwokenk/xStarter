@@ -4,7 +4,9 @@ const routes = [
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/Index.vue') }
+      { path: '', component: () => import('pages/Index.vue') },
+      { path: 'gov', component: () => import('pages/Governance.vue') },
+      { path: 'nft', component: () => import('pages/NFT.vue') },
     ]
   },
 

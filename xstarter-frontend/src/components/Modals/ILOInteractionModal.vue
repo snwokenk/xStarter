@@ -7,33 +7,56 @@
     transition-hide="slide-down"
     @update:model-value="minimize"
   >
-    <q-card>
+    <q-card class="scroll">
       <q-bar>
         <q-space />
         <q-btn dense flat icon="close" v-close-popup>
           <q-tooltip class="bg-white text-primary">Close</q-tooltip>
         </q-btn>
       </q-bar>
-
-<!--  TITLE    -->
-      <q-card-section class="row modal-header-font">
+      <q-card-section class="row modal-header-font ">
         <div class="text-center col-12 segoe-bold">
           Interacting With: &nbsp; {{ ILOName }} Initial Liquidity Offering
         </div>
-        <div class="text-center col-12 segoe-bold text-wr">
-          At Contract Address: &nbsp; {{ ILOInfo.ILOAddress }}
-        </div>
-        <div class="text-center col-12 segoe-bold text-wr">
-          {{ ILOName }} Token Address: &nbsp; {{ ILOMoreInfo.projectToken }}
-        </div>
-        <div class="text-center col-12 segoe-bold text-wr">
-          {{ ILOName }} LP Token Address: &nbsp; {{ ILOMoreInfo.liqPairAddr }}
-        </div>
       </q-card-section>
+
+<!--  TITLE    -->
+<!--      <div class="row justify-center full-width">-->
+<!--        <q-expansion-item label="ILO Information" class="display-card col-lg-7 col-11 accountDisplayCard" default-opened>-->
+<!--          <q-card-section class="row modal-header-font ">-->
+<!--            <div class="text-center col-12 segoe-bold">-->
+<!--              Interacting With: &nbsp; {{ ILOName }} Initial Liquidity Offering-->
+<!--            </div>-->
+<!--            <div class="text-center col-12 segoe-bold text-wr">-->
+<!--              At Contract Address: &nbsp; {{ ILOInfo.ILOAddress }}-->
+<!--            </div>-->
+<!--            <div class="text-center col-12 segoe-bold text-wr">-->
+<!--              {{ ILOName }} Token Address: &nbsp; {{ ILOMoreInfo.projectToken }}-->
+<!--            </div>-->
+<!--            <div class="text-center col-12 segoe-bold text-wr">-->
+<!--              {{ ILOName }} LP Token Address: &nbsp; {{ ILOMoreInfo.liqPairAddr }}-->
+<!--            </div>-->
+<!--          </q-card-section>-->
+<!--        </q-expansion-item>-->
+<!--      </div>-->
+      <q-card-section class="justify-center row full-width" >
+        <ILOInteractionAddressesInfoDisplay
+          class="col-lg-7 col-11"
+          header-class="text-bold text-uppercase text-h6 text-center"
+          default-opened
+          :ILOName="ILOName"
+          :ILOInfo="ILOInfo"
+          :ILOMoreInfo="ILOMoreInfo"
+          :ILOStatus="ILOStatus"
+        />
+      </q-card-section>
+
+
 <!--  Contribution Info    -->
-      <q-card-section class="justify-center row" >
+      <q-card-section class="justify-center row full-width" >
         <ILOInteractionInfoDisplay
-          class="col-auto"
+          header-class="text-bold text-uppercase text-h5 text-center"
+          class="col-lg-7 col-11"
           :ILOName="ILOName"
           :ILOInfo="ILOInfo"
           :maxPerAddr="maxPerAddr"
@@ -51,7 +74,7 @@
         />
       </q-card-section>
 
-      <q-card-actions align="center">
+      <q-card-actions align="center" class="q-gutter-y-md">
         <q-btn :disable="ILOStatus !== 'live'" outline class="btn-less-round" label="Contribute" @click="toggleContributeForm" />
 <!--        <q-btn outline class="btn-less-round" label="Contribute" @click="toggleContributeForm" />-->
 <!--  todo: withdraw tokens should be disabled until unlocked      -->
@@ -79,9 +102,10 @@
       <div class="row justify-center q-my-xl ">
         <ABIGeneratedForm
           class="col-12 col-lg-9 q-pa-xl accountDisplayCard display-card"
-          v-if="currentFunctionName && currentABI"
+          v-if="showABIForm"
           :abi="currentABI"
           :title="formTitle"
+          :native-currency-symbol="fundingTokenSymbol"
           :function-name="currentFunctionName"
           :connected-contract="currentConnectedContract"
           :success-call-back="currentSuccessCallback"
@@ -90,6 +114,7 @@
           :key="formKey"
           :default-values="formDefaultValues"
         />
+        <div ref="#abiForm"></div>
       </div>
 
     </q-card>
@@ -110,12 +135,16 @@ import xStarterPoolPairCode from 'src/artifacts/contracts/xStarterPoolPairB.sol/
 import ERC20Code from 'src/artifacts/contracts/xStarterPoolPairB.sol/ProjectBaseToken.json'
 import ILOInteractionInfoDisplay from "components/CardDisplays/ILOInteractionInfoDisplay";
 import {ILO_STATUS, xStarter_ILO_Info, xStarter_ILO_IPFS_CID} from "src/constants";
+import ILOInteractionAddressesInfoDisplay from "components/CardDisplays/ILOInteractionAddressesInfoDisplay";
+
+import { scroll } from 'quasar'
+const { getScrollTarget, setVerticalScrollPosition } = scroll
 
 
 
 export default defineComponent( {
   name: "ILOInteractionModal",
-  components: {ILOInteractionInfoDisplay, ABIGeneratedForm},
+  components: {ILOInteractionAddressesInfoDisplay, ILOInteractionInfoDisplay, ABIGeneratedForm},
   setup() {
     const proposalABI = xStarterProposalCode.abi
     const poolPairABI = xStarterPoolPairCode.abi
@@ -179,6 +208,9 @@ export default defineComponent( {
     }
   },
   computed: {
+    showABIForm() {
+      return this.currentFunctionName && this.currentABI
+    },
     usingILO() {
       return this.updatedILO ? this.updatedILO : this.anILO
     },
@@ -252,6 +284,20 @@ export default defineComponent( {
     }
   },
   methods: {
+    scrollToElement (el) {
+      console.log('ele in scroll is', el)
+      const target = getScrollTarget(el)
+      const offset = el.offsetTop
+      const duration = 500
+      setVerticalScrollPosition(target, offset, duration)
+      console.log(target, offset, duration)
+    },
+    scrollToForm() {
+      var element = this.$refs['#abiForm']
+      var top = element.offsetTop
+      window.scrollTo(0, top)
+      console.log(element, top)
+    },
     minimize() {
       this.$emit('update:modelValue', !this.modelValue)
     },
@@ -523,6 +569,13 @@ export default defineComponent( {
   watch: {
     connectedAccount: async function () {
       await this.refreshBalances()
+    },
+    showABIForm: function (boolVal) {
+      if (boolVal) {
+        console.log('abi element', this.$refs['#abiForm'])
+        this.scrollToElement(this.$refs['#abiForm'])
+        // this.scrollToForm()
+      }
     }
   }
 })

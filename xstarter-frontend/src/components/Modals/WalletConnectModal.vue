@@ -1,21 +1,24 @@
 <template>
   <GeneralModal v-model="showDialog" >
-    <div class="q-mb-xl segoe-bold text-h4 text-center">
-      Connect To Start Using xStarter
+    <div class="row full-height content-center justify-center">
+      <div class="q-mb-xl segoe-bold text-h4 text-center">
+        Connect To Start Using xStarter
+      </div>
+      <div class="row full-width content-center justify-center q-px-md q-mt-lg">
+        <q-btn
+          outline
+          size="md"
+          :label="'Connect With Metamask'"
+          :color="metamaskInstalled ? darkLightText: 'negative'"
+          :disable="!metamaskInstalled"
+          style="min-height: 50px; border-radius: 10px;"
+          class="col-lg-5 col-12"
+          @click="connectEthereum"
+          icon="img:metamask.svg"
+        />
+      </div>
     </div>
-    <div class="row full-width content-center justify-center q-px-md q-mt-lg">
-      <q-btn
-        outline
-        size="md"
-        :label="'Connect With Metamask'"
-        :color="metamaskInstalled ? darkLightText: 'negative'"
-        :disable="!metamaskInstalled"
-        style="min-height: 50px; border-radius: 10px;"
-        class="col-lg-5 col-12"
-        @click="connectEthereum"
-        icon="img:metamask.svg"
-      />
-    </div>
+
 
   </GeneralModal>
 </template>

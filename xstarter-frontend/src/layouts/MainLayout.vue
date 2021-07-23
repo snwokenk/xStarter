@@ -39,10 +39,10 @@
 
       <q-tabs align="center" :class="{'text-dark': !$q.dark.isActive, 'text-light': $q.dark.isActive}">
         <q-route-tab to="/" label="ILO"  />
-        <q-route-tab to="/page2" label="Governance" disable>
+        <q-route-tab to="/gov" label="Governance">
           <q-badge label="Coming Soon" :color="darkLightText" :text-color="darkLightTextReverse" style="font-size: 8px;" floating />
         </q-route-tab>
-        <q-route-tab to="/page3" label="NFT" disable>
+        <q-route-tab to="/nft" label="NFT">
           <q-badge label="Coming Soon" :color="darkLightText" :text-color="darkLightTextReverse" style="font-size: 8px;" floating />
         </q-route-tab>
       </q-tabs>
@@ -67,6 +67,7 @@
 
       </q-toolbar>
     </q-footer>
+    <NoticeModal v-if="showNotice" v-model="showNotice"/>
     <WalletConnectModal v-if="!connectedAndPermissioned" v-model="showWalletConnectModal" />
     <GeneralModal v-if="chainId !== 5"  v-model="showSwitchChainManual">
       <div  class="col-12 q-pa-md segoe-bold text-wr text-center">
@@ -109,13 +110,14 @@ import launchpadCode from 'src/artifacts/contracts/xStarterLaunchPad.sol/xStarte
 import xStarterProposalCode from 'src/artifacts/contracts/xStarterLaunchPad.sol/xStarterLaunchPad.json'
 import WalletConnectModal from "components/Modals/WalletConnectModal";
 import GeneralModal from "components/Modals/GeneralModal";
+import NoticeModal from "components/Modals/NoticeModal";
 
 
 
 export default defineComponent({
   name: 'MainLayout',
 
-  components: {GeneralModal, WalletConnectModal},
+  components: {NoticeModal, GeneralModal, WalletConnectModal},
 
   setup () {
     const $q = useQuasar()
@@ -410,6 +412,7 @@ export default defineComponent({
   data() {
     return {
       showWalletConnectModal: false,
+      showNotice: false
     }
   },
   computed: {
@@ -473,8 +476,12 @@ export default defineComponent({
   },
   mounted() {
     console.log('get provider', this.getProvider())
-    // console.log('process env', process.env)
-    // console.log('ipfs utils', this.$ipfs_utils.addILOAbout('xStarter', 'xStarter is a ', {facebook: 'httpsskfd'}))
+    try {
+      this.showNotice = !this.$q.sessionStorage.getItem('accRK')
+    } catch (e) {
+      console.log('error occurred reading from session', e)
+      this.showNotice = true
+    }
   },
   watch: {
     jsonRPCEndpoint: async function() {

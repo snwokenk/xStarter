@@ -35,18 +35,20 @@ async function main() {
     let uniswapFactory;
     let WETH;
     let mineLen = process.env.IS_NETWORK !== 'goerli' ? 5 : 15;
+    let currNonce;
+    let gasPriceNeeded = '0.000000003'
     
 
     // for xStarter ILO
-    let contributionLockSeconds = process.env.IS_NETWORK !== 'xdai' ? 3600 : 1209600  // on xdai prod 14 day lock
-    let liquidityPairLockSeconds = process.env.IS_NETWORK !== 'xdai' ? 3600+1800 : 31536000 // on xdai prod 365 days in seconds lock 
-    let initialStartTime = process.env.IS_NETWORK !== 'xdai' ? 36000 : 432000
-    let initialEndTime = process.env.IS_NETWORK !== 'xdai' ? 72000 : 1036800
+    let contributionLockSeconds = process.env.IS_NETWORK !== 'xdai' ? 300 : 1209600  // on xdai prod 14 day lock
+    let liquidityPairLockSeconds = process.env.IS_NETWORK !== 'xdai' ? 450 : 63072000 // on xdai prod 365 days in seconds lock 
+    let initialStartTime = process.env.IS_NETWORK !== 'xdai' ? 600 : 2592000
+    let initialEndTime = process.env.IS_NETWORK !== 'xdai' ? 900 : 3801600
     let minimumPerSwap = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('0.001')  : utils.parseEther('50') // on xdai minimum per addr is 500 or 500 xdai ie $100 
     let minimumPerAddress = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('0.01')  : utils.parseEther('100') // on xdai minimum per addr is 500 or 500 xdai ie $100 
-    let maximumPerAddress = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('0.03') : utils.parseEther('5000') // on xdai maximum per addr is 2500 or 2500 xdai ie $2500
-    let softcap = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('0.03')  : utils.parseEther('500000') // on xdai softcap is 500000 or $500k
-    let hardcap = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('0.05')  : utils.parseEther('1500000') // on xdai hardcap is 1.5 million or $1.5M
+    let maximumPerAddress = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('500000') : utils.parseEther('10000') // on xdai maximum per addr is 2500 or 2500 xdai ie $2500
+    let softcap = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('200000')  : utils.parseEther('200000') // on xdai softcap is 500000 or $500k
+    let hardcap = process.env.IS_NETWORK !== 'xdai' ? utils.parseEther('2000000')  : utils.parseEther('2000000') // on xdai hardcap is 1.5 million or $1.5M
     
     // let initialStartTime = 60
     // let initialEndTime = 180;
@@ -54,10 +56,11 @@ async function main() {
     // let liquidityPairLockSeconds = 600// on xdai prod 365 days in seconds lock 
 
     // uses honeyswap address
-    console.log('process env is', process.env.XDAI_DEX)
-    if(process.env.XDAI_DEX) {
+    
+    if(process.env.XDAI_DEX !== 'false') {
         uniswapRouter = "0x1C232F01118CB8B424793ae03F870aa7D0ac7f77";
         uniswapFactory = "0xa818b4f111ccac7aa31d0bcc0806d64f2e0737d7";
+
         // this is really address for WXDAI on honeyswap xDai
         WETH = '0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d'
     }else {
@@ -67,13 +70,29 @@ async function main() {
         WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
 
     }
+
+    console.log('dex address and factory', uniswapRouter, uniswapFactory)
+    
     
     const getAccounts = async () => {
         [owner, addr1, addr2, addr3, ...addrs] = await ethers.getSigners();
         
     }
-    const getRandom = () => {
-        return counter++
+    const getNonce = async (signer) => {
+        console.log('before', currNonce)
+        if (currNonce === undefined) {
+            // await getAccounts()
+            if(signer) {
+            currNonce = await signer.getTransactionCount()
+            }else {
+                currNonce = await owner.getTransactionCount()
+            }
+        }else {
+            currNonce = currNonce + 1
+        }
+        
+        console.log(currNonce)
+        return currNonce
     }
 
 
@@ -85,16 +104,17 @@ async function main() {
             xStarterTokenInst = await xStarterTokenFactory.deploy(
                 BigNumber.from('500000000'),
                 [],
-                // {nonce: Date.now() + getRandom()}
+                { gasPrice: ethers.utils.parseEther(gasPriceNeeded), nonce: getNonce() }
             )
 
             console.log('token inst', xStarterTokenInst.address)
+            // console.log('token obj', xStarterTokenInst.deployTransaction.gasPrice.toString)
 
             // deploy deployer
             // deploys pool pair
             xStarterDeployerFactory = await ethers.getContractFactory("contracts/xStarterLaunchPad.sol:xStarterDeployer")
             xStarterDeployerInst = await xStarterDeployerFactory.deploy(
-                //  {nonce: Date.now() + getRandom()}
+                { gasPrice: ethers.utils.parseEther(gasPriceNeeded), nonce: getNonce() }
             )
 
             console.log('deployer inst is', xStarterDeployerInst.address)
@@ -103,7 +123,7 @@ async function main() {
             // deploys erc20 tokens for projecr
             xStarterERCDeployerFactory = await ethers.getContractFactory("contracts/xStarterPoolPairB.sol:xStarterERCDeployer")
             xStarterERCDeployerInst = await xStarterERCDeployerFactory.deploy(
-                // {nonce: Date.now() + getRandom()}
+                { gasPrice: ethers.utils.parseEther(gasPriceNeeded), nonce: getNonce() }
             )
 
             console.log('erc deployer inst is', xStarterERCDeployerInst.address)
@@ -122,20 +142,20 @@ async function main() {
                 uniswapRouter,
                 uniswapFactory,
                 owner.address,
-                // {nonce: Date.now() + getRandom()}
+                { gasPrice: ethers.utils.parseEther(gasPriceNeeded), nonce: getNonce() }
             )
             console.log('xStarterLaunchpad inst is', xStarterLaunchPadInst.address)
 
-            await (await xStarterDeployerInst.setAllowedCaller(xStarterLaunchPadInst.address)).wait()
+            await (await xStarterDeployerInst.setAllowedCaller(xStarterLaunchPadInst.address, { gasPrice: ethers.utils.parseEther(gasPriceNeeded), nonce: getNonce() })).wait()
             console.log('xStarterDeployerInst inst is after set allowed', xStarterDeployerInst.address)
-            await (await xStarterERCDeployerInst.setAdmin(xStarterLaunchPadInst.address))
+            await (await xStarterERCDeployerInst.setAdmin(xStarterLaunchPadInst.address, { gasPrice: ethers.utils.parseEther(gasPriceNeeded), nonce: getNonce() }))
             console.log('xStarterERCDeployerInst inst is after set allowed', xStarterERCDeployerInst.address)
             
             
             // deploy governance
             xStarterGovernanceFactory = await ethers.getContractFactory("xStarterGovernance")
             xStarterGovernanceInst = await xStarterGovernanceFactory.deploy(
-                // {nonce: Date.now() + getRandom()}
+                { gasPrice: ethers.utils.parseEther(gasPriceNeeded), nonce: getNonce() }
             )
 
             console.log('xStarterGOV inst is', xStarterGovernanceInst.address)
@@ -143,7 +163,8 @@ async function main() {
 
             await (await xStarterGovernanceInst.initialize(
                 xStarterTokenInst.address, 
-                xStarterLaunchPadInst.address
+                xStarterLaunchPadInst.address,
+                { gasPrice: ethers.utils.parseEther(gasPriceNeeded), nonce: getNonce() }
             ))
 
             console.log('governance inst is', xStarterGovernanceInst.address)
@@ -159,7 +180,8 @@ async function main() {
                 70,
                 ethers.constants.AddressZero,
                 // fundingTokenInst.address,
-                xStarterLaunchPadInst.address 
+                xStarterLaunchPadInst.address,
+                { gasPrice: ethers.utils.parseEther(gasPriceNeeded), nonce: getNonce() }
             );
 
             console.log('xstarter proposal inst is', xStarterProposalInst.address)
@@ -172,7 +194,8 @@ async function main() {
                 maximumPerAddress,
                 softcap,
                 hardcap,
-                20
+                20,
+                { gasPrice: ethers.utils.parseEther(gasPriceNeeded), nonce: getNonce() }
                 )).wait()
             
             
@@ -180,12 +203,15 @@ async function main() {
 
 
             await (await xStarterLaunchPadInst.connect(owner).deployXstarterILO(
-                xStarterProposalInst.address
+                xStarterProposalInst.address,
+                { gasPrice: ethers.utils.parseEther(gasPriceNeeded), nonce: getNonce() }
             )).wait()
             console.log('xstarter proposal inst is after add more info', xStarterProposalInst.address)
 
             let startTime = parseInt(Date.now() / 1000) + initialStartTime;
+            // let startTime = 1628899200; // AUG 14  12:00 AMGMT
             let endTime = parseInt(Date.now() / 1000) + initialEndTime;
+            // let endTime = 1630108800; // AUG 28 12:00 AM GMT
             let proposalInfo = await xStarterLaunchPadInst.getProposal(xStarterProposalInst.address)
             xStarterPoolPairInst = poolPairFactory.attach(proposalInfo.info.ILOAddress)
           //   const poolPairFromOther = poolPair.connect(addr2);
@@ -197,14 +223,15 @@ async function main() {
               500000000,
               startTime,
               endTime,
+              { gasPrice: ethers.utils.parseEther(gasPriceNeeded), nonce: getNonce() }
           )).wait()
-          await (await xStarterTokenInst.approve(xStarterPoolPairInst.address, utils.parseEther('500000000'))).wait()
-          await (await xStarterPoolPairInst.depositAllTokenSupply()).wait()
+          await (await xStarterTokenInst.approve(xStarterPoolPairInst.address, utils.parseEther('500000000'), { gasPrice: ethers.utils.parseEther(gasPriceNeeded), nonce: getNonce() })).wait()
+          await (await xStarterPoolPairInst.depositAllTokenSupply({gasPrice: ethers.utils.parseEther(gasPriceNeeded), nonce: getNonce()} )).wait()
 
 
 
 
-    }
+    } 
 
     // for ILO with a separate erc20 token as funding token, ie Link, STAKE etc
     const populateFactoryDeployILOERC20Funding = async () => {
@@ -213,10 +240,11 @@ async function main() {
             xStarterTokenInst = await xStarterTokenFactory.deploy(
                 BigNumber.from('500000000'),
                 [],
-                // {nonce: Date.now() + getRandom()}
+                { gasPrice: ethers.utils.parseEther(gasPriceNeeded), nonce: getNonce() }
             )
 
             console.log('token inst', xStarterTokenInst.address)
+            // console.log('token obj', xStarterTokenInst)
 
             // projectTokenFactory = await ethers.getContractFactory("contracts/xStarterPoolPairB.sol:ProjectBaseTokenERC20");
             // fundingTokenInst.
@@ -225,7 +253,7 @@ async function main() {
             // deploys pool pair
             xStarterDeployerFactory = await ethers.getContractFactory("contracts/xStarterLaunchPad.sol:xStarterDeployer")
             xStarterDeployerInst = await xStarterDeployerFactory.deploy(
-                //  {nonce: Date.now() + getRandom()}
+                { gasPrice: ethers.utils.parseEther(gasPriceNeeded), nonce: getNonce() }
             )
 
             console.log('deployer inst is', xStarterDeployerInst.address)
@@ -234,7 +262,7 @@ async function main() {
             // deploys erc20 tokens for projecr
             xStarterERCDeployerFactory = await ethers.getContractFactory("contracts/xStarterPoolPairB.sol:xStarterERCDeployer")
             xStarterERCDeployerInst = await xStarterERCDeployerFactory.deploy(
-                // {nonce: Date.now() + getRandom()}
+                { gasPrice: ethers.utils.parseEther(gasPriceNeeded), nonce: getNonce() }
             )
 
             console.log('erc deployer inst is', xStarterERCDeployerInst.address)
@@ -253,20 +281,20 @@ async function main() {
                 uniswapRouter,
                 uniswapFactory,
                 owner.address,
-                // {nonce: Date.now() + getRandom()}
+                { gasPrice: ethers.utils.parseEther(gasPriceNeeded), nonce: getNonce() }
             )
             console.log('xStarterLaunchpad inst is', xStarterLaunchPadInst.address)
 
-            await (await xStarterDeployerInst.setAllowedCaller(xStarterLaunchPadInst.address)).wait()
+            await (await xStarterDeployerInst.setAllowedCaller(xStarterLaunchPadInst.address, { gasPrice: ethers.utils.parseEther(gasPriceNeeded), nonce: getNonce() })).wait()
             console.log('xStarterDeployerInst inst is after set allowed', xStarterDeployerInst.address)
-            await (await xStarterERCDeployerInst.setAdmin(xStarterLaunchPadInst.address))
+            await (await xStarterERCDeployerInst.setAdmin(xStarterLaunchPadInst.address, { gasPrice: ethers.utils.parseEther(gasPriceNeeded), nonce: getNonce() }))
             console.log('xStarterERCDeployerInst inst is after set allowed', xStarterERCDeployerInst.address)
             
             
             // deploy governance
             xStarterGovernanceFactory = await ethers.getContractFactory("xStarterGovernance")
             xStarterGovernanceInst = await xStarterGovernanceFactory.deploy(
-                // {nonce: Date.now() + getRandom()}
+                { gasPrice: ethers.utils.parseEther(gasPriceNeeded), nonce: getNonce() }
             )
 
             console.log('xStarterGOV inst is', xStarterGovernanceInst.address)
@@ -274,7 +302,8 @@ async function main() {
 
             await (await xStarterGovernanceInst.initialize(
                 xStarterTokenInst.address, 
-                xStarterLaunchPadInst.address
+                xStarterLaunchPadInst.address,
+                { gasPrice: ethers.utils.parseEther(gasPriceNeeded), nonce: getNonce() }
             ))
 
             console.log('governance inst is', xStarterGovernanceInst.address)
@@ -290,7 +319,8 @@ async function main() {
                 70,
                 '0x5a670c7692333E11f9dD795889F59b41CB5d76c1', // address of funding token
                 // fundingTokenInst.address,
-                xStarterLaunchPadInst.address 
+                xStarterLaunchPadInst.address,
+                { gasPrice: ethers.utils.parseEther(gasPriceNeeded), nonce: getNonce() } 
             );
 
             console.log('xstarter proposal inst is', xStarterProposalInst.address)
@@ -303,7 +333,8 @@ async function main() {
                 maximumPerAddress,
                 softcap,
                 hardcap,
-                20
+                20,
+                { gasPrice: ethers.utils.parseEther(gasPriceNeeded), nonce: getNonce() }
                 )).wait()
             
             
@@ -311,7 +342,8 @@ async function main() {
 
 
             await (await xStarterLaunchPadInst.connect(owner).deployXstarterILO(
-                xStarterProposalInst.address
+                xStarterProposalInst.address,
+                { gasPrice: ethers.utils.parseEther(gasPriceNeeded), nonce: getNonce() }
             )).wait()
             console.log('xstarter proposal inst is after add more info', xStarterProposalInst.address)
 
@@ -328,16 +360,27 @@ async function main() {
               500000000,
               startTime,
               endTime,
+              { gasPrice: ethers.utils.parseEther(gasPriceNeeded), nonce: getNonce() }
           )).wait()
-          await (await xStarterTokenInst.approve(xStarterPoolPairInst.address, utils.parseEther('500000000'))).wait()
-          await (await xStarterPoolPairInst.depositAllTokenSupply()).wait()
+          await (await xStarterTokenInst.approve(
+              xStarterPoolPairInst.address, 
+              utils.parseEther('500000000'),
+              { gasPrice: ethers.utils.parseEther(gasPriceNeeded), nonce: getNonce() }
+              )
+            ).wait()
+          await (await xStarterPoolPairInst.depositAllTokenSupply( { gasPrice: ethers.utils.parseEther(gasPriceNeeded), nonce: getNonce() })).wait()
 
 
 
 
     }
+
     await getAccounts();
+    // await getNonce();
     await populateFactoryDeployILONativeFunding();
+
+
+
     // await populateFactoryDeployILOERC20Funding();
 
     // console.log('owner addr is', owner.address)

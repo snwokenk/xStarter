@@ -78,7 +78,7 @@
 <script>
 import {defineComponent, inject, provide, ref} from 'vue'
 import LiquidityDisplayDuration from "components/CardDisplays/LiquidityDisplayDuration";
-import {SUPPORTED_FUNDING_TOKENS} from "src/constants";
+import {DEFAULT_CHAIN_FUNDING_TOKEN, SUPPORTED_FUNDING_TOKENS} from "src/constants";
 import ILOInteractionModal from "components/Modals/ILOInteractionModal";
 import {ethers} from "boot/ethers";
 import xStarterPoolPairCode from 'src/artifacts/contracts/xStarterPoolPairB.sol/xStarterPoolPairB.json'
@@ -90,6 +90,7 @@ export default defineComponent( {
     const connectedAndPermissioned = inject('$connectedAndPermissioned',)
     const poolPairABI = xStarterPoolPairCode.abi
     const blockInfo = inject('$blockInfo')
+    let chainId = inject('$chainId')
     const viewModal = ref(false)
     const getProvider = inject('$getProvider')
     const currentContrib = ref(0)
@@ -100,7 +101,7 @@ export default defineComponent( {
     provide('$changeCurrentContrib', changeCurrentContrib)
     const connectedAccount = inject('$connectedAccounts')
 
-    return {connectedAndPermissioned, viewModal, blockInfo, poolPairABI, currentContrib, connectedAccount, getProvider, changeCurrentContrib}
+    return {connectedAndPermissioned, viewModal, blockInfo, chainId, poolPairABI, currentContrib, connectedAccount, getProvider, changeCurrentContrib}
   },
   props: {
     liquidityOffering: {
@@ -140,8 +141,11 @@ export default defineComponent( {
       return parseInt(this.ILOMoreInfo.startTime) * 1000
     },
     fundingTokenSymbol() {
-      if (SUPPORTED_FUNDING_TOKENS[this.ILOInfo.fundingToken]) {
-        return SUPPORTED_FUNDING_TOKENS[this.ILOInfo.fundingToken]
+      let fundingSymbol = SUPPORTED_FUNDING_TOKENS[this.ILOInfo.fundingToken + '-' + this.chainId]
+      if (fundingSymbol) {
+        return fundingSymbol
+      }else if (!this.connectedAndPermissioned) {
+        return DEFAULT_CHAIN_FUNDING_TOKEN
       }
       return 'Custom Token'
     },
@@ -154,49 +158,24 @@ export default defineComponent( {
     amountRaised() {
       // const amtRaised = parseFloat(this.$ethers.utils.formatEther(this.ILOMoreInfo.amountRaised.toString()))
       const amtRaised = this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.amountRaised)
-      if ( amtRaised >= 1000000) {
-        return `${amtRaised}M`
-      } else if (amtRaised >= 1000) {
-        return `${amtRaised}K`
-      }
-      return amtRaised
+      return this.amountDisplay(amtRaised)
     },
     softCap() {
       const amt = this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.softcap)
-      if ( amt >= 1000000) {
-        return `${amt}M`
-      } else if (amt >= 1000) {
-        return `${amt}K`
-      }
-      return amt
+      return this.amountDisplay(amt)
     },
     hardCap() {
       const amt = this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.hardcap)
-      if ( amt >= 1000000) {
-        return `${amt}M`
-      } else if (amt >= 1000) {
-        return `${amt}K`
-      }
-      return amt
+      return this.amountDisplay(amt)
     },
 
     minPerAddr() {
       const amt = this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.minPerAddr)
-      if ( amt >= 1000000) {
-        return `${amt}M`
-      } else if (amt >= 1000) {
-        return `${amt}K`
-      }
-      return amt
+      return this.amountDisplay(amt)
     },
     maxPerAddr() {
       const amt = this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.maxPerAddr)
-      if ( amt >= 1000000) {
-        return `${amt}M`
-      } else if (amt >= 1000) {
-        return `${amt}K`
-      }
-      return amt
+      return this.amountDisplay(amt)
     },
     currentAddress() {
       return this.connectedAccount[0]
@@ -261,6 +240,14 @@ export default defineComponent( {
     }
   },
   methods: {
+    amountDisplay(amt) {
+      if ( amt >= 1000000) {
+        return `${amt / 1000000}M`
+      } else if (amt >= 1000) {
+        return `${amt / 1000}K`
+      }
+      return amt
+    },
     callViewMoreAndPassInfoData() {
       this.viewMoreCallBack(this.infoData)
     }

@@ -2,10 +2,10 @@
   <q-card flat square class="display-card accountDisplayCard q-py-md q-mb-lg q-px-lg q-gutter-y-sm" clickable>
     <q-card-section class="justify-between  account-display-text text-center full-width">
       <div class="full-width row justify-between">
-        <div v-if="chainId !== 5" class="col-12 q-pa-md q-mb-sm text-positive text-center">
-           <q-btn outline rounded label="Public Testing Is Now Live!" @click="showLiveTestingModal = !showLiveTestingModal" />
+<!--        <div v-if="chainId !== 5" class="col-12 q-pa-md q-mb-sm text-positive text-center">-->
+<!--           <q-btn outline rounded label="Public Testing Is Now Live!" @click="showLiveTestingModal = !showLiveTestingModal" />-->
 
-        </div>
+<!--        </div>-->
         <div class="col-auto">
           <div v-if="chainId" class="full-width">
             You're connected to <span class="text-bold" :class="{'text-positive': acceptedChain, 'text-negative': !acceptedChain}">{{ chainIdName }}</span>

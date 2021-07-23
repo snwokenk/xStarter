@@ -8,9 +8,9 @@
   "scripts": {
     "lint": "eslint --ext .js,.vue ./",
     "test": "echo \"No test specified\" && exit 0",
-    "build-for-local":  "IS_NETWORK=local quasar dev",
-    "build-for-xdai":  "IS_NETWORK=xdai quasar build",
-    "build-for-goerli":  "IS_NETWORK=goerli quasar build",
+    "build-for-local": "IS_NETWORK=local quasar dev",
+    "build-for-xdai": "IS_NETWORK=xdai quasar build",
+    "build-for-goerli": "IS_NETWORK=goerli quasar build",
     "create-github-pages-worktree": "git worktree add github_pages_dir github_pages",
     "build-and-copy-goerli": "npm run build-for-goerli && rsync -a --delete --exclude-from='excluded-file' dist/spa/ github_pages_dir/",
     "build-and-copy-xdai": "npm run build-for-xdai && rsync -a --delete --exclude-from='excluded-file' dist/spa/ github_pages_dir/"
@@ -24,6 +24,7 @@
     "core-js": "^3.6.5",
     "ethers": "^5.1.4",
     "ipfs-core": "^0.8.0",
+    "ipfs-http-client": "^50.1.2",
     "quasar": "^2.0.0-beta.1",
     "vue-i18n": "^9.0.0-beta.0"
   },

@@ -75,7 +75,7 @@
               </div>
               <div class="col-auto">
                 <div class="segoe-bold info-text">
-                  {{ softCapFullDisplay }} {{ fundingTokenSymbol}}
+                  {{ softCapFullDisplay.toLocaleString() }} {{ fundingTokenSymbol}}
                 </div>
                 <div class="segoe-regular info-label">
                   SoftCap
@@ -92,7 +92,7 @@
               </div>
               <div class="col-auto">
                 <div class="segoe-bold info-text">
-                  {{ hardCapFullDisplay }} {{ fundingTokenSymbol}}
+                  {{ hardCapFullDisplay.toLocaleString() }} {{ fundingTokenSymbol}}
                 </div>
                 <div class="segoe-regular info-label">
                   HardCap
@@ -108,7 +108,7 @@
               </div>
               <div class="col-auto">
                 <div class="segoe-bold info-text">
-                  {{ minPerAddr }} {{ fundingTokenSymbol}}
+                  {{ minPerAddr.toLocaleString() }} {{ fundingTokenSymbol}}
                 </div>
                 <div class="segoe-regular info-label">
                   Minimum Spend Per Address
@@ -124,7 +124,7 @@
               </div>
               <div class="col-auto">
                 <div class="segoe-bold info-text">
-                  {{ maxPerAddr }} {{ fundingTokenSymbol}}
+                  {{ maxPerAddr.toLocaleString() }} {{ fundingTokenSymbol}}
                 </div>
                 <div class="segoe-regular info-label">
                   Maximum Spend Per Address
@@ -141,7 +141,7 @@
               </div>
               <div class="col-auto">
                 <div v-if="hardCapFullDisplay" class="segoe-bold info-text">
-                  {{ softCapSwapRate }} tokens per 1 {{ fundingTokenSymbol }}
+                  {{ softCapSwapRate.toLocaleString() }} tokens per 1 {{ fundingTokenSymbol }}
                 </div>
                 <div v-else class="segoe-bold info-text">
                   TBD
@@ -160,7 +160,7 @@
               </div>
               <div class="col-auto">
                 <div v-if="hardCapFullDisplay" class="segoe-bold info-text">
-                  {{ hardCapSwapRate }} tokens per 1 {{ fundingTokenSymbol }}
+                  {{ hardCapSwapRate.toLocaleString() }} tokens per 1 {{ fundingTokenSymbol }}
                 </div>
                 <div v-else class="segoe-bold info-text">
                   TBD
@@ -198,7 +198,7 @@
               </div>
               <div class="col-auto">
                 <div v-if="hardCapFullDisplay" class="segoe-bold info-text">
-                  {{ listingPremium }}%  Above Swap ILO Swap Eate
+                  {{ listingPremium }}%  Above Swap ILO Swap Rate
                 </div>
                 <div v-else class="segoe-bold info-text">
                   TBD
@@ -304,11 +304,15 @@
 </template>
 
 <script>
-import {defineComponent} from "vue";
-import {SUPPORTED_FUNDING_TOKENS} from "src/constants";
+import {defineComponent, inject} from "vue";
+import {DEFAULT_CHAIN_FUNDING_TOKEN, SUPPORTED_FUNDING_TOKENS} from "src/constants";
 
 export default defineComponent( {
   name: "ILOAdditionalInfoDisplay",
+  setup() {
+    let chainId = inject('$chainId')
+    return {chainId}
+  },
   props: {
     selectedILO: {
       type: Object,
@@ -345,8 +349,11 @@ export default defineComponent( {
       return this.$helper.weiBigNumberToFloatEther(this.ILOMoreInfo.hardcap)
     },
     fundingTokenSymbol() {
-      if (SUPPORTED_FUNDING_TOKENS[this.ILOInfo.fundingToken]) {
-        return SUPPORTED_FUNDING_TOKENS[this.ILOInfo.fundingToken]
+      let fundingSymbol = SUPPORTED_FUNDING_TOKENS[this.ILOInfo.fundingToken + '-' + this.chainId]
+      if (fundingSymbol) {
+        return fundingSymbol
+      }else if (!this.connectedAndPermissioned) {
+        return DEFAULT_CHAIN_FUNDING_TOKEN
       }
       return 'Custom Token'
     },
@@ -367,11 +374,11 @@ export default defineComponent( {
       // return totalTokens
     },
     softCapSwapRate() {
-      return this.tokensForILO / this.softCapFullDisplay
+      return (this.tokensForILO * (this.percentOfFundingTokenForLiqudity / 100)) / this.softCapFullDisplay
     },
 
     hardCapSwapRate() {
-      return this.tokensForILO / this.hardCapFullDisplay
+      return (this.tokensForILO * (this.percentOfFundingTokenForLiqudity / 100)) / this.hardCapFullDisplay
     },
 
     percentOfFundingTokenForLiqudity() {
