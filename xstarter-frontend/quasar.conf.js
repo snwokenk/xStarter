@@ -26,7 +26,8 @@ module.exports = configure(function (ctx) {
       'axios',
       'ethers',
       'abiGenerator',
-      'ipfs_utils'
+      'ipfs_utils',
+      'gtm-plugin'
     ],
 
     // https://v2.quasar.dev/quasar-cli/quasar-conf-js#Property%3A-css

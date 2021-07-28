@@ -21,7 +21,7 @@ module.exports = {
       result = await ipfs.add(files, (pin ? { pin: true } : {}))
       console.log('result is ', result)
     } catch (e) {
-      console.error(error)
+      console.error(e)
     }
 
     return result
