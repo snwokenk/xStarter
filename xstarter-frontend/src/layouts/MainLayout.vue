@@ -98,20 +98,20 @@
 // https://ethereum.stackexchange.com/questions/97693/what-is-the-correct-way-to-deploy-a-react-app-that-uses-metamask
 // todo: use walletconnect for qr code connecting https://docs.walletconnect.org/quick-start/dapps/web3-provider
 
-import {defineComponent, ref, watch, onMounted, provide, inject} from 'vue'
-import { useQuasar } from 'quasar'
-import { ethers } from 'boot/ethers'
-import { abiUtils } from "boot/abiGenerator";
+import {defineComponent, onMounted, provide, ref} from 'vue'
+import {useQuasar} from 'quasar'
+import {ethers} from 'boot/ethers'
+import {abiUtils} from "boot/abiGenerator";
 import detectEthereumProvider from '@metamask/detect-provider';
 import MetaMaskOnboarding from '@metamask/onboarding';
-import { JSON_RPC_ENDPOINT, LAUNCHPAD_ADDRESS} from "src/constants";
+import {JSON_RPC_ENDPOINT, LAUNCHPAD_ADDRESS, RPC_ENDPOINTS} from "src/constants";
 // import data from 'src/artifacts/contracts/xStarterPoolPairB.sol/xStarterPoolPairB.json';
 import launchpadCode from 'src/artifacts/contracts/xStarterLaunchPad.sol/xStarterLaunchPad.json';
-import xStarterProposalCode from 'src/artifacts/contracts/xStarterLaunchPad.sol/xStarterLaunchPad.json'
+import xStarterProposalCode from 'src/artifacts/contracts/xStarterLaunchPad.sol/xStarterLaunchPad.json';
 import WalletConnectModal from "components/Modals/WalletConnectModal";
 import GeneralModal from "components/Modals/GeneralModal";
 import NoticeModal from "components/Modals/NoticeModal";
-
+import WalletConnectProvider from "@walletconnect/web3-provider";
 
 
 export default defineComponent({
@@ -129,6 +129,9 @@ export default defineComponent({
     console.log('xstarter constructor abi', abiUtils.getConstructorObj(xStarterProposalCode.abi))
 
     let provider = undefined
+    const wcLocalStorage = $q.localStorage.getItem('walletconnect')
+    let connectMethodToUse = ref(wcLocalStorage ? 'walletconnect' : 'metamask') // metamask || walletconnect
+    provide('$connectMethodToUse', connectMethodToUse)
     let signer = undefined
     let launchPadContract = undefined
     let launchPadLoaded = ref(false)
@@ -137,6 +140,7 @@ export default defineComponent({
     let jsonRPCEndpoint = ref(JSON_RPC_ENDPOINT)
     provide('$jsonRPCEndpoint', jsonRPCEndpoint)
     const ethereumProvider = ref(undefined)
+    const walletConnectProvider = ref(undefined)
     provide('$ethereumProvider', ethereumProvider)
     let chainId = ref(undefined)
     provide('$chainId', chainId)
@@ -264,8 +268,33 @@ export default defineComponent({
 
     }
     provide('$metaMaskEthereumChainAddRequest', metaMaskEthereumChainAddRequest)
+    const listenToEIP1193Events = async () => {
+
+      if (connectMethodToUse.value === 'metamask') {
+
+        // reload if chain is changed
+        ethereumProvider.value.on('chainChanged', (chainId) => {
+          window.location.reload();
+        })
+        // checks to see if any account has permission
+        ethereumProvider.value.on('accountsChanged',() => { checkExisting(true) })
+
+      }else if (connectMethodToUse.value === 'walletconnect') {
+
+        walletConnectProvider.value.on('chainChanged', (chainId) => {
+          window.location.reload();
+        })
+        // checks to see if any account has permission
+        walletConnectProvider.value.on('accountsChanged',() => { checkExisting(true) })
+      }
+
+    }
     const connectUsingWebProvider = async (accountsChanged = null) => {
-      if (metamaskInstalled.value) {
+      console.log('wallet connect provider in connectusingwebprovide is', walletConnectProvider.value)
+      if (connectMethodToUse.value === 'walletconnect' && walletConnectProvider.value.connected) {
+        connectedAccounts.value = walletConnectProvider.value.accounts
+        connectedAndPermissioned.value = connectedAccounts.value.length > 0
+      } else if (connectMethodToUse.value === 'metamask' && metamaskInstalled.value) {
         console.log('meta mask installed')
         try {
           connectedAccounts.value = await ethereumProvider.value.request({
@@ -276,8 +305,9 @@ export default defineComponent({
           return
         }
         connectedAndPermissioned.value = metamaskInstalled.value && connectedAccounts.value.length > 0
+      }
         if (connectedAndPermissioned.value) {
-          provider = new ethers.providers.Web3Provider(ethereumProvider.value)
+          provider = new ethers.providers.Web3Provider(connectMethodToUse.value === 'metamask' ? ethereumProvider.value : walletConnectProvider.value)
           signer = provider.getSigner()
 
           chainId.value = (await provider.getNetwork())['chainId'] // getNetwork = {chain id, chain name}
@@ -285,12 +315,9 @@ export default defineComponent({
           if (launchPadContract) {
             launchPadLoaded.value = true
           }
-          // reload if chain is changed
-          ethereumProvider.value.on('chainChanged', (chainId) => {
-            window.location.reload();
-          })
-          // checks to see if any account has permission
-          ethereumProvider.value.on('accountsChanged',() => { checkExisting(true) })
+
+          // listen to accounts changed or chainChanged
+          await listenToEIP1193Events()
           provider.on("block", async (blockNumber) => {
             console.log('received block event')
             const block = await  provider.getBlock()
@@ -317,13 +344,14 @@ export default defineComponent({
 
         }
       }
-    }
     const checkExisting = async (accountsChanged = null) => {
       // check if an web3 wallet is visible
       ethereumProvider.value = await detectEthereumProvider();
+      walletConnectProvider.value = await detectWalletConnectProvider();
+
       metamaskInstalled.value = ethereumProvider.value ? Boolean(ethereumProvider.value) : false
-      console.log('etherruem prov is', ethereumProvider.value, metamaskInstalled.value)
-       if (metamaskInstalled.value) {
+      // console.log('etherruem prov is', ethereumProvider.value, metamaskInstalled.value)
+       if (metamaskInstalled.value || walletConnectProvider.value.connected) {
          await connectUsingWebProvider(accountsChanged)
        }else {
         await connectUsingJsonRPCProvider()
@@ -333,6 +361,7 @@ export default defineComponent({
       checkExisting()
     })
     const connectEthereum = async () => {
+      connectMethodToUse.value = 'ethereum'
       if (!metamaskInstalled.value) {
         console.log('please install metamask')
       }else {
@@ -348,7 +377,7 @@ export default defineComponent({
 
         connectedAndPermissioned.value = metamaskInstalled.value && connectedAccounts.value.length > 0
         if (connectedAndPermissioned.value) {
-          checkExisting();
+          await checkExisting();
         }
 
         // provider = new ethers.providers.Web3Provider(ethereumProvider.value)
@@ -357,8 +386,35 @@ export default defineComponent({
       }
 
     }
-
     provide('$connectEthereum', connectEthereum)
+    const detectWalletConnectProvider = async () => {
+      const wcProvider = new WalletConnectProvider({
+        rpc: RPC_ENDPOINTS,
+      })
+      if (wcLocalStorage) {
+        await wcProvider.enable()
+      }
+      return wcProvider
+    }
+    const connectEthereumWalletConnect =  async () => {
+      connectMethodToUse.value = 'walletconnect'
+      console.log('connected permission in wallet connect', connectedAndPermissioned.value)
+      if (connectedAndPermissioned.value) {return}
+      await walletConnectProvider.value.enable()
+      connectedAccounts.value = walletConnectProvider.value.accounts
+
+        console.log('wallet connect connected accounts', connectedAccounts.value)
+      console.log('wallet connect provider is', walletConnectProvider.value)
+
+      connectedAndPermissioned.value = walletConnectProvider.value.connected && connectedAccounts.value.length > 0
+      if (connectedAndPermissioned.value) {
+        await checkExisting();
+      }
+
+    }
+    provide('$connectEthereumWalletConnect', connectEthereumWalletConnect)
+
+
     const getProvider = () => {
       return provider
     }
@@ -392,6 +448,7 @@ export default defineComponent({
     return {
       setDarkMode,
       connectEthereum,
+      connectEthereumWalletConnect,
       checkExisting,
       getProvider,
       getSigner,
@@ -400,6 +457,7 @@ export default defineComponent({
       metaMaskEthereumChainAddRequest,
       metamaskInstalled,
       ethereumProvider,
+      walletConnectProvider,
       connectedAccounts,
       connectedAndPermissioned,
       launchPadContract,

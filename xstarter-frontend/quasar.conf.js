@@ -79,6 +79,8 @@ module.exports = configure(function (ctx) {
       chainWebpack (chain) {
         chain.plugin('eslint-webpack-plugin')
           .use(ESLintPlugin, [{ extensions: [ 'js', 'vue' ] }])
+        const nodePolyfillWebpackPlugin = require('node-polyfill-webpack-plugin')
+        chain.plugin('node-polyfill').use(nodePolyfillWebpackPlugin)
       },
     },
 
@@ -107,7 +109,8 @@ module.exports = configure(function (ctx) {
 
       // Quasar plugins
       plugins: [
-        'SessionStorage'
+        'SessionStorage',
+        'LocalStorage'
       ]
     },
 

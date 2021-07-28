@@ -43,9 +43,15 @@ export const ACCEPTED_CHAINS_CHOICES = [
   {label: 'xDai', value: 100 }
 ]
 
-console.log('process env')
+export const RPC_ENDPOINTS = {
+  31337: 'http://127.0.0.1:8545',
+  5: 'https://rpc.goerli.mudit.blog/',
+  100: 'https://rpc.xdaichain.com/',
+}
+
 export const JSON_RPC_ENDPOINT = process.env.IS_NETWORK === 'xdai' ?
-  'https://rpc.xdaichain.com/' :  process.env.IS_NETWORK === 'goerli' ? 'https://rpc.goerli.mudit.blog/' : 'http://127.0.0.1:8545'
+  RPC_ENDPOINTS[100] :  process.env.IS_NETWORK === 'goerli' ? RPC_ENDPOINTS[5] : RPC_ENDPOINTS[31337]
+
 
 export const ILO_STATUS = {
   0: 'ILO PROPOSED',

@@ -4,7 +4,7 @@
       <div class="q-mb-xl segoe-bold text-h4 text-center">
         Connect To Start Using xStarter
       </div>
-      <div class="row full-width content-center justify-center q-px-md q-mt-lg">
+      <div class="row full-width content-center justify-center q-px-md q-gutter-x-md q-mt-lg">
         <q-btn
           outline
           size="md"
@@ -12,9 +12,22 @@
           :color="metamaskInstalled ? darkLightText: 'negative'"
           :disable="!metamaskInstalled"
           style="min-height: 50px; border-radius: 10px;"
-          class="col-lg-5 col-12"
+          class="col-lg-4 col-12"
           @click="connectEthereum"
           icon="img:metamask.svg"
+        />
+
+        <q-btn
+          outline
+          size="md"
+          :label="'Connect With WalletConnect'"
+          :color="metamaskInstalled ? darkLightText: 'negative'"
+          :disable="!metamaskInstalled"
+          style="min-height: 50px; border-radius: 10px;"
+          class="col-lg-5 col-12"
+          @click="connectEthereumWalletConnect"
+          icon="img:metamask.svg"
+          v-close-popup
         />
       </div>
     </div>
@@ -31,10 +44,12 @@ export default defineComponent(  {
   name: "WalletConnectModal",
   setup() {
     const connectEthereum = inject('$connectEthereum')
+    const connectEthereumWalletConnect = inject('$connectEthereumWalletConnect')
     const metamaskInstalled = inject('$metamaskInstalled')
 
     return {
       connectEthereum,
+      connectEthereumWalletConnect,
       metamaskInstalled
     }
   },
