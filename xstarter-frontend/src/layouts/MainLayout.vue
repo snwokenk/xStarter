@@ -306,49 +306,50 @@ export default defineComponent({
         }
         connectedAndPermissioned.value = metamaskInstalled.value && connectedAccounts.value.length > 0
       }
-        if (connectedAndPermissioned.value) {
-          provider = new ethers.providers.Web3Provider(connectMethodToUse.value === 'metamask' ? ethereumProvider.value : walletConnectProvider.value)
-          signer = provider.getSigner()
-
-          chainId.value = (await provider.getNetwork())['chainId'] // getNetwork = {chain id, chain name}
-          launchPadContract = await new ethers.Contract(LAUNCHPAD_ADDRESS[chainId.value] || '', launchpadCode.abi, signer)
-          if (launchPadContract) {
-            launchPadLoaded.value = true
-          }
-
-          // listen to accounts changed or chainChanged
-          await listenToEIP1193Events()
-          provider.on("block", async (blockNumber) => {
-            console.log('received block event')
-            const block = await  provider.getBlock()
-            blockInfo.value = {timestamp: block.timestamp, blockNumber: blockNumber}
-          })
-        }else {
-          launchPadLoaded.value = false
-          provider = undefined
-          signer = undefined
-          launchPadContract = undefined
-          console.log('connecteda')
-          if (accountsChanged) {
-            // if accounts was just changed an no accounts is connected reload
-            window.location.reload();
-          } else {
-            // this is probably from a reload, so use jsonrpc provider
-            if (provider) {
-              provider.off("block")
-            }
-
-            await connectUsingJsonRPCProvider()
-          }
-
-
+      if (connectedAndPermissioned.value) {
+        provider = new ethers.providers.Web3Provider(connectMethodToUse.value === 'metamask' ? ethereumProvider.value : walletConnectProvider.value)
+        signer = provider.getSigner()
+        console.log('provider in is', provider)
+        chainId.value = (await provider.getNetwork())['chainId'] // getNetwork = {chain id, chain name}
+        console.log('chain id in connect using webprovider is', chainId.value)
+        launchPadContract = await new ethers.Contract(LAUNCHPAD_ADDRESS[chainId.value] || '', launchpadCode.abi, signer)
+        if (launchPadContract) {
+          launchPadLoaded.value = true
         }
+
+        // listen to accounts changed or chainChanged
+        await listenToEIP1193Events()
+        provider.on("block", async (blockNumber) => {
+          console.log('received block event')
+          const block = await  provider.getBlock()
+          blockInfo.value = {timestamp: block.timestamp, blockNumber: blockNumber}
+        })
+      }else {
+        launchPadLoaded.value = false
+        provider = undefined
+        signer = undefined
+        launchPadContract = undefined
+        console.log('connecteda')
+        if (accountsChanged) {
+          // if accounts was just changed an no accounts is connected reload
+          window.location.reload();
+        } else {
+          // this is probably from a reload, so use jsonrpc provider
+          if (provider) {
+            provider.off("block")
+          }
+
+          await connectUsingJsonRPCProvider()
+        }
+      }
       }
     const checkExisting = async (accountsChanged = null) => {
       // check if an web3 wallet is visible
       ethereumProvider.value = await detectEthereumProvider();
-      walletConnectProvider.value = await detectWalletConnectProvider();
-
+      if (!walletConnectProvider.value) {
+        // must only create walletprovider object once
+        walletConnectProvider.value = await detectWalletConnectProvider();
+      }
       metamaskInstalled.value = ethereumProvider.value ? Boolean(ethereumProvider.value) : false
       // console.log('etherruem prov is', ethereumProvider.value, metamaskInstalled.value)
        if (metamaskInstalled.value || walletConnectProvider.value.connected) {
@@ -398,15 +399,12 @@ export default defineComponent({
     }
     const connectEthereumWalletConnect =  async () => {
       connectMethodToUse.value = 'walletconnect'
-      console.log('connected permission in wallet connect', connectedAndPermissioned.value)
       if (connectedAndPermissioned.value) {return}
       await walletConnectProvider.value.enable()
       connectedAccounts.value = walletConnectProvider.value.accounts
 
-        console.log('wallet connect connected accounts', connectedAccounts.value)
-      console.log('wallet connect provider is', walletConnectProvider.value)
-
       connectedAndPermissioned.value = walletConnectProvider.value.connected && connectedAccounts.value.length > 0
+
       if (connectedAndPermissioned.value) {
         await checkExisting();
       }
