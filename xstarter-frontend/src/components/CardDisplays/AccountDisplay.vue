@@ -6,6 +6,10 @@
 <!--           <q-btn outline rounded label="Public Testing Is Now Live!" @click="showLiveTestingModal = !showLiveTestingModal" />-->
 
 <!--        </div>-->
+        <div v-if="chainId !== 5" class="col-12 q-pa-md q-mb-sm text-positive text-center">
+          *** Main xStarter ILO Has Been Postponed. Please check our discord or telegram for more information ***
+
+        </div>
         <div class="col-auto">
           <div v-if="chainId" class="full-width">
             You're connected to <span class="text-bold" :class="{'text-positive': acceptedChain, 'text-negative': !acceptedChain}">{{ chainIdName }}</span>
