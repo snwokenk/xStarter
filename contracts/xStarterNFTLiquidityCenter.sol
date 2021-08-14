@@ -5,13 +5,16 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC777/IERC777Recipient.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777Sender.sol";
 import "@openzeppelin/contracts/token/ERC777/IERC777.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "@openzeppelin/contracts/utils/introspection/ERC1820Implementer.sol";
 import "@openzeppelin/contracts/utils/introspection/IERC1820Registry.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 
-
-contract xStarterNFTLiquidityCenter is Ownable, ERC1820Implementer, IERC777Sender, IERC777Recipient{
+// contract receives ERCToken of rate amount and either mints new to send to recipient or sends one available from holdings
+// contract receives NFT and sends ERCToken equals to the rate
+// ie if rate is 10,000 tokens, contract will mint  NFT till the maxNFTSupply is reached, it then checks to see if it has already minted supply
+contract xStarterNFTLiquidityCenter is Ownable, IERC721Receiver, ERC1820Implementer, IERC777Sender, IERC777Recipient{
     
     IERC1820Registry constant internal _ERC1820_REGISTRY = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
     string NFTName;
@@ -65,6 +68,10 @@ contract xStarterNFTLiquidityCenter is Ownable, ERC1820Implementer, IERC777Sende
     function setNFTAddress(address _NFT) public onlyOwner returns(bool) {
         NFT = _NFT;
         return true;
+    }
+    
+    function onERC721Received(address operator, address from, uint256 tokenId, bytes calldata data) public override returns(bytes4) {
+        return this.onERC721Received.selector;
     }
     
      // called when an ERC777 token is about to be sent to contract
