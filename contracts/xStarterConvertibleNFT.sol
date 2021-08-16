@@ -26,5 +26,16 @@ contract xStarterConvertibleNFT is Ownable, ERC721PresetMinterPauserAutoId, ERC7
         return "";
     }
     
+    // used to grand minter role to management contract and renounce all roles from contract
+    function grantAndRenounceMinterAdminRole(address account) public onlyRole(getRoleAdmin(DEFAULT_ADMIN_ROLE)) {
+        grantRole(MINTER_ROLE, account);
+         grantRole(PAUSER_ROLE, account);
+        renounceRole(MINTER_ROLE, msg.sender);
+        renounceRole(PAUSER_ROLE, msg.sender);
+        renounceRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        // require(getRoleMemberCount(MINTER_ROLE) == 1 && getRoleMemberCount(PAUSER_ROLE) == 1)
+        
+    }
+    
     
 }
