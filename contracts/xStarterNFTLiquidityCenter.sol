@@ -96,6 +96,7 @@ contract xStarterNFTLiquidityCenter is Ownable, IERC721Receiver, ERC1820Implemen
         return true;
     }
     
+    // todo: add logic to receive nfts, record and then have a way of depositor calling a function to receive tokens
     function onERC721Received(address operator, address from, uint256 tokenId, bytes calldata data) public pure override returns(bytes4) {
         return this.onERC721Received.selector;
     }
@@ -112,6 +113,7 @@ contract xStarterNFTLiquidityCenter is Ownable, IERC721Receiver, ERC1820Implemen
     ) external  override{
         // todo: have a flag that is set when contract has been fully setup, this requires, rate > 0
         // can only receive erctoken associated with NFT
+        require(NFT != address(0));
         require(msg.sender == ERCToken, 'not associated token');
         require(amount >= rate, "amount not enough to mint or redeem 1 nft");
         // first check if from address has reservedNFTs
@@ -123,7 +125,16 @@ contract xStarterNFTLiquidityCenter is Ownable, IERC721Receiver, ERC1820Implemen
             reservedNFTs[from].pop();
             IERC721XSTN(NFT).safeTransferFrom(address(this), to, tokenID);
         }else {
-            _assignNFT(from, amount);
+            uint noOfNfts = _assignNFT(from, amount);
+            
+            // check how much spent
+            uint spent = noOfNfts * rate;
+            uint change = amount - spent;
+            //todo: verify this is safe
+            if(change != 0) {
+                IERC777(ERCToken).send(from, change, "");
+            }
+            
         }
 
         
@@ -132,6 +143,7 @@ contract xStarterNFTLiquidityCenter is Ownable, IERC721Receiver, ERC1820Implemen
     function _assignNFT(address _to, uint _amount) internal returns(uint nftsAssigned) {
         // get number of NFTs desired 
         uint desiredNFTs = _amount / rate;
+        desiredNFTs = desiredNFTs > noPerTX ? noPerTX : desiredNFTs;
         // get number minted
         uint mintedNFTs = _mintNFT(_to, desiredNFTs);
         uint remNfts = desiredNFTs - mintedNFTs;
@@ -161,6 +173,7 @@ contract xStarterNFTLiquidityCenter is Ownable, IERC721Receiver, ERC1820Implemen
         }
     }
     
+    event NFTClaimed(address indexed _to, uint indexed tokenID);
     function _claimNFT(address _to, uint desiredNoOfNFTS) internal returns(uint nftsClaimed) {
         
         uint len = unclaimedNFTs.length;
@@ -175,6 +188,7 @@ contract xStarterNFTLiquidityCenter is Ownable, IERC721Receiver, ERC1820Implemen
             len = unclaimedNFTs.length;
             IERC721XSTN(NFT).safeTransferFrom(address(this), _to, tokenID);
             nftsClaimed++;
+            emit NFTClaimed(_to, tokenID);
         }
     }
     function _sendToken(address _addr, uint _amount) internal {
