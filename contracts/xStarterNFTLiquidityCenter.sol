@@ -34,6 +34,7 @@ contract xStarterNFTLiquidityCenter is Ownable, IERC721Receiver, ERC1820Implemen
     address ERCToken; // erc20 token for conversion to NFT
     address NFT;
     uint rate;
+    uint reserveFee;
     uint noPerTX;
     uint maxNFTSupply;
     uint noOfNFTMinted;
@@ -41,6 +42,7 @@ contract xStarterNFTLiquidityCenter is Ownable, IERC721Receiver, ERC1820Implemen
     // mapping(address => uint) balances;
     uint[] unclaimedNFTs;
     mapping(address => uint[]) reservedNFTs;
+    mapping(address => uint[]) preDepositNFTs;
     
     // function balanceOf(address _holder) public view returns(uint) {
     //     return balances[_holder];
@@ -96,9 +98,32 @@ contract xStarterNFTLiquidityCenter is Ownable, IERC721Receiver, ERC1820Implemen
         return true;
     }
     
-    // todo: add logic to receive nfts, record and then have a way of depositor calling a function to receive tokens
-    function onERC721Received(address operator, address from, uint256 tokenId, bytes calldata data) public pure override returns(bytes4) {
+    
+    function onERC721Received(address operator, address from, uint256 tokenId, bytes calldata data) public  override returns(bytes4) {
+        preDepositNFTs[from].push(tokenId);
         return this.onERC721Received.selector;
+    }
+    
+    // if reserved is true, the rate minus reserve fee is sent
+    // todo: finsih up logic
+    function completeNFTConversion(bool reserved) public returns(bool) {
+        uint len = preDepositNFTs[msg.sender].length;
+        uint tokenID;
+        require(len > 0, "No NFTs deposited");
+        uint amountToSend;
+        
+        while(len > 0) {
+            tokenID = preDepositNFTs[msg.sender][len - 1];
+            preDepositNFTs[msg.sender].pop();
+            len = preDepositNFTs[msg.sender].length;
+            amountToSend = amountToSend + rate;
+            if(reserved) {
+                amountToSend = amountToSend - reserveFee;
+            }
+            
+        }
+         IERC777(ERCToken).send(msg.sender, amountToSend, "");
+
     }
     
      // called when an ERC777 token is received by this contract
