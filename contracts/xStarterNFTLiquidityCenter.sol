@@ -117,12 +117,18 @@ contract xStarterNFTLiquidityCenter is Ownable, IERC721Receiver, ERC1820Implemen
             preDepositNFTs[msg.sender].pop();
             len = preDepositNFTs[msg.sender].length;
             amountToSend = amountToSend + rate;
+            
             if(reserved) {
                 amountToSend = amountToSend - reserveFee;
+                reservedNFTs[msg.sender].push(tokenID);
+            }else {
+                unclaimedNFTs.push(tokenID);
             }
             
         }
          IERC777(ERCToken).send(msg.sender, amountToSend, "");
+         
+         return true;
 
     }
     
