@@ -80,7 +80,7 @@ contract xStarterNFTLiquidityCenter is Ownable, IERC721Receiver, ERC1820Implemen
     ) external view  override {
         // check to see if NFTs available
         // check balance of this address
-        revert('not token sender');
+        // revert('not token sender');
         // require(msg.sender == ERCToken, 'not associated token');
     }
     
