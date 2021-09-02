@@ -7,6 +7,7 @@ const routes = [
       { path: '', component: () => import('pages/Index.vue') },
       { path: 'gov', component: () => import('pages/Governance.vue') },
       { path: 'nft', component: () => import('pages/NFT.vue') },
+      { path: 'nft/:ipfs_string', name: 'nft_mint', component: () => import('pages/NFTMintingAndConversion.vue') },
     ]
   },
 
