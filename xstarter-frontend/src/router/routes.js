@@ -4,10 +4,10 @@ const routes = [
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/Index.vue') },
-      { path: 'gov', component: () => import('pages/Governance.vue') },
-      { path: 'nft', component: () => import('pages/NFT.vue') },
-      { path: 'nft/:ipfs_string', name: 'nft_mint', component: () => import('pages/NFTMintingAndConversion.vue') },
+      { path: '', name: 'ilo_main', component: () => import('pages/Index.vue') },
+      { path: 'gov', name: 'gov_main', component: () => import('pages/Governance.vue') },
+      { path: 'nft', name: 'nft_main', component: () => import('pages/NFT.vue') },
+      { path: 'nft/mint/:ipfs_cid', name: 'nft_mint', component: () => import('pages/NFTMintingAndConversion.vue') },
     ]
   },
 
@@ -17,6 +17,10 @@ const routes = [
     path: '/:catchAll(.*)*',
     component: () => import('pages/Error404.vue')
   }
+  // {
+  //   path: '/nft/:catchAll(.*)*',
+  //   component: () => import('pages/NFT.vue')
+  // }
 ]
 
 export default routes

@@ -37,14 +37,14 @@
         </div>
       </q-toolbar>
 
-      <q-tabs align="center" :class="{'text-dark': !$q.dark.isActive, 'text-light': $q.dark.isActive}">
-        <q-route-tab to="/" label="ILO"  />
-        <q-route-tab to="/gov" label="Governance">
+      <q-tabs align="center" :class="{'text-dark': !$q.dark.isActive, 'text-light': $q.dark.isActive}" v-model="tabName">
+        <q-tab @click="$router.push('/')" label="ILO" name="ilo" />
+        <q-tab @click="$router.push('/gov')" label="Governance" name="gov">
           <q-badge label="Coming Soon" :color="darkLightText" :text-color="darkLightTextReverse" style="font-size: 8px;" floating />
-        </q-route-tab>
-        <q-route-tab to="/nft" label="NFT">
+        </q-tab>
+        <q-tab @click="$router.push('/nft')" to="/nft" label="NFT" name="nft">
           <q-badge label="Coming Soon" :color="darkLightText" :text-color="darkLightTextReverse" style="font-size: 8px;" floating />
-        </q-route-tab>
+        </q-tab>
       </q-tabs>
     </q-header>
 
@@ -468,7 +468,8 @@ export default defineComponent({
   data() {
     return {
       showWalletConnectModal: false,
-      showNotice: false
+      showNotice: false,
+      tabName: ''
     }
   },
   computed: {
@@ -538,6 +539,8 @@ export default defineComponent({
       console.log('error occurred reading from session', e)
       this.showNotice = true
     }
+    this.tabName = this.$route.name.split('_')[0]
+    console.log('path', this.tabName)
   },
   watch: {
     jsonRPCEndpoint: async function() {

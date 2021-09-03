@@ -62,6 +62,20 @@ website: "www.hungrybirds.io",
 
   }
 
+let aData = {
+  name: "HungryBirds",
+  logoCID: 'QmPBNPEMJg7zDknEn4AonCGZEZ9dehjjNsYFvQwyZvhneT',
+  logoURL: 'https://ipfs.io/ipfs/QmPBNPEMJg7zDknEn4AonCGZEZ9dehjjNsYFvQwyZvhneT',
+  description: `HungryBirds are a mix of programmatically generated NFT art and an ERC20 token. HungryBird uses a unique structure to provide instant liquidity for holders of HungryBirds NFTs and allows for indirect fractional ownership of it’s NFT Collection. In the HungryBird ecosystem, collectors can either hold a HungryBirds NFT or 10,000 NFT tokens and can easily convert between the two.
+       A Total of 10,500 NFTs will be minted`,
+  NFTMeta: {
+    maxMint: 10200,
+    maxMintPerTX: 20,
+    contractAddress: ''
+
+  }
+}
+
 export default defineComponent({
   name: 'NFTMintingAndConversion',
   setup() {
@@ -77,22 +91,22 @@ export default defineComponent({
     return {
       form: {
         numberToMint: 0
-      }
+      },
+      dataInfo: null
     }
   },
   computed: {
     logo() {
-      return '/HungryBirds/HungryBirdsLogo.png'
+      return this.dataInfo ? this.dataInfo.logoURL : ''
     },
     description() {
-      return `HungryBirds are a mix of programmatically generated NFT art and an ERC20 token. HungryBird uses a unique structure to provide instant liquidity for holders of HungryBirds NFTs and allows for indirect fractional ownership of it’s NFT Collection. In the HungryBird ecosystem, collectors can either hold a HungryBirds NFT or 10,000 NFT tokens and can easily convert between the two.
-       A Total of 10,500 NFTs will be minted`
+      return this.dataInfo ? this.dataInfo.description : ''
     },
     maxMint() {
-      return 10500
+      return this.dataInfo ? this.dataInfo.NFTMeta.maxMint : 0
     },
     maxMintPerTx() {
-      return 30
+      return this.dataInfo ? this.dataInfo.NFTMeta.maxMintPerTX : 0
     },
     numberMinted() {
       return 0
@@ -107,7 +121,15 @@ export default defineComponent({
       if (val > 0 && val <= this.maxMintPerTx) { return  true }
       return `Must Mint Between 1 to ${this.maxMintPerTx} NFTs per transaction`
     }
-
+  },
+  async mounted() {
+    // console.log(this.$ipfs_utils)
+    // console.log('ipfs utils', this.$ipfs_utils.saveILOInfo(aData))
+    const dataInfo  = await this.$ipfs_utils.getILOInfo(this.$route.params.ipfs_cid)
+    if (dataInfo) {
+      this.dataInfo = dataInfo
+    }
+    // console.log('data info is', dataInfo)
   }
 })
 </script>
