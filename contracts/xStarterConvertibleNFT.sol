@@ -9,22 +9,42 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 
 contract xStarterConvertibleNFT is Ownable, ERC721PresetMinterPauserAutoId, ERC777NoReceiveRecipient, ERC777NoSendSender {
-    uint maxSupply;
+    using Counters for Counters.Counter;
+    uint public maxSupply;
+    uint public maxPerTx;
+    uint public maxPerAddr;
+    Counters.Counter internal _tokenIdTracker;
     constructor(
         string memory _name,
         string  memory _symbol,
         string memory _baseNFTURI,
-        uint256 _maxSupply
+        uint _maxSupply,
+        uint _maxPerTx,
+        uint _maxPerAddr
     )
         ERC721PresetMinterPauserAutoId(_name, _symbol, _baseNFTURI)
     {
        maxSupply = _maxSupply;
+       maxPerTx = _maxPerTx;
+       maxPerAddr = _maxPerAddr;
     }
     
     // edit 
-    function _baseURI() internal pure override returns (string memory) {
-        return "";
+    // function _baseURI() internal pure override returns (string memory) {
+    //     return "";
+    // }
+    
+    function mintBirds(uint noOfBirds) public {
+        require(balanceOf(msg.sender) + noOfBirds <= maxPerAddr, 'max per address reached');
+        require(noOfBirds > 0 && noOfBirds <= maxPerTx, 'number of birds to mint not valid');
+        require(totalSupply() + noOfBirds <= maxSupply, 'no more NFTs to mint');
+        for(uint i=0; i<noOfBirds; i++) {
+            _mint(msg.sender, _tokenIdTracker.current());
+            _tokenIdTracker.increment();
+        }
+        
     }
+    
     
     // used to grand minter role to management contract and renounce all roles from contract
     function grantAndRenounceMinterAdminRole(address account) public onlyRole(getRoleAdmin(DEFAULT_ADMIN_ROLE)) {
