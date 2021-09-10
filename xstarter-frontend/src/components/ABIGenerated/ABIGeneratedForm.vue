@@ -6,7 +6,14 @@
 
     <div class="full-width q-gutter-y-md">
       <div v-for="(obj, ind) in funcInputs" :key="ind" >
-        <q-input :readonly="readOnlyObjs[obj.name]" :class="inputStyling.class" :style="inputStyling.style" v-model="formFields[obj.name]" :label="!displayNames[obj.name] ? obj.name : displayNames[obj.name]"  />
+        <q-input
+          :readonly="readOnlyObjs[obj.name]"
+          :class="inputStyling.class"
+          :style="inputStyling.style"
+          v-model="formFields[obj.name]"
+          :label="!displayNames[obj.name] ? obj.name : displayNames[obj.name]"
+          @update:model-value="(val) => { onInput(obj.name, val) }"
+        />
       </div>
       <div>
         <div v-if="errorMessage" class="text-negative ">
@@ -16,14 +23,20 @@
           Success! TX hash: {{ successMessage }}
         </div>
         <div v-if="funcABI.stateMutability === 'payable'">
-          <q-input  :class="inputStyling.class" :style="inputStyling.style" v-model="payableValue" :label="`${nativeCurrencySymbol} to send`"/>
+          <q-input
+            :class="inputStyling.class"
+            :style="inputStyling.style"
+            :readonly="payableReadOnly"
+            v-model="payableValue"
+            :label="`${nativeCurrencySymbol} to send`"
+          />
         </div>
         <div class="q-pl-xs" v-if="funcABI.inputs.length === 0 && funcABI.stateMutability === 'nonpayable'">
           No Inputs required. Click Execute to call function
         </div>
-        <div class="row q-mt-lg">
-          <q-btn rounded outline class="col-5" label="execute" @click="execute" />
-          <div class="col-1"/>
+        <div class="row q-mt-lg justify-center">
+          <q-btn rounded outline class="col-3" :label="actionBtnLabel" @click="execute" />
+          <div class="col-1" v-if="closeBtnCallback"/>
           <q-btn rounded outline v-if="closeBtnCallback" class="col-6" label="cancel" @click="closeBtnCallback"/>
         </div>
         <div v-if="waitingOnTx" class="row text-positive justify-center q-my-lg">
@@ -61,6 +74,7 @@ export default defineComponent( {
       errorMessage: '',
       successMessage: '',
       waitingOnTx: false,
+      payableReadOnly: false,
       payableValue: '',
       funcABI: {inputs: [], stateMutability: ''},
       funcInputs: [],
@@ -80,6 +94,10 @@ export default defineComponent( {
     functionType: {
       type: String,
       default: 'function' // can be 'function', 'constructor'
+    },
+    actionBtnLabel: {
+      type: String,
+      default: 'execute'
     },
     nativeCurrencySymbol: {
       type: String,
@@ -112,6 +130,11 @@ export default defineComponent( {
       type: Function,
       required: false
     },
+    // a parameter tied to a payable, for example if minting and each mint requires a certain amount of native tokens
+    parameterToPayable: {
+      type: Object,
+      required: false // {paramName: '', amtPerEach: } parameter that should be used to calculate payable value
+    },
     successCallBack: {
       type: Function,
       required: false
@@ -134,6 +157,12 @@ export default defineComponent( {
     },
     callAfterExecute() {
       this.waitingOnTx = false
+    },
+    onInput(fieldName, fieldVal) {
+      console.log('field name is', fieldName, fieldVal)
+      if (this.payableReadOnly && this.parameterToPayable.paramName === fieldName) {
+        this.payableValue = fieldVal ? (parseInt(fieldVal) * this.parameterToPayable.amtPerEach).toString() : 0
+      }
     },
     convertFieldToEther() {
       // todo: have a way of deciding which to use
@@ -209,6 +238,18 @@ export default defineComponent( {
           this.readOnlyObjs[inputObj.name] = !!defaultObj.readOnly
           this.hideObjs[inputObj.name] = !!defaultObj.hide
         }
+
+        if (this.parameterToPayable && this.funcInputs.some(obj => obj.name === this.parameterToPayable.paramName)) {
+          console.log('payable is readonly')
+          this.payableReadOnly = true
+          this.payableValue = 0
+        }
+      }
+    },
+    formFields: async function(val) {
+      console.log('form fields is', val)
+      if (val) {
+        console.log('form fields is', val)
       }
     }
   }

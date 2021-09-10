@@ -11,23 +11,43 @@
       <div class="text-h6 col-9 col-lg-10" >
         {{ description }}
       </div>
+
+      <div class="row  col-9 col-lg-10 q-mt-md content-center justify-center">
+        <div v-if="socialMedia.website" class="col-auto">
+          <q-btn icon="fas fa-globe" size="lg" round flat  target="_blank" type="a" :href="socialMedia.website" />
+        </div>
+        <div v-if="socialMedia.telegram" class="col-auto">
+          <q-btn icon="fab fa-telegram-plane" size="lg" round flat  target="_blank" type="a" :href="socialMedia.telegram" />
+        </div>
+
+        <div v-if="socialMedia.twitter" class="col-auto">
+          <q-btn icon="fab fa-twitter" size="lg" round flat target="_blank" type="a" :href="socialMedia.twitter" />
+        </div>
+        <div v-if="socialMedia.discord" class="col-auto">
+          <q-btn icon="fab fa-discord" size="lg" round flat target="_blank" type="a" :href="socialMedia.discord" />
+        </div>
+      </div>
+
       <div class="text-body1 text-center col-9 col-lg-7" >
         Total Minted: &nbsp; <span class="text-bold">{{ numberMinted }} / {{ maxMint }}</span>
       </div>
       <div class="text-body1 text-center col-9 col-lg-7" >
+        Number Of {{ name }} NFTs You Own : &nbsp; <span class="text-bold">{{ noOfUserNFTs }}</span>
+      </div>
+      <div class="text-body1 text-center col-9 col-lg-7 wrap-word" >
         <span class="text-bold">Contract Address</span>: {{ contractAddress }} <q-btn flat icon="content_copy" @click="copyContract" />
       </div>
 
-      <div class="col-11 col-lg-10 row justify-center">
-        <q-btn
-          outline
-          rounded
-          style="max-width: 300px; min-width: 200px;"
-          label="mint"
-          class="col-12"
-          @click="showMint"
-        />
-      </div>
+<!--      <div class="col-11 col-lg-10 row justify-center">-->
+<!--        <q-btn-->
+<!--          outline-->
+<!--          rounded-->
+<!--          style="max-width: 300px; min-width: 200px;"-->
+<!--          label="mint"-->
+<!--          class="col-12"-->
+<!--          @click="showMint"-->
+<!--        />-->
+<!--      </div>-->
 <!--      <div class="col-11 col-lg-10 row justify-center">-->
 <!--        <q-form class="q-gutter-y-lg" style="max-width: 300px; min-width: 200px;" @submit.prevent>-->
 <!--          <q-input-->
@@ -49,9 +69,9 @@
 <!--        </q-form>-->
 <!--      </div>-->
     </div>
-    <div class="row justify-center q-my-xl ">
+    <div class="row justify-center q-my-xl " v-if="dataInfo">
       <ABIGeneratedForm
-        class="col-12 col-lg-9 q-pa-xl accountDisplayCard display-card"
+        class="col-12 col-lg-7 q-pa-xl accountDisplayCard display-card"
         v-if="showABIForm"
         :abi="currentABI"
         :title="formTitle"
@@ -59,6 +79,8 @@
         :native-currency-symbol="fundingTokenSymbol"
         :function-name="currentFunctionName"
         :connected-contract="connectedContract"
+        :actionBtnLabel="'Mint'"
+        :parameterToPayable="{paramName: 'noOfBirds', amtPerEach: 0.60}"
         :input-styling="{class: 'q-pl-sm', style: 'border: 2px Solid; border-radius: 10px;'}"
       />
       <!--        <div ref="#abiForm"></div>-->
@@ -78,27 +100,7 @@ import ILOInteractionAddressesInfoDisplay from "components/CardDisplays/ILOInter
 import ILOInteractionInfoDisplay from "components/CardDisplays/ILOInteractionInfoDisplay";
 import {DEFAULT_CHAIN_FUNDING_TOKEN, SUPPORTED_FUNDING_TOKENS} from "src/constants";
 
-
-// json object of NFT project using xStarter NFT contracts
-// token must be a xStarterNFTConvertibleToken
-const exampleObj = {
-  name: "HungryBirds.io",
-  tokenInfo: {
-    name: "HungryBirds",
-    symbol: "HBD",
-    totalSupply: "150000000",
-    tokenAddress: "0x0"
-  },
-  NFTInfo: {
-
-  },
-  conversionInfo: {
-    rate: "10000",
-    fee: "500",
-  },
-website: "www.hungrybirds.io",
-
-  }
+// http://localhost:8081/nft/mint/QmYXRCAjfAR4FkpWUP22RiShK1NEZ4e88ip96V9BXq3uqE
 
 let aData = {
   name: "HungryBirds",
@@ -109,10 +111,19 @@ let aData = {
        A Total of 10,500 NFTs will be minted`,
   arrayOfImages: [],
   gif: 'https://i.imgur.com/7HPrer8.gif',
+  socialMedia: {
+    twitter: 'https://twitter.com/hungrybirdsnft',
+    discord: 'https://discord.com/invite/R2GzHBmR77',
+    telegram: 'https://t.me/HungryBirdsTokenNFT',
+    instagram: 'https://www.instagram.com/hungrybirdsnft/'
+  },
   NFTMeta: {
     maxMint: 10200,
+    reservedAmt: 300,
+    totalMint: 10500,
     maxMintPerTX: 20,
-    contractAddress: '0xeE39B8AdB33B5079a6Ed0a187D8db3E626056976',
+    maxPerAddr: 30,
+    contractAddress: '0x14B355AFaDB41248B52e92F46C12E55F66E2Eb9C',
     chainId: '56',
     mintFunction: 'mintBirds',
     abi: [
@@ -146,6 +157,16 @@ let aData = {
           {
             "internalType": "uint256",
             "name": "_maxPerAddr",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "_mintPrice",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "_supplyReserved",
             "type": "uint256"
           }
         ],
@@ -658,7 +679,20 @@ let aData = {
         ],
         "name": "mintBirds",
         "outputs": [],
-        "stateMutability": "nonpayable",
+        "stateMutability": "payable",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "mintPrice",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
         "type": "function"
       },
       {
@@ -836,6 +870,19 @@ let aData = {
         "name": "setApprovalForAll",
         "outputs": [],
         "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "supplyReserved",
+        "outputs": [
+          {
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
         "type": "function"
       },
       {
@@ -1063,6 +1110,19 @@ let aData = {
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "withdraw",
+        "outputs": [
+          {
+            "internalType": "bool",
+            "name": "success",
+            "type": "bool"
+          }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
       }
     ]
   }
@@ -1087,9 +1147,10 @@ export default defineComponent({
         numberToMint: 0
       },
       dataInfo: null,
-      showABIForm: false,
+      showABIForm: true,
       connectedContract: null,
-      totalMintedNFTs: 0
+      totalMintedNFTs: 0,
+      noOfUserNFTs: 0
     }
   },
   computed: {
@@ -1102,8 +1163,18 @@ export default defineComponent({
       }
       return 'Custom Token'
     },
+    name() {
+      return this.dataInfo ? this.dataInfo.name : ''
+    },
     logo() {
       return this.dataInfo ? this.dataInfo.logoURL : ''
+    },
+    socialMedia() {
+      return this.dataInfo ?
+        // {website: this.dataInfo.website, this.dataInfo.socialMedia.twitter, this.dataInfo.socialMedia.discord, this.dataInfo.socialMedia.telegram}
+        { website: this.dataInfo.website, ...this.dataInfo.socialMedia }
+        :
+        []
     },
     description() {
       return this.dataInfo ? this.dataInfo.description : ''
@@ -1159,6 +1230,7 @@ export default defineComponent({
     },
     async updateNumberNFTs() {
       this.totalMintedNFTs = (await this.getTotalSupply()).toNumber()
+      this.noOfUserNFTs = (await this.getBalanceOf()).toNumber()
       // console.log(this.totalMintedNFTs.toNumber())
     },
     async getTotalSupply() {
@@ -1166,17 +1238,25 @@ export default defineComponent({
         this.connectedContract = await this.getConnectedContract()
       }
       return await this.connectedContract.totalSupply()
+    },
+    async getBalanceOf() {
+      if (!this.connectedContract) {
+        this.connectedContract = await this.getConnectedContract()
+      }
+      return await this.connectedContract.balanceOf(this.connectedAccount[0])
     }
   },
   async mounted() {
     // console.log(this.$ipfs_utils)
     // console.log('ipfs utils', await this.$ipfs_utils.saveILOInfo(aData))
+    //"QmYXRCAjfAR4FkpWUP22RiShK1NEZ4e88ip96V9BXq3uqE"
     const dataInfo  = await this.$ipfs_utils.getILOInfo(this.$route.params.ipfs_cid)
     if (dataInfo) {
       this.dataInfo = dataInfo
     }
     await this.updateNumberNFTs()
-    // console.log('data info is', dataInfo)
+    await this.showMint()
+    console.log('data info is', dataInfo)
   }
 })
 </script>
