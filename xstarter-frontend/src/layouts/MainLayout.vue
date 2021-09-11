@@ -212,12 +212,13 @@ export default defineComponent({
 
     const metaMaskEthereumChainAddRequest = async (
       chainId,
-      chainName,
-      currencyName,
-      currencySymbol,
-      rpcArray,
-      blockExplorerArray,
-      iconUrlArray,
+      paramObj
+      // chainName,
+      // currencyName,
+      // currencySymbol,
+      // rpcArray,
+      // blockExplorerArray,
+      // iconUrlArray,
     ) => {
       let wasAdded = false
       try {
@@ -235,18 +236,19 @@ export default defineComponent({
           try {
             wasAdded = await ethereumProvider.value.request({
               method: 'wallet_addEthereumChain',
-              params: [{
-                chainId: chainId, // A 0x-prefixed hexadecimal string
-                chainName: chainName,
-                nativeCurrency: {
-                  name: currencyName,
-                  symbol: currencySymbol, // 2-6 characters long
-                  decimals: 18,
-                },
-                rpcUrls: rpcArray,
-                blockExplorerUrls: blockExplorerArray,
-                iconUrls: iconUrlArray, // Currently ignored.
-              }],
+              params: [paramObj],
+              // params: [{
+              //   chainId: chainId, // A 0x-prefixed hexadecimal string
+              //   chainName: chainName,
+              //   nativeCurrency: {
+              //     name: currencyName,
+              //     symbol: currencySymbol, // 2-6 characters long
+              //     decimals: 18,
+              //   },
+              //   rpcUrls: rpcArray,
+              //   blockExplorerUrls: blockExplorerArray,
+              //   iconUrls: iconUrlArray, // Currently ignored.
+              // }],
             })
 
             if (wasAdded) {

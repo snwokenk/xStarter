@@ -26,10 +26,19 @@
         <div v-if="socialMedia.discord" class="col-auto">
           <q-btn icon="fab fa-discord" size="lg" round flat target="_blank" type="a" :href="socialMedia.discord" />
         </div>
+        <div v-if="socialMedia.instagram" class="col-auto">
+          <q-btn icon="fab fa-instagram" size="lg" round flat target="_blank" type="a" :href="socialMedia.instagram" />
+        </div>
       </div>
 
       <div class="text-body1 text-center col-9 col-lg-7" >
-        Total Minted: &nbsp; <span class="text-bold">{{ numberMinted }} / {{ maxMint }}</span>
+        Total Minted: &nbsp; <span class="text-bold">{{ numberMinted }}</span>
+      </div>
+      <div class="text-body1 text-center col-9 col-lg-7" >
+        Reserved: &nbsp; <span class="text-bold">{{ reservedAmt }}</span>
+      </div>
+      <div class="text-body1 text-center col-9 col-lg-7" >
+        Available: &nbsp; <span class="text-bold">{{ totalMint - numberMinted - reservedAmt }}</span>
       </div>
       <div class="text-body1 text-center col-9 col-lg-7" >
         Number Of {{ name }} NFTs You Own : &nbsp; <span class="text-bold">{{ noOfUserNFTs }}</span>
@@ -38,38 +47,21 @@
         <span class="text-bold">Contract Address</span>: {{ contractAddress }} <q-btn flat icon="content_copy" @click="copyContract" />
       </div>
 
-<!--      <div class="col-11 col-lg-10 row justify-center">-->
-<!--        <q-btn-->
-<!--          outline-->
-<!--          rounded-->
-<!--          style="max-width: 300px; min-width: 200px;"-->
-<!--          label="mint"-->
-<!--          class="col-12"-->
-<!--          @click="showMint"-->
-<!--        />-->
-<!--      </div>-->
-<!--      <div class="col-11 col-lg-10 row justify-center">-->
-<!--        <q-form class="q-gutter-y-lg" style="max-width: 300px; min-width: 200px;" @submit.prevent>-->
-<!--          <q-input-->
-<!--            class="col-12"-->
-<!--            outlined-->
-<!--            v-model="form.numberToMint"-->
-<!--            label="Number Of NFTs To Mint"-->
-<!--            type="number"-->
-<!--            :rules="[checkMax]"-->
-<!--          />-->
-<!--          <q-btn-->
-<!--            outline-->
-<!--            rounded-->
-<!--            style="max-width: 300px; min-width: 200px;"-->
-<!--            label="mint"-->
-<!--            class="col-12"-->
-<!--            type="submit"-->
-<!--          />-->
-<!--        </q-form>-->
-<!--      </div>-->
     </div>
-    <div class="row justify-center q-my-xl " v-if="dataInfo">
+
+<!--    <q-card  flat square  clickable>-->
+<!--      <q-card-section class="justify-between account-display-text text-center">-->
+<!--       -->
+<!--      </q-card-section>-->
+<!--    </q-card>-->
+
+    <div v-if="isWrongNetwork" class="row justify-center">
+      <div class="display-card accountDisplayCard q-mb-lg col-10 col-lg-5 q-pa-xl">
+        <NetworkSwitcher :requiredNetworkId="nftChainId" />
+      </div>
+    </div>
+
+    <div class="row justify-center q-mb-xl " v-else-if="dataInfo">
       <ABIGeneratedForm
         class="col-12 col-lg-7 q-pa-xl accountDisplayCard display-card"
         v-if="showABIForm"
@@ -99,6 +91,7 @@ import {ethers} from "boot/ethers";
 import ILOInteractionAddressesInfoDisplay from "components/CardDisplays/ILOInteractionAddressesInfoDisplay";
 import ILOInteractionInfoDisplay from "components/CardDisplays/ILOInteractionInfoDisplay";
 import {DEFAULT_CHAIN_FUNDING_TOKEN, SUPPORTED_FUNDING_TOKENS} from "src/constants";
+import NetworkSwitcher from "components/NetworkSwitcher";
 
 // http://localhost:8081/nft/mint/QmYXRCAjfAR4FkpWUP22RiShK1NEZ4e88ip96V9BXq3uqE
 
@@ -124,7 +117,7 @@ let aData = {
     maxMintPerTX: 20,
     maxPerAddr: 30,
     contractAddress: '0x14B355AFaDB41248B52e92F46C12E55F66E2Eb9C',
-    chainId: '56',
+    chainId: '31337',
     mintFunction: 'mintBirds',
     abi: [
       {
@@ -1130,16 +1123,17 @@ let aData = {
 
 export default defineComponent({
   name: 'NFTMintingAndConversion',
-  components: {ABIGeneratedForm},
+  components: {NetworkSwitcher, ABIGeneratedForm},
   setup() {
     const getProvider = inject('$getProvider')
     const getSigner = inject('$getSigner')
     const getLaunchPadContract = inject('$getLaunchPadContract')
     const connectedAccount = inject('$connectedAccounts')
+    let chainId = inject('$chainId')
     const getConnectedAndPermissioned = inject('$getConnectedAndPermissioned')
     // const mintABi = xStarterERC721Code.abi
     console.log('provider is ', getProvider())
-    return {getProvider, getSigner, getLaunchPadContract, getConnectedAndPermissioned, connectedAccount}
+    return {getProvider, getSigner, getLaunchPadContract, getConnectedAndPermissioned, connectedAccount, chainId}
   },
   data() {
     return {
@@ -1155,13 +1149,16 @@ export default defineComponent({
   },
   computed: {
     fundingTokenSymbol() {
-      let fundingSymbol = SUPPORTED_FUNDING_TOKENS['0x0000000000000000000000000000000000000000-' + this.chainId]
+      let fundingSymbol = SUPPORTED_FUNDING_TOKENS['0x0000000000000000000000000000000000000000-' + this.nftChainId]
       if (fundingSymbol) {
         return fundingSymbol
       }else if (!this.connectedAndPermissioned) {
         return DEFAULT_CHAIN_FUNDING_TOKEN
       }
       return 'Custom Token'
+    },
+    isWrongNetwork() {
+      return this.chainId && parseInt(this.chainId) !== parseInt(this.nftChainId)
     },
     name() {
       return this.dataInfo ? this.dataInfo.name : ''
@@ -1185,11 +1182,20 @@ export default defineComponent({
     currentABI() {
       return this.dataInfo ? this.dataInfo.NFTMeta.abi : ''
     },
+    nftChainId() {
+      return this.dataInfo ? this.dataInfo.NFTMeta.chainId : ''
+    },
     currentFunctionName() {
       return this.dataInfo ? this.dataInfo.NFTMeta.mintFunction : ''
     },
     maxMint() {
       return this.dataInfo ? this.dataInfo.NFTMeta.maxMint : 0
+    },
+    totalMint(){
+      return this.dataInfo ? this.dataInfo.NFTMeta.totalMint : 0
+    },
+    reservedAmt(){
+      return this.dataInfo ? this.dataInfo.NFTMeta.reservedAmt : 0
     },
     maxMintPerTx() {
       return this.dataInfo ? this.dataInfo.NFTMeta.maxMintPerTX : 0
@@ -1249,7 +1255,8 @@ export default defineComponent({
   async mounted() {
     // console.log(this.$ipfs_utils)
     // console.log('ipfs utils', await this.$ipfs_utils.saveILOInfo(aData))
-    //"QmYXRCAjfAR4FkpWUP22RiShK1NEZ4e88ip96V9BXq3uqE"
+    //"QmYXRCAjfAR4FkpWUP22RiShK1NEZ4e88ip96V9BXq3uqE" BNB test
+    //"Qmcs3PT6zpez2jYRkMGtEJt5suXZdrnS4ZZ3SUnoSQAHJa" hard hat
     const dataInfo  = await this.$ipfs_utils.getILOInfo(this.$route.params.ipfs_cid)
     if (dataInfo) {
       this.dataInfo = dataInfo

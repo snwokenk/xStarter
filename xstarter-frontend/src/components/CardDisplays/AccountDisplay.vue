@@ -75,7 +75,7 @@
 
 <script>
 import {defineComponent, inject, provide, ref} from "vue";
-import {ACCEPTED_CHAINS, CHAIN_ID_TO_NAME} from "src/constants";
+import {ACCEPTED_CHAINS, CHAIN_ID_TO_NAME, CHAIN_INFO_OBJ} from "src/constants";
 import GeneralModal from "components/Modals/GeneralModal";
 
 export default defineComponent( {
@@ -114,35 +114,26 @@ export default defineComponent( {
     async addXDai() {
       await this.metaMaskEthereumChainAddRequest(
         '0x64',
-        'xDai',
-        'xDai',
-        'xDai',
-        ['https://rpc.xdaichain.com/', 'https://xdai.poanetwork.dev/', 'https://dai.poa.network/'],
-        ['https://blockscout.com/xdai/mainnet/'],
-        ['']
+        CHAIN_INFO_OBJ[100]
+        // 'xDai',
+        // 'xDai',
+        // 'xDai',
+        // ['https://rpc.xdaichain.com/', 'https://xdai.poanetwork.dev/', 'https://dai.poa.network/'],
+        // ['https://blockscout.com/xdai/mainnet/'],
+        // ['']
       )
       this.jsonRPCEndpoint = 'https://rpc.xdaichain.com/'
-    },
-    async addSPOATest() {
-      await this.metaMaskEthereumChainAddRequest(
-        '0x4D',
-        'SPOA',
-        'SPOA',
-        'SPOA',
-        ['https://sokol.poa.network'],
-        ['https://blockscout.com/poa/sokol'],
-        ['']
-      )
     },
     async addGOERLITest() {
       await this.metaMaskEthereumChainAddRequest(
         '0x5',
-        'ETH',
-        'ETH',
-        'ETH',
-        ['https://goerli.prylabs.net/'],
-        ['https://goerli.etherscan.io'],
-        ['']
+        CHAIN_INFO_OBJ[5]
+        // 'ETH',
+        // 'ETH',
+        // 'ETH',
+        // ['https://goerli.prylabs.net/'],
+        // ['https://goerli.etherscan.io'],
+        // ['']
       )
       this.jsonRPCEndpoint = 'https://rpc.slock.it/goerli'
     }

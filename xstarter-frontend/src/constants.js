@@ -36,8 +36,60 @@ export const CHAIN_ID_TO_NAME = {
 export const  ACCEPTED_CHAINS = {
   31337: true,
   100: true,
-  5: true
+  5: true,
+  56: true
   // 137: true
+}
+
+export const CHAIN_INFO_OBJ = {
+  5: {
+    chainId: '0x5', // A 0x-prefixed hexadecimal string
+    chainName: 'ETH',
+    nativeCurrency: {
+      name: 'ETH',
+      symbol: 'ETH', // 2-6 characters long
+      decimals: 18,
+    },
+    rpcUrls: ['https://goerli.prylabs.net/'],
+    blockExplorerUrls: ['https://goerli.etherscan.io'],
+    iconUrls: [''], // Currently ignored.
+  },
+  56: {
+    chainId: '0x38', // A 0x-prefixed hexadecimal string
+    chainName: 'Binance Smart Chain Mainnet',
+    nativeCurrency: {
+      name: 'BNB',
+      symbol: 'BNB', // 2-6 characters long
+      decimals: 18,
+    },
+    rpcUrls: ['https://bsc-dataseed.binance.org/'],
+    blockExplorerUrls: ['https://bscscan.com'],
+    iconUrls: [''], // Currently ignored.
+  },
+  100: {
+    chainId: '0x64', // A 0x-prefixed hexadecimal string
+    chainName: 'xDai',
+    nativeCurrency: {
+      name: 'xDai',
+      symbol: 'xDai', // 2-6 characters long
+      decimals: 18,
+    },
+    rpcUrls: ['https://rpc.xdaichain.com/', 'https://xdai.poanetwork.dev/', 'https://dai.poa.network/'],
+    blockExplorerUrls: ['https://blockscout.com/xdai/mainnet/'],
+    iconUrls: [''], // Currently ignored.
+  },
+  31337: {
+    chainId: '0x7A69', // A 0x-prefixed hexadecimal string
+    chainName: 'LocalHost 8545',
+    nativeCurrency: {
+      name: 'ETH',
+      symbol: 'ETH', // 2-6 characters long
+      decimals: 18,
+    },
+    rpcUrls: ['http://localhost:8545'],
+    blockExplorerUrls: [''],
+    iconUrls: [''], // Currently ignored.
+  },
 }
 
 export const ACCEPTED_CHAINS_CHOICES = [
@@ -48,6 +100,7 @@ export const RPC_ENDPOINTS = {
   31337: 'http://127.0.0.1:8545',
   5: 'https://rpc.goerli.mudit.blog/',
   100: 'https://rpc.xdaichain.com/',
+  56: 'https://bsc-dataseed.binance.org/'
 }
 
 export const JSON_RPC_ENDPOINT = process.env.IS_NETWORK === 'xdai' ?
