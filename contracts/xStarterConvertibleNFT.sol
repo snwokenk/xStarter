@@ -15,6 +15,7 @@ contract xStarterConvertibleNFT is Ownable, ERC721PresetMinterPauserAutoId, ERC7
     uint public maxPerTx;
     uint public maxPerAddr;
     uint public mintPrice;
+    bool public mintingAllowed;
     
     
     uint contractBalance;
@@ -44,17 +45,22 @@ contract xStarterConvertibleNFT is Ownable, ERC721PresetMinterPauserAutoId, ERC7
     // }
     
      function withdraw() public onlyRole(getRoleAdmin(DEFAULT_ADMIN_ROLE)) returns(bool success) {
-         require(contractBalance > 0, 'zero balance');
+         require(contractBalance > 0, "zero balance");
          uint amount_ = contractBalance;
          contractBalance = 0;
-         (success, ) = msg.sender.call{value: amount_}('');
+         (success, ) = msg.sender.call{value: amount_}("");
      }
+     
+    function changeMintingAllowed(bool _mintingAllowed) public onlyRole(getRoleAdmin(DEFAULT_ADMIN_ROLE)) {
+        mintingAllowed = _mintingAllowed;
+    }
     
     function mintBirds(uint noOfBirds) public payable {
-        require(balanceOf(msg.sender) + noOfBirds <= maxPerAddr, 'max per address reached');
-        require(noOfBirds > 0 && noOfBirds <= maxPerTx, 'number of birds to mint not valid');
-        require(totalSupply() + noOfBirds <= maxSupply - supplyReserved, 'no more NFTs to mint');
-        require(noOfBirds * mintPrice == msg.value, 'correct payment not sent');
+        require(mintingAllowed, "minting not allowed");
+        require(balanceOf(msg.sender) + noOfBirds <= maxPerAddr, "max per address reached");
+        require(noOfBirds > 0 && noOfBirds <= maxPerTx, "number of birds to mint not valid");
+        require(totalSupply() + noOfBirds <= maxSupply - supplyReserved, "no more NFTs to mint");
+        require(noOfBirds * mintPrice == msg.value, "correct payment not sent");
         contractBalance += msg.value;
         for(uint i=0; i<noOfBirds; i++) {
             _mint(msg.sender, _tokenIdTracker.current());
@@ -66,7 +72,7 @@ contract xStarterConvertibleNFT is Ownable, ERC721PresetMinterPauserAutoId, ERC7
     
     // used to grand minter role to management contract and renounce all roles from contract
     function grantAndRenounceMinterAdminRole(address account) public onlyRole(getRoleAdmin(DEFAULT_ADMIN_ROLE)) {
-        require(contractBalance == 0, 'contract must have a zero balance, call withdraw');
+        require(contractBalance == 0, "contract must have a zero balance, call withdraw");
         grantRole(MINTER_ROLE, account);
          grantRole(PAUSER_ROLE, account);
         renounceRole(MINTER_ROLE, msg.sender);

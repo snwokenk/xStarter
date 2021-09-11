@@ -43,6 +43,9 @@
       <div class="text-body1 text-center col-9 col-lg-7" >
         Number Of {{ name }} NFTs You Own : &nbsp; <span class="text-bold">{{ noOfUserNFTs }}</span>
       </div>
+      <div class="text-body1 text-center col-9 col-lg-7" >
+        Mint Price: <span class="text-bold">{{ mintPrice }} {{ fundingTokenSymbol }}</span>
+      </div>
       <div class="text-body1 text-center col-9 col-lg-7 wrap-word" >
         <span class="text-bold">Contract Address</span>: {{ contractAddress }} <q-btn flat icon="content_copy" @click="copyContract" />
       </div>
@@ -93,7 +96,8 @@ import ILOInteractionInfoDisplay from "components/CardDisplays/ILOInteractionInf
 import {DEFAULT_CHAIN_FUNDING_TOKEN, SUPPORTED_FUNDING_TOKENS} from "src/constants";
 import NetworkSwitcher from "components/NetworkSwitcher";
 
-// http://localhost:8081/nft/mint/QmYXRCAjfAR4FkpWUP22RiShK1NEZ4e88ip96V9BXq3uqE
+// http://localhost:8081/nft/mint/Qmb78F9tgwXmAUvk83mEM4XMD9RgrmUUzgMx3Uefsi4jQR
+// /nft/mint/QmX51xhLTxZbWvJN3ZuJ39zeDqsDT2aV7PadaJbqZLiDn1  - for Goerl
 
 let aData = {
   name: "HungryBirds",
@@ -116,8 +120,9 @@ let aData = {
     totalMint: 10500,
     maxMintPerTX: 20,
     maxPerAddr: 30,
-    contractAddress: '0x14B355AFaDB41248B52e92F46C12E55F66E2Eb9C',
-    chainId: '31337',
+    mintPriceInEthers: '0.60',
+    contractAddress: '0x5F7FFd6A9Fa4A52373148329fE825404EFeeED8C',
+    chainId: '5',
     mintFunction: 'mintBirds',
     abi: [
       {
@@ -453,6 +458,19 @@ let aData = {
       {
         "inputs": [
           {
+            "internalType": "bool",
+            "name": "_mintingAllowed",
+            "type": "bool"
+          }
+        ],
+        "name": "changeMintingAllowed",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
             "internalType": "uint256",
             "name": "tokenId",
             "type": "uint256"
@@ -683,6 +701,19 @@ let aData = {
             "internalType": "uint256",
             "name": "",
             "type": "uint256"
+          }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "name": "mintingAllowed",
+        "outputs": [
+          {
+            "internalType": "bool",
+            "name": "",
+            "type": "bool"
           }
         ],
         "stateMutability": "view",
@@ -1117,7 +1148,7 @@ let aData = {
         "stateMutability": "nonpayable",
         "type": "function"
       }
-    ]
+    ],
   }
 }
 
@@ -1200,6 +1231,9 @@ export default defineComponent({
     maxMintPerTx() {
       return this.dataInfo ? this.dataInfo.NFTMeta.maxMintPerTX : 0
     },
+    mintPrice() {
+      return this.dataInfo ? this.dataInfo.NFTMeta.mintPriceInEthers : ''
+    },
     numberMinted() {
       return this.totalMintedNFTs
     },
@@ -1255,8 +1289,9 @@ export default defineComponent({
   async mounted() {
     // console.log(this.$ipfs_utils)
     // console.log('ipfs utils', await this.$ipfs_utils.saveILOInfo(aData))
+    // "QmX51xhLTxZbWvJN3ZuJ39zeDqsDT2aV7PadaJbqZLiDn1" Goerli
     //"QmYXRCAjfAR4FkpWUP22RiShK1NEZ4e88ip96V9BXq3uqE" BNB test
-    //"Qmcs3PT6zpez2jYRkMGtEJt5suXZdrnS4ZZ3SUnoSQAHJa" hard hat
+    //"Qmb78F9tgwXmAUvk83mEM4XMD9RgrmUUzgMx3Uefsi4jQR" hard hat
     const dataInfo  = await this.$ipfs_utils.getILOInfo(this.$route.params.ipfs_cid)
     if (dataInfo) {
       this.dataInfo = dataInfo
@@ -1264,6 +1299,11 @@ export default defineComponent({
     await this.updateNumberNFTs()
     await this.showMint()
     console.log('data info is', dataInfo)
+  },
+  watch: {
+    connectedAccount: async function () {
+      await this.updateNumberNFTs()
+    },
   }
 })
 </script>
