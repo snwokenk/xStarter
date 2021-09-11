@@ -127,7 +127,6 @@ export default defineComponent({
 
     // console.log('xstarterpropsal code', typeof  xStarterProposalCode, xStarterProposalCode)
     console.log('xstarter constructor abi', abiUtils.getConstructorObj(xStarterProposalCode.abi))
-
     let provider = undefined
     const wcLocalStorage = $q.localStorage.getItem('walletconnect')
     let connectMethodToUse = ref(wcLocalStorage ? 'walletconnect' : 'metamask') // metamask || walletconnect
@@ -390,6 +389,11 @@ export default defineComponent({
 
     }
     provide('$connectEthereum', connectEthereum)
+
+    const showWalletConnectModal = ref(false)
+    provide('$showWalletConnectModal', showWalletConnectModal)
+
+
     const detectWalletConnectProvider = async () => {
       const wcProvider = new WalletConnectProvider({
         rpc: RPC_ENDPOINTS,
@@ -464,12 +468,13 @@ export default defineComponent({
       launchPadLoaded,
       chainId,
       blockInfo,
-      showSwitchChainManual
+      showSwitchChainManual,
+      showWalletConnectModal
     }
   },
   data() {
     return {
-      showWalletConnectModal: false,
+      // showWalletConnectModal: false,
       showNotice: false,
       tabName: ''
     }

@@ -58,7 +58,7 @@
 <!--      </q-card-section>-->
 <!--    </q-card>-->
 
-    <div v-if="isWrongNetwork" class="row justify-center">
+    <div v-if="isWrongNetwork || !chainId" class="row justify-center">
       <div class="display-card accountDisplayCard q-mb-lg col-10 col-lg-5 q-pa-xl">
         <NetworkSwitcher :requiredNetworkId="nftChainId" />
       </div>
