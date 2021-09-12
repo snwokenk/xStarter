@@ -161,7 +161,8 @@ export default defineComponent( {
     onInput(fieldName, fieldVal) {
       console.log('field name is', fieldName, fieldVal)
       if (this.payableReadOnly && this.parameterToPayable.paramName === fieldName) {
-        this.payableValue = fieldVal ? (parseInt(fieldVal) * this.parameterToPayable.amtPerEach).toString() : 0
+        const bigNumberPayable = this.$ethers.utils.parseEther(parseFloat(this.parameterToPayable.amtPerEach).toString()).mul(parseFloat(fieldVal)).toString()
+        this.payableValue = fieldVal ? this.$helper.weiBigNumberToFloatEther(bigNumberPayable).toString() : 0
       }
     },
     convertFieldToEther() {
@@ -215,13 +216,10 @@ export default defineComponent( {
     }
   },
   mounted() {
-    console.log('conected contract is', this.connectedContract)
     const funcABI = abiUtils.getFunctionObj(this.abi, this.functionName, this.functionType)
-    console.log('abi func is', funcABI)
     if (funcABI) {
       this.funcABI = {...funcABI}
     }
-
     console.log('func abi', funcABI)
   },
   watch: {
@@ -229,7 +227,6 @@ export default defineComponent( {
       // Add Defaults
       // {functionParameter: {defaultValue: value, readOnly: bool, hide: bool
       this.funcInputs = val.inputs
-      console.log('defaultVaue is', this.defaultValues)
       for (const inputObj of val.inputs) {
         this.formFields[inputObj.name] = ''
         const defaultObj = this.defaultValues[inputObj.name]
@@ -244,12 +241,6 @@ export default defineComponent( {
           this.payableReadOnly = true
           this.payableValue = 0
         }
-      }
-    },
-    formFields: async function(val) {
-      console.log('form fields is', val)
-      if (val) {
-        console.log('form fields is', val)
       }
     }
   }

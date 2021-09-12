@@ -121,8 +121,8 @@ let aData = {
     maxMintPerTX: 20,
     maxPerAddr: 30,
     mintPriceInEthers: '0.60',
-    contractAddress: '0x5F7FFd6A9Fa4A52373148329fE825404EFeeED8C',
-    chainId: '5',
+    contractAddress: '0x9a81a76e12dFc42eb51ed7C882cfA042C17f594A',
+    chainId: '31337',
     mintFunction: 'mintBirds',
     abi: [
       {
@@ -1271,7 +1271,6 @@ export default defineComponent({
     async updateNumberNFTs() {
       this.totalMintedNFTs = (await this.getTotalSupply()).toNumber()
       this.noOfUserNFTs = (await this.getBalanceOf()).toNumber()
-      // console.log(this.totalMintedNFTs.toNumber())
     },
     async getTotalSupply() {
       if (!this.connectedContract) {
@@ -1291,7 +1290,7 @@ export default defineComponent({
     // console.log('ipfs utils', await this.$ipfs_utils.saveILOInfo(aData))
     // "QmX51xhLTxZbWvJN3ZuJ39zeDqsDT2aV7PadaJbqZLiDn1" Goerli
     //"QmYXRCAjfAR4FkpWUP22RiShK1NEZ4e88ip96V9BXq3uqE" BNB test
-    //"Qmb78F9tgwXmAUvk83mEM4XMD9RgrmUUzgMx3Uefsi4jQR" hard hat
+    //"QmVH35aoFFpaCfiTxxpgZYSeGCSCWaJvwekm1pV7iFCXBN" hard hat
     const dataInfo  = await this.$ipfs_utils.getILOInfo(this.$route.params.ipfs_cid)
     if (dataInfo) {
       this.dataInfo = dataInfo
