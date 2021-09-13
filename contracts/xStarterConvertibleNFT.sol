@@ -55,6 +55,17 @@ contract xStarterConvertibleNFT is Ownable, ERC721PresetMinterPauserAutoId, ERC7
         mintingAllowed = _mintingAllowed;
     }
     
+    function mintReservedBirds(address[] memory _addrs) public onlyRole(getRoleAdmin(DEFAULT_ADMIN_ROLE)) {
+        require(_addrs.length > 0, "no addresses");
+        require(_addrs.length <= supplyReserved, 'not enough reserved NFTs');
+        supplyReserved -= _addrs.length;
+        for(uint i=0; i<_addrs.length; i++) {
+            _mint(_addrs[i], _tokenIdTracker.current());
+            _tokenIdTracker.increment();
+        }
+    }
+    
+    
     function mintBirds(uint noOfBirds) public payable {
         require(mintingAllowed, "minting not allowed");
         require(balanceOf(msg.sender) + noOfBirds <= maxPerAddr, "max per address reached");

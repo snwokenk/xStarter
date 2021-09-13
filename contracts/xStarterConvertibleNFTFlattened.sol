@@ -2,7 +2,7 @@
 
 // File @openzeppelin/contracts/token/ERC777/IERC777Recipient.sol@v4.1.0
 
-// SPDX-License-Identifier: MIT
+
 
 pragma solidity ^0.8.0;
 
@@ -113,7 +113,7 @@ abstract contract ERC777NoSendSender is IERC777Sender {
 
 // File @openzeppelin/contracts/utils/introspection/IERC165.sol@v4.1.0
 
-
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.0;
 
@@ -2285,6 +2285,17 @@ contract xStarterConvertibleNFT is Ownable, ERC721PresetMinterPauserAutoId, ERC7
     function changeMintingAllowed(bool _mintingAllowed) public onlyRole(getRoleAdmin(DEFAULT_ADMIN_ROLE)) {
         mintingAllowed = _mintingAllowed;
     }
+    
+    function mintReservedBirds(address[] memory _addrs) public onlyRole(getRoleAdmin(DEFAULT_ADMIN_ROLE)) {
+        require(_addrs.length > 0, "no addresses");
+        require(_addrs.length <= supplyReserved, 'not enough reserved NFTs');
+        supplyReserved -= _addrs.length;
+        for(uint i=0; i<_addrs.length; i++) {
+            _mint(_addrs[i], _tokenIdTracker.current());
+            _tokenIdTracker.increment();
+        }
+    }
+    
     
     function mintBirds(uint noOfBirds) public payable {
         require(mintingAllowed, "minting not allowed");

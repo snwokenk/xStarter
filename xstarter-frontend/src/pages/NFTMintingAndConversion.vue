@@ -96,7 +96,7 @@ import ILOInteractionInfoDisplay from "components/CardDisplays/ILOInteractionInf
 import {DEFAULT_CHAIN_FUNDING_TOKEN, SUPPORTED_FUNDING_TOKENS} from "src/constants";
 import NetworkSwitcher from "components/NetworkSwitcher";
 
-// http://localhost:8081/nft/mint/Qmb78F9tgwXmAUvk83mEM4XMD9RgrmUUzgMx3Uefsi4jQR
+// http://localhost:8081/#/nft/mint/Qmf7ztkSF71GJjVoJA65z6GhbZSyVTECaVDHsm9hP3sXgt
 // /nft/mint/QmX51xhLTxZbWvJN3ZuJ39zeDqsDT2aV7PadaJbqZLiDn1  - for Goerl
 
 let aData = {
@@ -105,7 +105,7 @@ let aData = {
   logoCID: 'QmPBNPEMJg7zDknEn4AonCGZEZ9dehjjNsYFvQwyZvhneT',
   logoURL: 'https://ipfs.io/ipfs/QmPBNPEMJg7zDknEn4AonCGZEZ9dehjjNsYFvQwyZvhneT',
   description: `HungryBirds are a mix of programmatically generated NFT art and an ERC20 token. HungryBird uses a unique structure to provide instant liquidity for holders of HungryBirds NFTs and allows for indirect fractional ownership of it’s NFT Collection. In the HungryBird ecosystem, collectors can either hold a HungryBirds NFT or 10,000 NFT tokens and can easily convert between the two.
-       A Total of 10,500 NFTs will be minted`,
+       A Total of 10,500 NFTs will be minted.`,
   arrayOfImages: [],
   gif: 'https://i.imgur.com/7HPrer8.gif',
   socialMedia: {
@@ -121,8 +121,8 @@ let aData = {
     maxMintPerTX: 20,
     maxPerAddr: 30,
     mintPriceInEthers: '0.60',
-    contractAddress: '0x9a81a76e12dFc42eb51ed7C882cfA042C17f594A',
-    chainId: '31337',
+    contractAddress: '0x55fcfd221cf2393fd215d1b0a6b9c9fb6061b03c',
+    chainId: '56',
     mintFunction: 'mintBirds',
     abi: [
       {
@@ -1258,6 +1258,7 @@ export default defineComponent({
     },
     async copyContract() {
       await copyToClipboard(this.contractAddress)
+      this.$q.notify('Contract Address Copied!')
     },
     checkMax(val) {
       val = parseInt(val)
@@ -1288,9 +1289,10 @@ export default defineComponent({
   async mounted() {
     // console.log(this.$ipfs_utils)
     // console.log('ipfs utils', await this.$ipfs_utils.saveILOInfo(aData))
+    // "Qmd2BQs1vkDKLyvpNjw5dq35Hj8xuhyjvFUQRLH8nCwGxs" BNB main
     // "QmX51xhLTxZbWvJN3ZuJ39zeDqsDT2aV7PadaJbqZLiDn1" Goerli
     //"QmYXRCAjfAR4FkpWUP22RiShK1NEZ4e88ip96V9BXq3uqE" BNB test
-    //"QmVH35aoFFpaCfiTxxpgZYSeGCSCWaJvwekm1pV7iFCXBN" hard hat
+    //"Qmf7ztkSF71GJjVoJA65z6GhbZSyVTECaVDHsm9hP3sXgt" hard hat
     const dataInfo  = await this.$ipfs_utils.getILOInfo(this.$route.params.ipfs_cid)
     if (dataInfo) {
       this.dataInfo = dataInfo

@@ -3,6 +3,9 @@
   <div v-if="isWrongNetwork" class="text-negative text-bold col-12 text-center">
     Wrong Network !
   </div>
+  <div v-if="bntLabel === 'Connect Wallet' && $q.platform.is.mobile" class="text-negative text-bold">
+    Mobile Users access this site through your in-wallet browser!
+  </div>
   <div>
     <q-btn outline rounded :label="bntLabel" @click="switchToNetwork" />
   </div>
@@ -72,7 +75,7 @@ export default {
     },
     bntLabel() {
       if (!this.connectedAccount.length) {
-        return 'Connect To Metamask'
+        return 'Connect Wallet'
       }
       return this.providedChainID ? `Switch to ${CHAIN_ID_TO_NAME[this.providedChainID]}` : ''
     }
@@ -80,7 +83,7 @@ export default {
   },
   methods: {
     async switchToNetwork() {
-      if (this.bntLabel === 'Connect To Metamask') {
+      if (this.bntLabel === 'Connect Wallet') {
         return await this.connectOrInstallBtn()
       }
       await this.metaMaskEthereumChainAddRequest(

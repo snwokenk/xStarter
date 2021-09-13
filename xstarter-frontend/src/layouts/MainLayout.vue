@@ -67,7 +67,7 @@
 
       </q-toolbar>
     </q-footer>
-    <NoticeModal v-if="showNotice" v-model="showNotice"/>
+    <NoticeModal v-if="false" v-model="showNotice"/>
     <WalletConnectModal v-if="!connectedAndPermissioned" v-model="showWalletConnectModal" />
     <GeneralModal v-if="chainId !== 5"  v-model="showSwitchChainManual">
       <div  class="col-12 q-pa-md segoe-bold text-wr text-center">
