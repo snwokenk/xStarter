@@ -32,16 +32,16 @@
       </div>
 
       <div class="text-body1 text-center col-9 col-lg-7" >
-        Total Minted: &nbsp; <span class="text-bold">{{ numberMinted }}</span>
+        Total Minted: &nbsp; <span class="text-bold">{{ !isNotConnectedOrWrongNetwork ? numberMinted : 'Connect To View' }}</span>
       </div>
       <div class="text-body1 text-center col-9 col-lg-7" >
         Reserved: &nbsp; <span class="text-bold">{{ reservedAmt }}</span>
       </div>
       <div class="text-body1 text-center col-9 col-lg-7" >
-        Available: &nbsp; <span class="text-bold">{{ totalMint - numberMinted - reservedAmt }}</span>
+        Available: &nbsp; <span class="text-bold">{{ !isNotConnectedOrWrongNetwork ? totalMint - numberMinted - reservedAmt : 'Connect To View' }}</span>
       </div>
       <div class="text-body1 text-center col-9 col-lg-7" >
-        Number Of {{ name }} NFTs You Own : &nbsp; <span class="text-bold">{{ noOfUserNFTs }}</span>
+        Number Of {{ name }} NFTs You Own : &nbsp; <span class="text-bold">{{ !isNotConnectedOrWrongNetwork ? noOfUserNFTs : 'Connect To View' }}</span>
       </div>
       <div class="text-body1 text-center col-9 col-lg-7" >
         Mint Price: <span class="text-bold">{{ mintPrice }} {{ fundingTokenSymbol }}</span>
@@ -1189,7 +1189,11 @@ export default defineComponent({
       return 'Custom Token'
     },
     isWrongNetwork() {
+      // connected to metamask but not connected to right network
       return this.chainId && parseInt(this.chainId) !== parseInt(this.nftChainId)
+    },
+    isNotConnectedOrWrongNetwork() {
+      return !this.chainId || this.isWrongNetwork
     },
     name() {
       return this.dataInfo ? this.dataInfo.name : ''

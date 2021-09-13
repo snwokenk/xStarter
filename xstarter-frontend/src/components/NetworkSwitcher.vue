@@ -112,9 +112,7 @@ export default {
         if (this.calledConnect) {
           window.location.reload()
         }
-
       }
-
     }
   }
 }
