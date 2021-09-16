@@ -2,26 +2,23 @@
   <q-layout view="hHh lpR fFf">
 
     <q-header elevated class="text-white q-pt-sm"  :class="{'bg-dark': $q.dark.isActive, 'bg-light': !$q.dark.isActive}" height-hint="98">
-      <q-toolbar>
-        <q-toolbar-title style="width: 10%" >
-          <div >
-            <img v-if="$q.dark.isActive" class="logo-style" src="~assets/xstarter_dark_logo.png">
-            <img v-else class="logo-style" src="~assets/xstarter_light_logo.png">
-
+      <q-toolbar class="row justify-between">
+        <div style="width: 10%" >
+          <div style="width: 115px;" >
+            <img v-if="$q.dark.isActive" class="logo-style" src="~assets/xstarter_dark_logo.png" style="max-width: 100%">
+            <img v-else class="logo-style" src="~assets/xstarter_light_logo.png" style="max-width: 100%">
           </div>
-        </q-toolbar-title>
+        </div>
+        <q-tabs v-if="!$q.platform.is.mobile || $q.platform.is.tablet" align="center" :class="{'text-dark': !$q.dark.isActive, 'text-light': $q.dark.isActive}" v-model="tabName">
+          <q-tab @click="$router.push('/')" label="ILO" name="ilo" />
+          <q-tab @click="$router.push('/gov')" label="Governance" name="gov">
+            <q-badge label="Coming Soon" :color="darkLightText" :text-color="darkLightTextReverse" style="font-size: 8px;" floating />
+          </q-tab>
+          <q-tab @click="$router.push('/nft')" to="/nft" label="NFT" name="nft">
+            <q-badge label="Coming Soon" :color="darkLightText" :text-color="darkLightTextReverse" style="font-size: 8px;" floating />
+          </q-tab>
+        </q-tabs>
         <div class="q-gutter-x-sm">
-
-<!--          <q-btn-->
-<!--            rounded-->
-<!--            outline-->
-<!--            size="md"-->
-<!--            :label="connectBtnLabel"-->
-<!--            :icon="metamaskInstalled ? undefined : 'error_outline'"-->
-<!--            :color="metamaskInstalled ? darkLightText: 'negative'"-->
-<!--            :disable="!metamaskInstalled"-->
-<!--            @click="connectEthereum"-->
-<!--          />-->
           <q-btn
             rounded
             outline
@@ -31,13 +28,11 @@
             :color="metamaskInstalled ? darkLightText: 'negative'"
             @click="connectOrInstallBtn"
           />
-
-
           <q-btn round flat :color="darkLightText" :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'" @click="setDarkMode"/>
         </div>
       </q-toolbar>
 
-      <q-tabs align="center" :class="{'text-dark': !$q.dark.isActive, 'text-light': $q.dark.isActive}" v-model="tabName">
+      <q-tabs v-if="$q.platform.is.mobile" align="center" :class="{'text-dark': !$q.dark.isActive, 'text-light': $q.dark.isActive}" v-model="tabName">
         <q-tab @click="$router.push('/')" label="ILO" name="ilo" />
         <q-tab @click="$router.push('/gov')" label="Governance" name="gov">
           <q-badge label="Coming Soon" :color="darkLightText" :text-color="darkLightTextReverse" style="font-size: 8px;" floating />
