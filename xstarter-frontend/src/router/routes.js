@@ -4,7 +4,8 @@ const routes = [
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', name: 'ilo_main', component: () => import('pages/Index.vue') },
+      { path: '', name: 'index', component: () => import('pages/Index.vue') },
+      { path: 'ilo', name: 'ilo_main', component: () => import('pages/ILO.vue') },
       { path: 'gov', name: 'gov_main', component: () => import('pages/Governance.vue') },
       { path: 'nft', name: 'nft_main', component: () => import('pages/NFT.vue') },
       { path: 'nft/mint/:ipfs_cid', name: 'nft_mint', component: () => import('pages/NFTMintingAndConversion.vue') },

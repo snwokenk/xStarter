@@ -18,7 +18,8 @@
           :baseURI="baseURI"
           :tokenId="id"
           :key="id"
-          class="col-11 col-md-3"
+          :jsonRPCEndPoint="jsonRPCEndPoint"
+          class="col-11 col-md-3 "
         />
       </div>
     </div>
@@ -38,6 +39,8 @@
 <script>
 import {inject, ref} from "vue";
 import ImageCardDisplay from "components/CardDisplays/ImageCardDisplay";
+import {CHAIN_INFO_OBJ} from "src/constants";
+import {ethers} from "boot/ethers";
 
 export default {
   name: "NFTGallery",
@@ -53,7 +56,22 @@ export default {
     console.log('provider is ', getProvider())
     return {getProvider, getSigner, getLaunchPadContract, getConnectedAndPermissioned, connectedAccount, chainId, current: ref(1)}
   },
+
+  data() {
+    return {
+      erc721ABI: [
+        'function ownerOf(uint256 tokenId) view returns (address owner)',
+        'function balanceOf(address owner) view returns (uint256 balance)',
+        'function tokenURI(uint256 tokenId) view returns (string memory)',
+        'function totalSupply() view returns (uint)'
+      ],
+      totalSupply: 0
+    }
+  },
   computed: {
+    jsonRPCEndPoint() {
+      return CHAIN_INFO_OBJ[this.$route.params.chainId].rpcUrls[0]
+    },
     collectionBanner() {
       return '/HungryBirds/HungryBirdsLogo.png'
     },
@@ -64,10 +82,7 @@ export default {
       return 12
     },
     totalItems() {
-      return 10500
-    },
-    totalMinted() {
-      return 10500
+      return 9
     },
     totalPages() {
       return Math.ceil(this.totalItems / this.maxPerPage)
@@ -80,20 +95,34 @@ export default {
     },
     currentListOfTokenId() {
       let imgData = []
-      let lastIndex = this.totalMinted > this.current * this.maxPerPage ? this.current * this.maxPerPage : this.totalMinted
+      let lastIndex = this.totalSupply > this.current * this.maxPerPage ? this.current * this.maxPerPage : this.totalSupply
       for (let i = (this.current * this.maxPerPage) - this.maxPerPage; i < lastIndex; i++) {
         imgData.push(i)
       }
       return imgData
     },
-    imagesObj() {
-      let imgData = []
-
-      for (let i = (this.current * this.maxPerPage) - this.maxPerPage; i < lastIndex; i++) {
-        imgData.push(i)
-      }
-      return imgData
+    erc721Contract() {
+      return new ethers.Contract(this.contractAddress, this.erc721ABI, this.getProvider());
+    },
+    contractAddress() {
+      return this.$route.params.contractAddress
     }
+  },
+  methods: {
+    // if need to sign
+    async getConnectedContract() {
+      if (!this.erc721Contract) {return null}
+      return await this.erc721Contract.connect(this.getSigner())
+    },
+    async readOnlyERC721Contract() {
+      const provider  = await new ethers.providers.JsonRpcProvider(this.jsonRPCEndPoint);
+      console.log('providers is ', provider)
+      return new ethers.Contract(this.contractAddress, this.erc721ABI, provider);
+    }
+  },
+  async mounted() {
+    const readOnlyContract = await this.readOnlyERC721Contract()
+    this.totalSupply = await readOnlyContract.totalSupply()
   }
 }
 </script>
