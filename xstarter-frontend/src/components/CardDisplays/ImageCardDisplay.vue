@@ -105,6 +105,7 @@ export default {
     console.log('the endpoint is', this.jsonRPCEndPoint)
     const readOnlyContract = await this.readOnlyERC721Contract()
     const tokenURI = await readOnlyContract.tokenURI(this.tokenId)
+    console.log('the tokenURI is', tokenURI)
     this.ownerOf = await readOnlyContract.ownerOf(this.tokenId)
     const metaData = await this.$api.get(tokenURI)
     console.log('metadata is', this.tokenId, metaData)

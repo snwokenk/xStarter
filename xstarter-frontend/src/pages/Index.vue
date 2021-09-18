@@ -1,12 +1,24 @@
 <template>
   <q-page class="flex flex-center">
-    <div class="row full-width justify-center q-pt-lg">
-      <AccountDisplay class="col-lg-5 col-xs-10"  />
+    <div class="row q-px-xl justify-center q-gutter-md">
+      <div class="text-h5 text-center col-11 col-md-8">
+        xStarter Provides Tools To help you manage your crypto/NFT project (alpha version)
+      </div>
+      <div class="text-subtitle2 text-center col-11 col-md-8">
+        For NFT Projects, you can deploy your NFT, generate a page to allow others to mint your nft, display your NFT art and metadata and many more.
+        For those seeking to do an Inital DEX Offering, you can use our platform to launch one and after automatically initiate a market after.
+      </div>
     </div>
 
-    <ILOMainDisplay v-if="currentView === 'ilo'" />
 
-    <ABIGeneratedForm v-show="false" :display-names="{xStarterToken_: 'Address of xStarter Token'}" :abi="proposalABI" :title="{name: 'Create A Proposal', class: '', style: ''}" function-name="constructor"/>
+    <div class="row full-width justify-center q-gutter-y-xl">
+      <div class="col-11 col-md-9 col-lg-7 col-xl-6">
+        <q-btn rounded outline label="NFT Tools" class="homeButtons full-width" @click="$router.push('/nft')" />
+      </div>
+      <div class="col-11 col-md-9 col-lg-7 col-xl-6">
+        <q-btn rounded outline label="ILO/IDO Tools" class="homeButtons full-width" @click="$router.push('/ilo')" />
+      </div>
+    </div>
 
   </q-page>
 </template>
@@ -21,20 +33,10 @@ import xStarterProposalCode from 'src/artifacts/contracts/xStarterProposal.sol/x
 
 export default defineComponent({
   name: 'PageIndex',
-  components: {ABIGeneratedForm, AccountDisplay, ILOMainDisplay},
   data() {
     return {
       currentView: 'ilo',
     }
-  },
-  setup() {
-    const getProvider = inject('$getProvider')
-    const getSigner = inject('$getSigner')
-    const getLaunchPadContract = inject('$getLaunchPadContract')
-    const getConnectedAndPermissioned = inject('$getConnectedAndPermissioned')
-    const proposalABI = xStarterProposalCode.abi
-    console.log('provider is ', getProvider())
-    return {getProvider, getSigner, getLaunchPadContract, getConnectedAndPermissioned, proposalABI}
   },
   computed: {
     listOfLiquidityOffering() {
@@ -57,6 +59,6 @@ export default defineComponent({
 .display-container{
   width: 80%;
   min-height: 300px;
-
 }
+
 </style>

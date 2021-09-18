@@ -4,19 +4,20 @@
     <q-header elevated class="text-white q-pt-sm"  :class="{'bg-dark': $q.dark.isActive, 'bg-light': !$q.dark.isActive}" height-hint="98">
       <q-toolbar class="row justify-between">
         <div style="width: 10%" >
-          <div style="width: 115px;" >
+          <div style="width: 115px;" @click="$router.push('/')" class="cursor-pointer">
             <img v-if="$q.dark.isActive" class="logo-style" src="~assets/xstarter_dark_logo.png" style="max-width: 100%">
             <img v-else class="logo-style" src="~assets/xstarter_light_logo.png" style="max-width: 100%">
           </div>
         </div>
         <q-tabs v-if="!$q.platform.is.mobile || $q.platform.is.tablet" align="center" :class="{'text-dark': !$q.dark.isActive, 'text-light': $q.dark.isActive}" v-model="tabName">
-          <q-tab @click="$router.push('/')" label="ILO" name="ilo" />
-          <q-tab @click="$router.push('/gov')" label="Governance" name="gov">
-            <q-badge label="Coming Soon" :color="darkLightText" :text-color="darkLightTextReverse" style="font-size: 8px;" floating />
-          </q-tab>
-          <q-tab @click="$router.push('/nft')" to="/nft" label="NFT" name="nft">
-            <q-badge label="Coming Soon" :color="darkLightText" :text-color="darkLightTextReverse" style="font-size: 8px;" floating />
-          </q-tab>
+          <q-tab @click="$router.push('/ilo')" label="IDO/ILO" name="ilo" />
+<!--          <q-tab @click="$router.push('/gov')" label="Governance" name="gov">-->
+<!--            <q-badge label="Coming Soon" :color="darkLightText" :text-color="darkLightTextReverse" style="font-size: 8px;" floating />-->
+<!--          </q-tab>-->
+          <q-tab @click="$router.push('/nft')" to="/nft" label="NFT" name="nft" />
+<!--          <q-tab @click="$router.push('/nft')" to="/nft" label="NFT" name="nft">-->
+<!--            <q-badge label="Coming Soon" :color="darkLightText" :text-color="darkLightTextReverse" style="font-size: 8px;" floating />-->
+<!--          </q-tab>-->
         </q-tabs>
         <div class="q-gutter-x-sm">
           <q-btn
@@ -33,7 +34,7 @@
       </q-toolbar>
 
       <q-tabs v-if="$q.platform.is.mobile" align="center" :class="{'text-dark': !$q.dark.isActive, 'text-light': $q.dark.isActive}" v-model="tabName">
-        <q-tab @click="$router.push('/')" label="ILO" name="ilo" />
+        <q-tab @click="$router.push('/ilo')" label="ILO" name="ilo" />
         <q-tab @click="$router.push('/gov')" label="Governance" name="gov">
           <q-badge label="Coming Soon" :color="darkLightText" :text-color="darkLightTextReverse" style="font-size: 8px;" floating />
         </q-tab>
@@ -99,7 +100,7 @@ import {ethers} from 'boot/ethers'
 import {abiUtils} from "boot/abiGenerator";
 import detectEthereumProvider from '@metamask/detect-provider';
 import MetaMaskOnboarding from '@metamask/onboarding';
-import {JSON_RPC_ENDPOINT, LAUNCHPAD_ADDRESS, RPC_ENDPOINTS} from "src/constants";
+import {CHAIN_ID_TO_NAME, JSON_RPC_ENDPOINT, LAUNCHPAD_ADDRESS, RPC_ENDPOINTS} from "src/constants";
 // import data from 'src/artifacts/contracts/xStarterPoolPairB.sol/xStarterPoolPairB.json';
 import launchpadCode from 'src/artifacts/contracts/xStarterLaunchPad.sol/xStarterLaunchPad.json';
 import xStarterProposalCode from 'src/artifacts/contracts/xStarterLaunchPad.sol/xStarterLaunchPad.json';
@@ -119,7 +120,15 @@ export default defineComponent({
     const setDarkMode = async () => {
       $q.dark.toggle()
     }
-
+    const getChainIdOptions = () => {
+      const  chainIds = Object.keys(CHAIN_ID_TO_NAME)
+      const tmpArr = []
+      for (const chainId1 of chainIds) {
+        tmpArr.push({ label: CHAIN_ID_TO_NAME[chainId1], value: chainId1 })
+      }
+      return tmpArr
+    }
+    provide('$getChainIdOptions', getChainIdOptions)
     // console.log('xstarterpropsal code', typeof  xStarterProposalCode, xStarterProposalCode)
     console.log('xstarter constructor abi', abiUtils.getConstructorObj(xStarterProposalCode.abi))
     let provider = undefined

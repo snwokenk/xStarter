@@ -122,7 +122,7 @@ export default {
   },
   async mounted() {
     const readOnlyContract = await this.readOnlyERC721Contract()
-    this.totalSupply = await readOnlyContract.totalSupply()
+    this.totalSupply = (await readOnlyContract.totalSupply()).toNumber()
   }
 }
 </script>

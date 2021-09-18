@@ -25,11 +25,14 @@ export const SUPPORTED_FUNDING_TOKENS = {
 
 export const CHAIN_ID_TO_NAME = {
   1: 'Ethereum Main Net',
-  31337: 'Hardhat Localhost',
-  100: 'xDai Layer 2',
+  5: 'GOERLI Testnet',
   56: 'Binance Smart Chain',
   77: 'POA Sokol Testnet',
-  5: 'GOERLI Testnet'
+  100: 'xDai Layer 2',
+  31337: 'Hardhat Localhost',
+
+
+
   // 137: 'Polygon Matic'
 }
 
@@ -42,6 +45,18 @@ export const  ACCEPTED_CHAINS = {
 }
 
 export const CHAIN_INFO_OBJ = {
+  1: {
+    chainId: '0x1', // A 0x-prefixed hexadecimal string
+    chainName: 'ETH',
+    nativeCurrency: {
+      name: 'ETH',
+      symbol: 'ETH', // 2-6 characters long
+      decimals: 18,
+    },
+    rpcUrls: ['https://api.mycryptoapi.com/eth/'],
+    blockExplorerUrls: ['https://etherscan.io'],
+    iconUrls: [''], // Currently ignored.
+  },
   5: {
     chainId: '0x5', // A 0x-prefixed hexadecimal string
     chainName: 'ETH',
