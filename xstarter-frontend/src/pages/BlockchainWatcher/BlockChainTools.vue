@@ -4,7 +4,7 @@
       <WatchForPairCreation />
     </div>
 
-    <div class="full-width justify-center row">
+    <div class="full-width justify-center row q-mt-xl">
       <q-btn label="start listening" outline @click="listenAndFilterTransaction" />
     </div>
 

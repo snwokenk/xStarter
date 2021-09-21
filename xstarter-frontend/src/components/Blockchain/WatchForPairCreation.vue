@@ -1,11 +1,17 @@
 <template>
   <div class="row">
-    <div class="full-width justify-center row q-mt-md">
-      <q-btn label="find past paircreated" outline @click="listenAndFilterPairCreatedByWETHReserve" />
+    <div class="full-width q-gutter-y-xl justify-center row q-mt-md">
+      <div class="col-12 justify-center row">
+        <q-btn label="listen and find pair by amount" outline @click="listenAndFilterPairCreatedByWETHReserve" />
+      </div>
+      <div class="col-12 row q-gutter-lg">
+        <q-input class="col-5" outlined v-model="symbolFilter" label="symbol to filter" />
+        <q-btn class="col-6" label="listen and find pair by symbol" outline @click="listenAndFilterPairCreatedBySymbol" />
+      </div>
     </div>
 
-    <div class="q-gutter-y-lg">
-      <div class="col-12 text-center" v-for="obj in arrayOfFilteredDexPair" :key="obj.hash">
+    <div v-if="arrayOfFilteredDexPairByAmount.length" class="q-gutter-y-lg">
+      <div class="col-12 text-center" v-for="obj in arrayOfFilteredDexPairByAmount" :key="obj.hash">
         pair address: {{ obj.pairAddr }} <br />
         token Address: {{ obj.tokenAddr }} <br />
         WETH(Native Token) Balance: {{ obj.WETHBal }}<br />
@@ -13,6 +19,18 @@
         <q-btn flat label="view on BscScan" @click="openLink(`https://bscscan.com/token/${obj.tokenAddr}`)" />
       </div>
     </div>
+
+    <div v-if="arrayOfFilteredDexPairBySymbol.length" class="q-gutter-y-lg">
+      <div class="col-12 text-center" v-for="obj in arrayOfFilteredDexPairBySymbol" :key="obj.hash">
+        pair address: {{ obj.pairAddr }} <br />
+        token Address: {{ obj.tokenAddr }} <br />
+        Symbol: {{ obj.symbol }}<br />
+        name : {{ obj.name}}<br />
+        <q-btn flat label="view Token on BscScan" @click="openLink(`https://bscscan.com/token/${obj.tokenAddr}`)" />
+        <q-btn flat label="view Pair LP on BscScan" @click="openLink(`https://bscscan.com/token/${obj.pairAddr}`)" />
+      </div>
+    </div>
+
 
 
   </div>
@@ -66,7 +84,7 @@ export default defineComponent( {
       const getLocalProvider = () => {
         return localProvider
       }
-      const pcakeRouter =  new ethers.Contract('0x10ED43C718714eb63d5aA57B78B54704E256024E', ERC20ABI, localProvider);
+      const pcakeRouter =  new ethers.Contract('0x10ED43C718714eb63d5aA57B78B54704E256024E', RouterABI, localProvider);
       // 0xca143ce32fe78f1f7019d7d551a6402fc5350c73
       const getPCakeRouter = () => {
         return pcakeRouter
@@ -77,6 +95,10 @@ export default defineComponent( {
         return pcakeFactory
       }
 
+      const getERC20Contract = (tokenAddr) => {
+        return new ethers.Contract(tokenAddr, ERC20ABI, localProvider);
+      }
+
       // const mintABi = xStarterERC721Code.abi
       console.log('provider is ', getProvider())
       return {
@@ -84,6 +106,7 @@ export default defineComponent( {
         getLocalProvider,
         getPCakeRouter,
         getPCakeFactory,
+        getERC20Contract,
         getSigner,
         getLaunchPadContract,
         getConnectedAndPermissioned,
@@ -98,14 +121,10 @@ export default defineComponent( {
         arrayOfTxs: [],
         minAmtInEthers: 5,
         searchHistoric: true,
-        arrayOfFilteredDexPair: [],
+        symbolFilter: '',
+        arrayOfFilteredDexPairByAmount: [],
+        arrayOfFilteredDexPairBySymbol: [],
         arrayOfERC20: [],
-        erc20ABI: [
-          'function balanceOf(address owner) view returns (uint256 balance)',
-          'function totalSupply() view returns (uint)',
-          'function name() view  returns (string)',
-          'function symbol() view returns (string)'
-        ],
         provider: null
       }
     },
@@ -123,8 +142,18 @@ export default defineComponent( {
           const minAmtInWeiBigNUmber = ethers.utils.parseEther(this.minAmtInEthers.toString())
           console.log('big number for ethers', minAmtInWeiBigNUmber)
           let prevEvents = await this.getHistoricPairCreatedEvents()
-          this.filterHistoryPairEventsByLiquidity(prevEvents, minAmtInWeiBigNUmber)
+          await this.filterHistoryPairEventsByLiquidity(prevEvents, minAmtInWeiBigNUmber)
         }
+      },
+
+      async listenAndFilterPairCreatedBySymbol() {
+        // get previous
+        // const minAmtInEthers = this.minAmtInEthers
+        if (this.searchHistoric) {
+          let prevEvents = await this.getHistoricPairCreatedEvents()
+          await this.filterHistoryPairEventsBySymbol(prevEvents)
+        }
+        this.filterRealtimePairEventsBySymbol()
       },
 
       // 1
@@ -151,26 +180,19 @@ export default defineComponent( {
           let deData = await event.decode(event.data, event.topics)
           if (deData.token1 === this.WETH) {
             console.log('token 1 is weth', deData.token1 === this.WETH, deData.token0, this.WETH)
-            this.queryAndFilterPair(deData.pair, minAmountInWeiBigNumber, deData.token0, 'reserve1')
+            this.queryAndFilterPairByAmount(deData.pair, minAmountInWeiBigNumber, deData.token0, 'reserve1')
 
           }else if (deData.token0 === this.WETH) {
             console.log('token 0 is weth', deData.token0 === this.WETH, deData.token1, this.WETH)
-            this.queryAndFilterPair(deData.pair, minAmountInWeiBigNumber, deData.token1, 'reserve0')
+            this.queryAndFilterPairByAmount(deData.pair, minAmountInWeiBigNumber, deData.token1, 'reserve0')
           }
         }
-        // for (const event of events) {
-        //   let deData = await event.decode(event.data, event.topics)
-        //   if (deData.token1 === this.WETH) {
-        //     console.log('deData.token0', deData.token0)
-        //     // this.queryPairForReserves(deData.pair)
-        //   }
-        // }
       },
-      async queryAndFilterPair(pairAddress, minAmountInWeiBigNumber, tokenAddress, reserve1Or0) {
+      async queryAndFilterPairByAmount(pairAddress, minAmountInWeiBigNumber, tokenAddress, reserve1Or0) {
         const reserves = await this.queryPairForReserves(pairAddress)
         console.log('reserves is', reserves, reserves[reserve1Or0].gte(minAmountInWeiBigNumber))
         if (reserves[reserve1Or0].gte(minAmountInWeiBigNumber)) {
-          this.arrayOfFilteredDexPair.push({
+          this.arrayOfFilteredDexPairByAmount.push({
             pairAddr: pairAddress,
             tokenAddr: tokenAddress,
             WETHBal: ethers.utils.formatEther(reserves[reserve1Or0]),
@@ -178,6 +200,55 @@ export default defineComponent( {
           })
         }else {
           console.log('not greater than ', this.minAmtInEthers)
+        }
+      },
+      async filterHistoryPairEventsBySymbol(events = []) {
+        console.log('events in history filter is', events)
+        const symbolUppercase = this.symbolFilter.toUpperCase()
+        for (let i = 0; i < events.length; i++) {
+          let event = events[i]
+          let deData = await event.decode(event.data, event.topics)
+          if (deData.token1 === this.WETH) {
+            this.queryAndFilterPairBySymbol(deData.pair, symbolUppercase, deData.token0)
+
+          }else if (deData.token0 === this.WETH) {
+            this.queryAndFilterPairBySymbol(deData.pair, symbolUppercase, deData.token1)
+
+          }
+        }
+      },
+      async filterRealtimePairEventsBySymbol() {
+        const aContract = this.getPCakeFactory()
+        // const provider = this.getLocalProvider()
+        console.log('starting listen for event and filter by symbol')
+        aContract.on('PairCreated', async (token0, token1, pair, indexInAllPairs, event) => {
+          const symbolUppercase = this.symbolFilter.toUpperCase()
+          if (token1 === this.WETH) {
+            await this.queryAndFilterPairBySymbol(pair, symbolUppercase, token0)
+
+          }else if (token0 === this.WETH) {
+            await this.queryAndFilterPairBySymbol(pair, symbolUppercase, token1)
+
+          }
+        })
+        console.log('listen for event and filter by symbol started')
+      },
+      async queryAndFilterPairBySymbol(pairAddress, symbol, tokenAddress) {
+        // const reserves = await this.queryPairForReserves(pairAddress)
+        // console.log('reserves is', reserves, reserves[reserve1Or0].gte(minAmountInWeiBigNumber))
+
+        const ercContract = this.getERC20Contract(tokenAddress)
+        const tokenSymbol =  await ercContract.symbol()
+        if (tokenSymbol.toUpperCase() === symbol) {
+          const name =  await ercContract.name()
+          this.arrayOfFilteredDexPairBySymbol.push({
+            pairAddr: pairAddress,
+            tokenAddr: tokenAddress,
+            symbol: tokenSymbol,
+            name: name
+          })
+        }else {
+          console.log(`tokensymbol not equals to ${symbol} but rather: ${tokenSymbol.toUpperCase()}`, pairAddress)
         }
       },
       // 3
