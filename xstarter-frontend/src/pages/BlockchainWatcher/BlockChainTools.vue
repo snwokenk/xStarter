@@ -1,7 +1,11 @@
 <template>
   <q-page class="flex flex-center">
-    <div class="q-mt-lg">
+    <div class="q-my-lg">
       <WatchForPairCreation />
+    </div>
+
+    <div class="q-my-xl">
+      <PairVolumeAnalysis />
     </div>
 
     <div class="full-width justify-center row q-mt-xl">
@@ -26,6 +30,7 @@ import {defineComponent, inject, ref} from 'vue';
 import {ethers} from "boot/ethers";
 import { openURL } from 'quasar'
 import WatchForPairCreation from "components/Blockchain/WatchForPairCreation";
+import PairVolumeAnalysis from "components/Blockchain/PairVolumeAnalysis";
 
 const ERC20ABI = [
   'function balanceOf(address owner) view returns (uint256 balance)',
@@ -36,7 +41,7 @@ const ERC20ABI = [
 
 export default defineComponent( {
     name: "BlockChainTools",
-  components: {WatchForPairCreation},
+  components: {PairVolumeAnalysis, WatchForPairCreation},
   setup() {
       const getProvider = inject('$getProvider')
       const getSigner = inject('$getSigner')
