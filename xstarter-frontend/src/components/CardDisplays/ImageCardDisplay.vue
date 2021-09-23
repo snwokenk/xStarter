@@ -32,7 +32,7 @@
 
 <script>
 import {ethers} from "boot/ethers";
-import {inject, ref} from "vue";
+import {inject, provide, ref} from "vue";
 
 export default {
   name: "ImageCardDisplay",
@@ -43,9 +43,10 @@ export default {
     const connectedAccount = inject('$connectedAccounts')
     let chainId = inject('$chainId')
     const getConnectedAndPermissioned = inject('$getConnectedAndPermissioned')
+    const getReadOnlyERC721Contract = inject('$getReadOnlyERC721Contract')
     // const mintABi = xStarterERC721Code.abi
     console.log('provider is ', getProvider())
-    return {getProvider, getSigner, getLaunchPadContract, getConnectedAndPermissioned, connectedAccount, chainId, current: ref(1)}
+    return {getProvider, getSigner, getLaunchPadContract, getConnectedAndPermissioned, getReadOnlyERC721Contract, connectedAccount, chainId, current: ref(1)}
   },
   props: {
     // imgSource: {
@@ -93,11 +94,11 @@ export default {
       if (!this.erc721Contract) {return null}
       return await this.erc721Contract.connect(this.getSigner())
     },
-    async readOnlyERC721Contract() {
-      const provider  = await new ethers.providers.JsonRpcProvider(this.jsonRPCEndPoint);
-      console.log('providers is ', provider)
-      return new ethers.Contract(this.contractAddress, this.erc721ABI, provider);
-    },
+    // async readOnlyERC721Contract() {
+    //   const provider  = await new ethers.providers.JsonRpcProvider(this.jsonRPCEndPoint);
+    //   console.log('providers is ', provider)
+    //   return new ethers.Contract(this.contractAddress, this.erc721ABI, provider);
+    // },
     async getTokenURIMetadata(tokenURI) {
       const QmIndex = tokenURI.indexOf('Qm')
       if (tokenURI.toLowerCase().includes('http')) {
@@ -121,7 +122,7 @@ export default {
     // get metadata should have image, description
     // const metaData = await this.$api.get(`${this.baseURI}${this.tokenId}`)
     console.log('the endpoint is', this.jsonRPCEndPoint)
-    const readOnlyContract = await this.readOnlyERC721Contract()
+    const readOnlyContract = await this.getReadOnlyERC721Contract()
     const tokenURI = await readOnlyContract.tokenURI(this.tokenId)
     console.log('the tokenURI is', tokenURI)
     this.ownerOf = await readOnlyContract.ownerOf(this.tokenId)

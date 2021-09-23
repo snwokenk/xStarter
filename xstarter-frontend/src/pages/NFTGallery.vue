@@ -1,8 +1,9 @@
 <template>
   <q-page>
-    <div class="full-width justify-center row" style="border-bottom: 1px solid gray;">
+    <div class="full-width justify-center content-center row" style="border-bottom: 1px solid gray; min-height: 200px">
 <!--      <q-img v-if="$q.platform.is.mobile" :src="collectionBanner" style="width: 100%" />-->
-      <q-img :src="collectionBanner" style="width: 80%; max-height: 300px"  />
+<!--      <q-img :src="collectionBanner" style="width: 80%; max-height: 300px"  />-->
+      <div v-html="name" class="text-h4 text-center" />
     </div>
 <!--    <div class="full-width row justify-center" :style="$q.platform.is.mobile ? 'margin-top: -25px;' : 'margin-top: -50px;'">-->
 
@@ -36,15 +37,26 @@
 </template>
 
 <script>
-import {inject, ref} from "vue";
+import {inject, provide, ref} from "vue";
 import ImageCardDisplay from "components/CardDisplays/ImageCardDisplay";
 import {CHAIN_INFO_OBJ} from "src/constants";
 import {ethers} from "boot/ethers";
+import { useRouter, useRoute } from 'vue-router'
 
+const erc721ABI = [
+  'function ownerOf(uint256 tokenId) view returns (address owner)',
+  'function balanceOf(address owner) view returns (uint256 balance)',
+  'function tokenURI(uint256 tokenId) view returns (string memory)',
+  'function totalSupply() view returns (uint)',
+  'function name() view returns (string memory)'
+]
 export default {
   name: "NFTGallery",
   components: {ImageCardDisplay},
   setup() {
+    const router = useRouter()
+    const route = useRoute()
+
     const getProvider = inject('$getProvider')
     const getSigner = inject('$getSigner')
     const getLaunchPadContract = inject('$getLaunchPadContract')
@@ -53,18 +65,27 @@ export default {
     const getConnectedAndPermissioned = inject('$getConnectedAndPermissioned')
     // const mintABi = xStarterERC721Code.abi
     console.log('provider is ', getProvider())
-    return {getProvider, getSigner, getLaunchPadContract, getConnectedAndPermissioned, connectedAccount, chainId, current: ref(1)}
+    const contAddr = route.params.contractAddress
+    const jsonRPC = CHAIN_INFO_OBJ[route.params.chainId].rpcUrls[0]
+    const localProvider = new ethers.providers.JsonRpcProvider(jsonRPC);
+    const readOnlyERC721Contract = new ethers.Contract(contAddr, erc721ABI, localProvider);
+    const getReadOnlyERC721Contract = async () => {
+      return readOnlyERC721Contract
+    }
+    provide('$getReadOnlyERC721Contract', getReadOnlyERC721Contract)
+    return {getProvider, getSigner, getLaunchPadContract, getConnectedAndPermissioned, getReadOnlyERC721Contract, connectedAccount, chainId, current: ref(1)}
   },
 
   data() {
     return {
-      erc721ABI: [
-        'function ownerOf(uint256 tokenId) view returns (address owner)',
-        'function balanceOf(address owner) view returns (uint256 balance)',
-        'function tokenURI(uint256 tokenId) view returns (string memory)',
-        'function totalSupply() view returns (uint)'
-      ],
-      totalSupply: 0
+      // erc721ABI: [
+      //   'function ownerOf(uint256 tokenId) view returns (address owner)',
+      //   'function balanceOf(address owner) view returns (uint256 balance)',
+      //   'function tokenURI(uint256 tokenId) view returns (string memory)',
+      //   'function totalSupply() view returns (uint)'
+      // ],
+      totalSupply: 0,
+      name: ''
     }
   },
   computed: {
@@ -84,7 +105,7 @@ export default {
       return 9
     },
     totalPages() {
-      return Math.ceil(this.totalItems / this.maxPerPage)
+      return Math.ceil(this.totalSupply / this.maxPerPage)
     },
     baseURI() {
       return 'https://hungrybirds.art/firstgen/'
@@ -101,7 +122,7 @@ export default {
       return imgData
     },
     erc721Contract() {
-      return new ethers.Contract(this.contractAddress, this.erc721ABI, this.getProvider());
+      return new ethers.Contract(this.contractAddress, erc721ABI, this.getProvider());
     },
     contractAddress() {
       return this.$route.params.contractAddress
@@ -113,15 +134,16 @@ export default {
       if (!this.erc721Contract) {return null}
       return await this.erc721Contract.connect(this.getSigner())
     },
-    async readOnlyERC721Contract() {
-      const provider  = await new ethers.providers.JsonRpcProvider(this.jsonRPCEndPoint);
-      console.log('providers is ', provider)
-      return new ethers.Contract(this.contractAddress, this.erc721ABI, provider);
-    }
+    // async readOnlyERC721Contract() {
+    //   const provider  = await new ethers.providers.JsonRpcProvider(this.jsonRPCEndPoint);
+    //   console.log('providers is ', provider)
+    //   return new ethers.Contract(this.contractAddress, this.erc721ABI, provider);
+    // }
   },
   async mounted() {
-    const readOnlyContract = await this.readOnlyERC721Contract()
+    const readOnlyContract = await this.getReadOnlyERC721Contract()
     this.totalSupply = (await readOnlyContract.totalSupply()).toNumber()
+    this.name = (await readOnlyContract.name())
   }
 }
 </script>

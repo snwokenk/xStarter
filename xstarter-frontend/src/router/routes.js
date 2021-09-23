@@ -9,6 +9,7 @@ const routes = [
       { path: 'gov', name: 'gov_main', component: () => import('pages/Governance.vue') },
       { path: 'nft', name: 'nft_main', component: () => import('pages/NFT.vue') },
       { path: 'nft/mint/:ipfs_cid', name: 'nft_mint', component: () => import('pages/NFTMintingAndConversion.vue') },
+      { path: 'nft/deploy', name: 'nft_deploy', component: () => import('pages/NFTDeploymentPage.vue') },
       { path: 'nft/gallery/:chainId/:contractAddress', name: 'nft_gallery', component: () => import('pages/NFTGallery.vue') },
       { path: 'tools', name: 'tools', component: () => import('pages/BlockchainWatcher/BlockChainTools.vue') },
     ]

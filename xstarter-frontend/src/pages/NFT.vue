@@ -5,7 +5,7 @@
 <!--    </div>-->
     <div class="row full-width justify-center q-gutter-y-xl">
       <div class="col-11 col-md-9 col-lg-7 col-xl-6">
-        <q-btn rounded outline label="Deploy Your NFT" class="homeButtons full-width" @click="$router.push('/nft')" />
+        <q-btn rounded outline label="Deploy Your NFT" class="homeButtons full-width" @click="$router.push('/nft/deploy')" />
       </div>
       <div class="col-11 col-md-9 col-lg-7 col-xl-6">
         <q-btn rounded outline label="Generate A Mint Page For Your NFT" class="homeButtons full-width" @click="$router.push('/ilo')" />
@@ -14,7 +14,7 @@
 
       <div class="display-card accountDisplayCard q-py-lg col-11 col-md-7 col-lg-5 q-gutter-y-lg" style="min-height: 200px;">
         <div class="text-center text-bold">
-          View NFT Gallery Or Single Image
+          View NFT Gallery
         </div>
         <div class="q-px-xl">
           <q-select v-model="chainIdVal" :options="chainIdOptions" label="Select Chain" />
@@ -28,8 +28,6 @@
         <div class="row justify-center">
           <q-btn :disable="!galleryAddr" label="View" outline rounded @click="goToGallery" />
         </div>
-
-
       </div>
     </div>
 
@@ -39,7 +37,6 @@
 
 <script>
 import {defineComponent, inject, provide} from 'vue';
-import xStarterProposalCode from 'src/artifacts/contracts/xStarterProposal.sol/xStarterProposal.json'
 
 export default defineComponent({
   name: 'NFT',
@@ -49,9 +46,8 @@ export default defineComponent({
     const getSigner = inject('$getSigner')
     const getLaunchPadContract = inject('$getLaunchPadContract')
     const getConnectedAndPermissioned = inject('$getConnectedAndPermissioned')
-    const proposalABI = xStarterProposalCode.abi
     console.log('provider is ', getProvider())
-    return {getProvider, getSigner, getLaunchPadContract, getConnectedAndPermissioned, getChainIdOptions, proposalABI}
+    return {getProvider, getSigner, getLaunchPadContract, getConnectedAndPermissioned, getChainIdOptions}
   },
   computed: {
     chainIdOptions() {

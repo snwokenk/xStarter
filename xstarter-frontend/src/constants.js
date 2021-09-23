@@ -29,6 +29,7 @@ export const CHAIN_ID_TO_NAME = {
   56: 'Binance Smart Chain',
   77: 'POA Sokol Testnet',
   100: 'xDai Layer 2',
+  137: 'Polygon Matic',
   31337: 'Hardhat Localhost',
 
 
@@ -39,6 +40,8 @@ export const CHAIN_ID_TO_NAME = {
 export const  ACCEPTED_CHAINS = {
   31337: true,
   100: true,
+  137: true,
+  1: true,
   5: true,
   56: true
   // 137: true
@@ -93,6 +96,19 @@ export const CHAIN_INFO_OBJ = {
     blockExplorerUrls: ['https://blockscout.com/xdai/mainnet/'],
     iconUrls: [''], // Currently ignored.
   },
+  137: {
+    chainId: '0x89',
+    chainName: 'Polygon',
+    nativeCurrency: {
+      name: 'Matic',
+      symbol: 'Matic',
+      decimals: 18
+    },
+    rpcUrls: ['https://rpc-mainnet.matic.network'],
+    blockExplorerUrls: ['https://polygonscan.com/'],
+    iconUrls: ['']
+
+  },
   31337: {
     chainId: '0x7A69', // A 0x-prefixed hexadecimal string
     chainName: 'LocalHost 8545',
@@ -115,7 +131,8 @@ export const RPC_ENDPOINTS = {
   31337: 'http://127.0.0.1:8545',
   5: 'https://rpc.goerli.mudit.blog/',
   100: 'https://rpc.xdaichain.com/',
-  56: 'https://bsc-dataseed.binance.org/'
+  56: 'https://bsc-dataseed.binance.org/',
+  137: 'https://rpc-mainnet.matic.network'
 }
 
 export const JSON_RPC_ENDPOINT = process.env.IS_NETWORK === 'xdai' ?
