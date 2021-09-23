@@ -4,17 +4,16 @@
 <!--      <q-img v-if="$q.platform.is.mobile" :src="collectionBanner" style="width: 100%" />-->
       <q-img :src="collectionBanner" style="width: 80%; max-height: 300px"  />
     </div>
-    <div class="full-width row justify-center" :style="$q.platform.is.mobile ? 'margin-top: -25px;' : 'margin-top: -50px;'">
+<!--    <div class="full-width row justify-center" :style="$q.platform.is.mobile ? 'margin-top: -25px;' : 'margin-top: -50px;'">-->
 
-      <q-avatar :size="$q.platform.is.mobile ? '125px' : '200px'">
-        <img :src="collectionProfileLogo"  alt=""/>
-      </q-avatar>
-    </div>
+<!--      <q-avatar :size="$q.platform.is.mobile ? '125px' : '200px'">-->
+<!--        <img :src="collectionProfileLogo"  alt=""/>-->
+<!--      </q-avatar>-->
+<!--    </div>-->
     <div class="full-width justify-center row">
       <div class="row q-px-xl q-gutter-lg justify-center q-pb-xl" style="margin-top: 150px; max-width: 1250px">
         <ImageCardDisplay
           v-for="id in currentListOfTokenId"
-          img-source="https://hungrybirds.art/firstgen/1.png"
           :baseURI="baseURI"
           :tokenId="id"
           :key="id"
@@ -72,12 +71,12 @@ export default {
     jsonRPCEndPoint() {
       return CHAIN_INFO_OBJ[this.$route.params.chainId].rpcUrls[0]
     },
-    collectionBanner() {
-      return '/HungryBirds/HungryBirdsLogo.png'
-    },
-    collectionProfileLogo() {
-      return '/HungryBirds/hungryBirds_square_logo.png'
-    },
+    // collectionBanner() {
+    //   return '/HungryBirds/HungryBirdsLogo.png'
+    // },
+    // collectionProfileLogo() {
+    //   return '/HungryBirds/hungryBirds_square_logo.png'
+    // },
     maxPerPage() {
       return 12
     },

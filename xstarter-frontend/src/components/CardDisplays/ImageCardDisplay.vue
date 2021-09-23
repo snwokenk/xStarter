@@ -97,6 +97,24 @@ export default {
       const provider  = await new ethers.providers.JsonRpcProvider(this.jsonRPCEndPoint);
       console.log('providers is ', provider)
       return new ethers.Contract(this.contractAddress, this.erc721ABI, provider);
+    },
+    async getTokenURIMetadata(tokenURI) {
+      const QmIndex = tokenURI.indexOf('Qm')
+      if (tokenURI.toLowerCase().includes('http')) {
+        return await this.$api.get(tokenURI)
+      }else if (tokenURI.toLowerCase().includes('ipfs') && QmIndex > -1) {
+        return await this.$api.get('https://ipfs.io/ipfs/' + tokenURI.slice(QmIndex))
+      }
+    },
+    async getImgSource(rawImgSrc) {
+      const QmIndex = rawImgSrc.indexOf('Qm')
+      console.log('qm included ', QmIndex)
+      if (rawImgSrc.toLowerCase().includes('http')) {
+        return rawImgSrc
+      }else if (rawImgSrc.toLowerCase().includes('ipfs') && QmIndex > -1) {
+
+        return 'https://ipfs.io/ipfs/' + rawImgSrc.slice(QmIndex)
+      }
     }
   },
   async mounted() {
@@ -107,9 +125,10 @@ export default {
     const tokenURI = await readOnlyContract.tokenURI(this.tokenId)
     console.log('the tokenURI is', tokenURI)
     this.ownerOf = await readOnlyContract.ownerOf(this.tokenId)
-    const metaData = await this.$api.get(tokenURI)
+    // const metaData = await this.$api.get(tokenURI)
+    const metaData = await this.getTokenURIMetadata(tokenURI)
     console.log('metadata is', this.tokenId, metaData)
-    this.imgSource = metaData.data.image
+    this.imgSource = await this.getImgSource(metaData.data.image)
     this.imgDesc = metaData.data.description
     this.imgAttrs = metaData.data.attributes ? metaData.data.attributes : []
 
