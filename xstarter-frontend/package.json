@@ -18,7 +18,7 @@
   "dependencies": {
     "@metamask/detect-provider": "^1.2.0",
     "@metamask/onboarding": "^1.0.1",
-    "@quasar/extras": "^1.0.0",
+    "@quasar/extras": "^1.11.1",
     "@quasar/icongenie": "^2.4.0",
     "@walletconnect/web3-provider": "^1.5.1",
     "axios": "^0.21.1",
@@ -27,12 +27,13 @@
     "ipfs-core": "^0.8.0",
     "ipfs-http-client": "^50.1.2",
     "node-polyfill-webpack-plugin": "^1.1.4",
-    "quasar": "^2.0.0-beta.1",
-    "vue-i18n": "^9.0.0-beta.0"
+    "quasar": "^2.1.0",
+    "vue-i18n": "^9.0.0-beta.0",
+    "vuex": "^4.0.2"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.13.14",
-    "@quasar/app": "^3.0.0-beta.1",
+    "@quasar/app": "^3.1.0",
     "eslint": "^7.14.0",
     "eslint-config-prettier": "^8.1.0",
     "eslint-plugin-vue": "^7.0.0",

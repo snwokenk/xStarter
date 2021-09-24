@@ -1,5 +1,5 @@
 <template>
-  <q-page class="flex flex-center">
+  <q-page class="flex flex-center q-py-xl">
 <!--    <div class="display-card accountDisplayCard account-display-text q-pa-xl">-->
 <!--      This section will allow the creation and sale of NFTs priced in xStarter Tokens-->
 <!--    </div>-->
