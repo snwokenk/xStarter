@@ -8,7 +8,7 @@
         <q-btn rounded outline label="Deploy Your NFT" class="homeButtons full-width" @click="$router.push('/nft/deploy')" />
       </div>
       <div class="col-11 col-md-9 col-lg-7 col-xl-6">
-        <q-btn rounded outline label="Generate A Mint Page For Your NFT" class="homeButtons full-width" @click="$router.push('/ilo')" />
+        <q-btn rounded outline label="Generate A Mint Page For Your NFT" class="homeButtons full-width" @click="$router.push('/nft/gen_mint_page')" />
       </div>
       <q-space class="col-12" />
 

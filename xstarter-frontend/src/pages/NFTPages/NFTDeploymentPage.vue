@@ -18,6 +18,9 @@
 <!--          <q-select v-model="form.chainIdVal" :options="chainIdOptions" label="Select Chain" />-->
 <!--        </div>-->
         <div class="q-px-xl">
+          <NetworkSwitcher :use-as-manual-switcher="true" />
+        </div>
+        <div class="q-px-xl">
           <q-input  v-model="form.name" placeholder="Name Of NFT (ie. HungryBirds)" />
         </div>
         <div class="q-px-xl">
