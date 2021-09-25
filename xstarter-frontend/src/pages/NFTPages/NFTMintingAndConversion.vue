@@ -1224,7 +1224,7 @@ export default defineComponent({
       return this.dataInfo ? this.dataInfo.NFTMeta.mintFunction : ''
     },
     maxMint() {
-      return this.dataInfo ? this.dataInfo.NFTMeta.maxMint : 0
+      return this.dataInfo ? parseInt(this.dataInfo.NFTMeta.totalMint) - parseInt(this.dataInfo.NFTMeta.reservedAmt) : 0
     },
     totalMint(){
       return this.dataInfo ? this.dataInfo.NFTMeta.totalMint : 0

@@ -317,7 +317,12 @@ export default defineComponent({
         console.log('provider in is', provider)
         chainId.value = (await provider.getNetwork())['chainId'] // getNetwork = {chain id, chain name}
         console.log('chain id in connect using webprovider is', chainId.value)
-        launchPadContract = await new ethers.Contract(LAUNCHPAD_ADDRESS[chainId.value] || '', launchpadCode.abi, signer)
+        if (LAUNCHPAD_ADDRESS[chainId.value]) {
+          launchPadContract = await new ethers.Contract(LAUNCHPAD_ADDRESS[chainId.value], launchpadCode.abi, signer)
+        }else {
+          launchPadContract = null
+        }
+
         if (launchPadContract) {
           launchPadLoaded.value = true
         }
