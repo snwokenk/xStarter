@@ -43,7 +43,7 @@
           <q-input  v-model="form.NFTMeta.contractAddress" :rules="[val => !!val || 'Field is required']" placeholder="Address of NFT Contract" />
         </div>
         <div class="q-px-xl">
-          <q-input  v-model="form.NFTMeta.mintFunction" :rules="[val => !!val || 'Field is required']" placeholder="Name of function, on smart contract that is called to mint" />
+          <q-input  v-model="form.NFTMeta.mintFunction" :rules="[val => !!val || 'Field is required']" placeholder="Name of function, on smart contract, that is called to mint" />
         </div>
         <div class="q-px-xl">
           <q-input  v-model="form.NFTMeta.totalMint" :rules="[val => !!val || 'Field is required']" placeholder="Total number of NFTs to be minted" />
@@ -195,9 +195,9 @@ export default defineComponent({
         this.form.arrayOfImages = this.arrayOfImages.split(',')
       }
       this.convertABIToArray()
-      const cidPage = await this.$ipfs_utils.saveILOInfo(this.form)
-      if (cidPage) {
-        this.generatedPageUrl = `https://www.xstarter.app/#/nft/mint/${cidPage}`
+      const cidObj = await this.$ipfs_utils.saveILOInfo(this.form)
+      if (cidObj) {
+        this.generatedPageUrl = `https://www.xstarter.app/#/nft/mint/${cidObj.path}`
       }
     },
 
