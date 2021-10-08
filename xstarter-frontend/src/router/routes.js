@@ -13,6 +13,7 @@ const routes = [
       { path: 'nft/gen_mint_page', name: 'nft_generate_mint_page', component: () => import('pages/NFTPages/NFTMintPageGenerator.vue') },
       { path: 'nft/gallery/:chainId/:contractAddress', name: 'nft_gallery', component: () => import('pages/NFTGallery.vue') },
       { path: 'tools', name: 'tools', component: () => import('pages/BlockchainWatcher/BlockChainTools.vue') },
+      { path: 'trading_tools', name: 'trading_tools', component: () => import('pages/BlockchainWatcher/TradingTools.vue') }
     ]
   },
 
