@@ -28,11 +28,11 @@ class xStarterIndexDBFactory {
       console.log('no database with that name created ');
       return;
     }
-    console.log('db is', this.objectOfDbs[dbName])
     await this.objectOfDbs[dbName].addData(nameOfObjectStore, arrayOfDatas, onSuccessCallBack, onErrorCallback, onCompleteCallback);
   }
 
   async getNumberedIndexByRange(dbName, nameOfObjectStore, nameOfIndex, startNum, endNum, callBackForEachData) {
+    console.log('start num is', startNum)
     if (!this.objectOfDbs[dbName]) {
       console.log('no database with that name created ');
       return;
@@ -131,13 +131,13 @@ class xStarterIndexDB {
     // }
     const objectStore = this.db.transaction([nameOfObjectStore], "readwrite").objectStore(nameOfObjectStore)
     const index = objectStore.index(nameOfIndex)
-    const boundKeyRange = IDBKeyRange.bound(startNum, endNum, false, true);
+    const boundKeyRange = IDBKeyRange.bound(startNum, endNum, true, true);
 
-    index.openCursor(boundKeyRange).onsuccess = function(event) {
+    index.openCursor(boundKeyRange).onsuccess = async function(event) {
       const cursor = event.target.result;
       if (cursor) {
         // Do something with the matches.
-        console.log('in opened cursor',  cursor.key.primaryKey, cursor.key, cursor.value)
+        // console.log('in opened cursor',  cursor.key.primaryKey, cursor.key, cursor.value)
         callBackForEachData(cursor.value)
         cursor.continue();
       }

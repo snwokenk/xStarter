@@ -171,13 +171,41 @@ export default defineComponent( {
       },
 
       async computeVolume() {
+        const currentHourTimestamp = this.getCurrentHourTimestamp(true)
+        console.log('currenthourtimestamp', currentHourTimestamp - 1)
         await this.$indexDBFactory.getNumberedIndexByRange(
           this.dbName,
           this.objectStoreName,
           'timestamp',
-          1633658400,
-          1633662000,
+          currentHourTimestamp - 7201, // minus one second
+          currentHourTimestamp + 3601,
+          this.calculateAndPopulateData
         )
+      },
+      getCurrentHourTimestamp(inSeconds) {
+        const d = new Date()
+        d.setMinutes(0,0,0)
+        console.log('time is', d.getTime())
+        return inSeconds ? Math.floor(d.getTime()/1000) :  d.getTime()
+      },
+      async calculateAndPopulateData(data) {
+        console.log('data is ', data)
+        if (typeof this.tokenWithIndex[data.tokenAddr] === 'undefined') {
+          this.tokenWithIndex[data.tokenAddr] = this.tokenAndVolume.push({
+            tokenAddr: data.tokenAddr,
+            buyVolume: ethers.BigNumber.from(0),
+            sellVolume: ethers.BigNumber.from(0),
+            total: ethers.BigNumber.from(0),
+            net: ethers.BigNumber.from(0)
+          }) - 1 // add index
+        }
+
+        const indOfToken = this.tokenWithIndex[data.tokenAddr]
+        this.tokenAndVolume[indOfToken].sellVolume = this.tokenAndVolume[indOfToken].sellVolume.add(data.sellVolume)
+        this.tokenAndVolume[indOfToken].buyVolume = this.tokenAndVolume[indOfToken].buyVolume.add(data.buyVolume)
+        this.tokenAndVolume[indOfToken].total = this.tokenAndVolume[indOfToken].total.add(data.buyVolume).add(data.sellVolume)
+        this.tokenAndVolume[indOfToken].net = this.tokenAndVolume[indOfToken].net.sub(data.sellVolume).add(data.buyVolume)
+
       },
 
       async listenAndFilterTransaction() {
