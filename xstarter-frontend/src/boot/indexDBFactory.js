@@ -39,6 +39,15 @@ class xStarterIndexDBFactory {
     }
     await this.objectOfDbs[dbName].getNumberedIndexByRange(nameOfObjectStore, nameOfIndex, startNum, endNum, callBackForEachData)
   }
+  async getPaginatedNumberedIndexByRange(dbName, nameOfObjectStore, nameOfIndex, startNum, endNum, paginationLength, callBackForEachData) {
+    console.log('start num is', startNum)
+    if (!this.objectOfDbs[dbName]) {
+      console.log('no database with that name created ');
+      return;
+    }
+
+    await this.objectOfDbs[dbName].getPaginatedNumberedIndexByRange(nameOfObjectStore, nameOfIndex, startNum, endNum, paginationLength, callBackForEachData)
+  }
 }
 
 class xStarterIndexDB {
@@ -142,6 +151,46 @@ class xStarterIndexDB {
         cursor.continue();
       }
     };
+  }
+  // takes the start and end number and gets all in tranches
+  async getPaginatedNumberedIndexByRange(nameOfObjectStore, nameOfIndex, startNum, endNum, paginationLength, callBackForEachData) {
+
+    const objectStore = this.db.transaction([nameOfObjectStore], "readwrite").objectStore(nameOfObjectStore)
+    const index = objectStore.index(nameOfIndex)
+    // const boundKeyRange = IDBKeyRange.bound(startNum, endNum, true, true);
+
+    let tmpStart = startNum
+    let tmpEnd = startNum + paginationLength > endNum ? endNum : startNum + paginationLength
+    while (true) {
+      const boundKeyRange = IDBKeyRange.bound(tmpStart, tmpEnd, true, true);
+      const req = index.getAll(boundKeyRange)
+      req.onsuccess = function (event) {
+        console.log('event result is', event.target.result)
+        const result = event.target.result
+        if (!result.length) { return }
+        callBackForEachData(result)
+        // for (let i = 0; i < result.length - 1; i++) {
+        //   callBackForEachData(result[i])
+        // }
+      }
+      tmpStart = tmpEnd
+      tmpEnd = tmpEnd + paginationLength > endNum ? endNum : tmpEnd + paginationLength
+      if (tmpStart >= endNum) {
+        break
+      }
+    }
+
+
+
+    // index.openCursor(boundKeyRange).onsuccess = async function(event) {
+    //   const cursor = event.target.result;
+    //   if (cursor) {
+    //     // Do something with the matches.
+    //     // console.log('in opened cursor',  cursor.key.primaryKey, cursor.key, cursor.value)
+    //     callBackForEachData(cursor.value)
+    //     cursor.continue();
+    //   }
+    // };
   }
 }
 

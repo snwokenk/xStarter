@@ -4,6 +4,7 @@
       <div class="col-12 justify-center row">
         <q-btn label="listen for volume" outline @click="listenAndFilterTransaction" />
         <q-btn label="Compute" outline @click="computeVolume" />
+        <q-btn label="Compute Paginate" outline @click="computeVolumePaginated" />
       </div>
 <!--      <div class="col-12 row q-gutter-lg">-->
 <!--        <q-input class="col-5" outlined v-model="symbolFilter" label="symbol to filter" />-->
@@ -182,6 +183,21 @@ export default defineComponent( {
           this.calculateAndPopulateData
         )
       },
+      async computeVolumePaginated() {
+        const currentHourTimestamp = this.getCurrentHourTimestamp(true)
+        console.log('currenthourtimestamp', currentHourTimestamp - 1)
+        await this.$indexDBFactory.getPaginatedNumberedIndexByRange(
+          this.dbName,
+          this.objectStoreName,
+          'timestamp',
+          // currentHourTimestamp - 7201, // minus one second
+          1633741200,
+          // currentHourTimestamp + 3601,
+          1633748400,
+          30,
+          this.calculateAndPopulateAllData
+        )
+      },
       getCurrentHourTimestamp(inSeconds) {
         const d = new Date()
         d.setMinutes(0,0,0)
@@ -189,7 +205,7 @@ export default defineComponent( {
         return inSeconds ? Math.floor(d.getTime()/1000) :  d.getTime()
       },
       async calculateAndPopulateData(data) {
-        console.log('data is ', data)
+        console.log('data is ')
         if (typeof this.tokenWithIndex[data.tokenAddr] === 'undefined') {
           this.tokenWithIndex[data.tokenAddr] = this.tokenAndVolume.push({
             tokenAddr: data.tokenAddr,
@@ -205,6 +221,29 @@ export default defineComponent( {
         this.tokenAndVolume[indOfToken].buyVolume = this.tokenAndVolume[indOfToken].buyVolume.add(data.buyVolume)
         this.tokenAndVolume[indOfToken].total = this.tokenAndVolume[indOfToken].total.add(data.buyVolume).add(data.sellVolume)
         this.tokenAndVolume[indOfToken].net = this.tokenAndVolume[indOfToken].net.sub(data.sellVolume).add(data.buyVolume)
+
+      },
+
+      async calculateAndPopulateAllData(arrayOfData) {
+        console.log('data is ', arrayOfData)
+        for (let i = 0; i < arrayOfData.length - 1; i++) {
+          const data = arrayOfData[i]
+          if (typeof this.tokenWithIndex[data.tokenAddr] === 'undefined') {
+            this.tokenWithIndex[data.tokenAddr] = this.tokenAndVolume.push({
+              tokenAddr: data.tokenAddr,
+              buyVolume: ethers.BigNumber.from(0),
+              sellVolume: ethers.BigNumber.from(0),
+              total: ethers.BigNumber.from(0),
+              net: ethers.BigNumber.from(0)
+            }) - 1 // add index
+          }
+
+          const indOfToken = this.tokenWithIndex[data.tokenAddr]
+          this.tokenAndVolume[indOfToken].sellVolume = this.tokenAndVolume[indOfToken].sellVolume.add(data.sellVolume)
+          this.tokenAndVolume[indOfToken].buyVolume = this.tokenAndVolume[indOfToken].buyVolume.add(data.buyVolume)
+          this.tokenAndVolume[indOfToken].total = this.tokenAndVolume[indOfToken].total.add(data.buyVolume).add(data.sellVolume)
+          this.tokenAndVolume[indOfToken].net = this.tokenAndVolume[indOfToken].net.sub(data.sellVolume).add(data.buyVolume)
+        }
 
       },
 
