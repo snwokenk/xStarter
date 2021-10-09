@@ -164,11 +164,10 @@ class xStarterIndexDB {
     while (true) {
       const boundKeyRange = IDBKeyRange.bound(tmpStart, tmpEnd, true, true);
       const req = index.getAll(boundKeyRange)
-      req.onsuccess = function (event) {
-        console.log('event result is', event.target.result)
+      req.onsuccess = async function (event) {
         const result = event.target.result
         if (!result.length) { return }
-        callBackForEachData(result)
+        await callBackForEachData(result)
         // for (let i = 0; i < result.length - 1; i++) {
         //   callBackForEachData(result[i])
         // }

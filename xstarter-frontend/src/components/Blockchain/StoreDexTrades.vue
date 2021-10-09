@@ -4,8 +4,28 @@
       <div class="col-12 justify-center row">
         <q-btn label="listen for volume" outline @click="listenAndFilterTransaction" />
         <q-btn label="Compute" outline @click="computeVolume" />
+
+      </div>
+      <div class="col-12 justify-center row q-gutter-md q-mt-md">
+        <q-select v-model="computeTimeOption" outlined :options="computeTimeOptions" label="Select Time Range To Compute" />
+        <q-select v-model="computePaginationTimeBlockOption" outlined :options="computePaginationTimeBlockOptions" label="Select Pagination Time Block, when computing, data for time block will be computed " />
         <q-btn label="Compute Paginate" outline @click="computeVolumePaginated" />
       </div>
+      <div class="col-12 justify-center row q-gutter-md q-mt-md">
+        <q-select v-model="sortByValue" outlined :options="computedSortBy" label="Sort By"  />
+      </div>
+<!--      <div class="col-12 justify-center row q-mt-lg">-->
+<!--        <div class="col-12">-->
+<!--          Select Time Range To Compute-->
+<!--        </div>-->
+<!--        <div class="q-gutter-md row col-12 items-start">-->
+<!--          <q-date v-model="dateTimeRange" mask="YYYY-MM-DD HH:mm" />-->
+<!--          <q-time v-model="dateTimeRange" mask="YYYY-MM-DD HH:mm" />-->
+<!--        </div>-->
+<!--        <div class="col-12">-->
+<!--          {{ computedStartTimestamp }}-->
+<!--        </div>-->
+<!--      </div>-->
 <!--      <div class="col-12 row q-gutter-lg">-->
 <!--        <q-input class="col-5" outlined v-model="symbolFilter" label="symbol to filter" />-->
 <!--        <q-btn class="col-6" label="listen and find pair by symbol" outline @click="listenAndFilterPairCreatedBySymbol" />-->
@@ -13,13 +33,14 @@
     </div>
     <div class="col-12" v-if="listeningDate"> Started Listening {{ listeningDate  }}</div>
     <div v-if="tokenAndVolume.length" class="q-gutter-y-lg col-12">
-      <div class="text-center" v-for="obj in tokenAndVolumeSorted" :key="obj.tokenAddr">
+      <div class="text-center" v-for="obj in tokenAndVolumeSorted[sortByValue.value]" :key="obj.tokenAddr">
         Token Address : {{ obj.tokenAddr }} <br />
         Sell Volume: {{ $ethers.utils.formatEther(obj.sellVolume.toString()) }} <br />
         Buy Volume: {{ $ethers.utils.formatEther(obj.buyVolume.toString()) }}<br />
         total: {{ $ethers.utils.formatEther(obj.total.toString()) }}<br />
         net: {{ $ethers.utils.formatEther(obj.net.toString()) }}
         <q-btn flat label="view on BscScan" @click="openLink(`https://bscscan.com/token/${obj.tokenAddr}`)" />
+        <q-btn flat label="view on Poocoin" @click="openLink(`https://poocoin.app/tokens/${obj.tokenAddr}`)" />
       </div>
     </div>
 
@@ -152,6 +173,11 @@ export default defineComponent( {
         listeningDate: null,
         dbName: 'BlockchainData',
         objectStoreName: 'DexTrades',
+        dateTimeString: '',
+        dateTimeRange: { from: '', to: ''},
+        computeTimeOption: {label: 'Last 60 minutes', value: 'getCurrentLast60Minutes' },
+        computePaginationTimeBlockOption:  {label: '120 seconds', value: 120 },
+        sortByValue: {label: 'positive net', value: 0}
       }
     },
     computed: {
@@ -160,10 +186,42 @@ export default defineComponent( {
         // return [...this.tokenAndVolume].sort(function (a, b) {
         //   return a.total - b.total;
         // });
-        if (this.currentBlockNumber === 0) {}
-        return [...this.tokenAndVolume].sort(function (a, b) {
+        // if (this.currentBlockNumber === 0) { return []}
+
+        const sortedVolume = [...this.tokenAndVolume].sort(function (a, b) {
           return b.net - a.net  ;
-        }).slice(0, 100);
+        })
+
+         return [sortedVolume.slice(0, 100), sortedVolume.slice(-100).reverse()]
+        // return [...this.tokenAndVolume].sort(function (a, b) {
+        //   return b.net - a.net  ;
+        // }).slice(0, 100);
+      },
+      computedStartTimestamp() {
+        if (!this.dateTimeString){ return '' }
+
+        const newDate = new Date(this.dateTimeString)
+        return newDate.getTime()
+      },
+      computeTimeOptions() {
+        return [
+          {label: 'Current Hour to Date', value: 'getCurrentHourTimestamp'},
+          {label: 'Last 60 minutes', value: 'getCurrentLast60Minutes' },
+          {label: 'Current Day To Date', value: 'getCurrentDayTimestamp' }
+        ]
+      },
+      computePaginationTimeBlockOptions() {
+        return [
+          {label: '60 seconds time block', value: 60},
+          {label: '120 seconds time block', value: 120 },
+          {label: '5 minute time block', value: 300 }
+        ]
+      },
+      computedSortBy() {
+        return [
+          {label: 'positive net', value: 0},
+          {label: 'negative net', value: 1}
+        ]
       }
     },
     methods: {
@@ -172,6 +230,8 @@ export default defineComponent( {
       },
 
       async computeVolume() {
+        this.tokenWithIndex = {}
+        this.tokenAndVolume = []
         const currentHourTimestamp = this.getCurrentHourTimestamp(true)
         console.log('currenthourtimestamp', currentHourTimestamp - 1)
         await this.$indexDBFactory.getNumberedIndexByRange(
@@ -184,17 +244,20 @@ export default defineComponent( {
         )
       },
       async computeVolumePaginated() {
-        const currentHourTimestamp = this.getCurrentHourTimestamp(true)
-        console.log('currenthourtimestamp', currentHourTimestamp - 1)
+        console.log('function should be', this[this.computeTimeOption.value], this.computeTimeOptions.value)
+        const currentHourTimestamp = this[this.computeTimeOption.value](true)
+        this.tokenWithIndex = {}
+        this.tokenAndVolume = []
+        console.log('currenthourtimestamp', currentHourTimestamp[0] - 1)
         await this.$indexDBFactory.getPaginatedNumberedIndexByRange(
           this.dbName,
           this.objectStoreName,
           'timestamp',
-          // currentHourTimestamp - 7201, // minus one second
-          1633741200,
-          // currentHourTimestamp + 3601,
-          1633748400,
-          30,
+          currentHourTimestamp[0] - 1, // minus one second
+          // 1633741200,
+          currentHourTimestamp[1],
+          // 1633748400,
+          this.computePaginationTimeBlockOption.value,
           this.calculateAndPopulateAllData
         )
       },
@@ -202,7 +265,22 @@ export default defineComponent( {
         const d = new Date()
         d.setMinutes(0,0,0)
         console.log('time is', d.getTime())
-        return inSeconds ? Math.floor(d.getTime()/1000) :  d.getTime()
+        const now = Date.now()
+        return inSeconds ? [Math.floor(d.getTime()/1000), Math.floor(now/1000)]: [d.getTime(), now]
+      },
+      getCurrentLast60Minutes(inSeconds) {
+        const now = Date.now()
+        const previousHourInMilli = now - 3600000
+
+        return inSeconds ? [Math.floor(previousHourInMilli/1000), Math.floor(now/1000)]: [previousHourInMilli, now]
+
+      },
+      getCurrentDayTimestamp(inSeconds) {
+        const d = new Date()
+        d.setHours(0,0,0, 0)
+        const now = Date.now()
+        console.log('time is', d.getTime(), now)
+        return inSeconds ? [Math.floor(d.getTime()/1000), Math.floor(now/1000)]: [d.getTime(), now]
       },
       async calculateAndPopulateData(data) {
         console.log('data is ')
@@ -225,7 +303,8 @@ export default defineComponent( {
       },
 
       async calculateAndPopulateAllData(arrayOfData) {
-        console.log('data is ', arrayOfData)
+        // console.log('data is ', arrayOfData)
+        console.log('calculating')
         for (let i = 0; i < arrayOfData.length - 1; i++) {
           const data = arrayOfData[i]
           if (typeof this.tokenWithIndex[data.tokenAddr] === 'undefined') {
@@ -283,6 +362,10 @@ export default defineComponent( {
               case 'swapExactTokensForETHSupportingFeeOnTransferTokens':
                 await this.storeSwapExactTokensForETH(decodedData, blockTimestamp, formattedDataToAdd)
                 break
+              case 'swapTokensForExactETH':
+                console.log('swapTokensForExactETH data is', decodedData)
+                await this.storeSwapExactTokensForETH(decodedData, blockTimestamp, formattedDataToAdd)
+                break
               case 'swapETHForExactTokens':
                 await this.storeSwapETHForExactTokens(decodedData,blockTimestamp, formattedDataToAdd)
                 break
@@ -295,7 +378,8 @@ export default defineComponent( {
                 await this.storeSwapETHForExactTokens(decodedData,blockTimestamp, formattedDataToAdd)
                 break
               default:
-                console.log('it other', funcName, decodedData)
+                // console.log('it other', funcName, decodedData)
+                break
             }
 
           }
@@ -317,7 +401,7 @@ export default defineComponent( {
             tokenAddr: tokenAddr,
             timestamp: blockTimestamp,
             buyVolume: ethers.BigNumber.from(0),
-            sellVolume: decodedData.args.amountOutMin
+            sellVolume: decodedData.args.amountOutMin || decodedData.args.amountOut
             // total: decodedData.args.amountOutMin,
             // net: decodedData.args.amountOutMin.mul(-1)
           })
