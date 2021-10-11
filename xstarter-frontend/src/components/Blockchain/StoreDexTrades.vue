@@ -207,7 +207,8 @@ export default defineComponent( {
         return [
           {label: 'Current Hour to Date', value: 'getCurrentHourTimestamp'},
           {label: 'Last 60 minutes', value: 'getCurrentLast60Minutes' },
-          {label: 'Current Day To Date', value: 'getCurrentDayTimestamp' }
+          {label: 'Current Day To Date', value: 'getCurrentDayTimestamp' },
+          {label: 'Last 24 Hours', value: 'getCurrentLast24Hours'}
         ]
       },
       computePaginationTimeBlockOptions() {
@@ -281,6 +282,13 @@ export default defineComponent( {
         const now = Date.now()
         console.log('time is', d.getTime(), now)
         return inSeconds ? [Math.floor(d.getTime()/1000), Math.floor(now/1000)]: [d.getTime(), now]
+      },
+      getCurrentLast24Hours(inSeconds) {
+        const now = Date.now()
+        const previous24HourInMilli = now - 86400000
+
+        return inSeconds ? [Math.floor(previous24HourInMilli/1000), Math.floor(now/1000)]: [previous24HourInMilli, now]
+
       },
       async calculateAndPopulateData(data) {
         console.log('data is ')
