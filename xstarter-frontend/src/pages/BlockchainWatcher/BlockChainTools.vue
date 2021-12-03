@@ -1,25 +1,34 @@
 <template>
   <q-page class="flex flex-center">
-    <div class="q-my-lg">
+    <div class="row content-center justify-center q-mb-xl full-width">
+      <div class="col-6">
+        <q-select v-model="showView" :options="showViewOptions" label="Select View" class="full-width"/>
+      </div>
+    </div>
+    <div class="q-my-lg" v-if="showView === 'watch pair creation'">
       <WatchForPairCreation />
     </div>
 
-    <div class="q-my-xl">
+    <div class="q-my-xl"  v-if="showView === 'watch pair volume'">
       <PairVolumeAnalysis />
     </div>
 
-    <div class="full-width justify-center row q-mt-xl">
-      <q-btn label="start listening" outline @click="listenAndFilterTransaction" />
+    <div class="q-my-xl" v-if="showView === 'watch pair add liquidity'">
+      <AddLiquidityWatcher />
     </div>
 
-    <div class="column q-gutter-y-lg">
-      <div class="col-12 text-center" v-for="obj in arrayOfERC20" :key="obj.hash">
-        tx hash: {{ obj.hash }} <br />
-        token Address: {{ obj.tokenAddr }} <br />
-        token name: {{ obj.name }}
-        <q-btn flat label="view on BscScan" @click="openLink(`https://bscscan.com/token/${obj.tokenAddr}`)" />
-      </div>
-    </div>
+<!--    <div class="full-width justify-center row q-mt-xl">-->
+<!--      <q-btn label="start listening" outline @click="listenAndFilterTransaction" />-->
+<!--    </div>-->
+
+<!--    <div class="column q-gutter-y-lg">-->
+<!--      <div class="col-12 text-center" v-for="obj in arrayOfERC20" :key="obj.hash">-->
+<!--        tx hash: {{ obj.hash }} <br />-->
+<!--        token Address: {{ obj.tokenAddr }} <br />-->
+<!--        token name: {{ obj.name }}-->
+<!--        <q-btn flat label="view on BscScan" @click="openLink(`https://bscscan.com/token/${obj.tokenAddr}`)" />-->
+<!--      </div>-->
+<!--    </div>-->
 
 
   </q-page>
@@ -31,6 +40,7 @@ import {ethers} from "boot/ethers";
 import { openURL } from 'quasar'
 import WatchForPairCreation from "components/Blockchain/WatchForPairCreation";
 import PairVolumeAnalysis from "components/Blockchain/PairVolumeAnalysis";
+import AddLiquidityWatcher from "components/Blockchain/AddLiquidityWatcher";
 
 const ERC20ABI = [
   'function balanceOf(address owner) view returns (uint256 balance)',
@@ -41,7 +51,7 @@ const ERC20ABI = [
 
 export default defineComponent( {
     name: "BlockChainTools",
-  components: {PairVolumeAnalysis, WatchForPairCreation},
+  components: {AddLiquidityWatcher, PairVolumeAnalysis, WatchForPairCreation},
   setup() {
       const getProvider = inject('$getProvider')
       const getSigner = inject('$getSigner')
@@ -72,7 +82,9 @@ export default defineComponent( {
           'function name() view  returns (string)',
           'function symbol() view returns (string)'
         ],
-        provider: null
+        provider: null,
+        showView: null,
+        showViewOptions: ['watch pair creation', 'watch pair volume', 'watch pair add liquidity']
       }
   },
   methods: {
