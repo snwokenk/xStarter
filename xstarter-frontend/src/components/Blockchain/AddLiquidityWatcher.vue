@@ -1,25 +1,30 @@
 <template>
-  <div class="row">
+  <div class="row ">
     <div class="full-width justify-center col-12 row q-mt-md">
-      <div class="col-12 justify-center row">
-        <q-btn label="listen for AddLiquidityTransactions" outline @click="listenAndFilterTransaction" />
-      </div>
       <div class="col-9 row">
         <div class="col-12">
-          <q-select v-model="selectedBlockChain" :options="arrayOfBlockChains" label="Select Blockchain To Use" class="full-width"/>
+          <q-select
+            v-model="selectedBlockChain"
+            :options="arrayOfBlockChains"
+            label="Select Blockchain To Use"
+            class="full-width"
+            @update:model-value="selectedDex = null"
+          />
         </div>
-        <div class="col-12">
-          <q-select v-model="selectedBlockChain" :options="arrayOfBlockChains" label="Select DEX" class="full-width"/>
+        <div v-if="selectedBlockChain" class="col-12">
+          <q-select v-model="selectedDex" :options="arrayOfAvailableDex" label="Select DEX" class="full-width"/>
         </div>
+      </div>
+      <div v-if="selectedDex" class="col-12 justify-center row q-mt-xl">
+        <q-btn label="listen for AddLiquidity Transactions" outline @click="listenAndFilterTransaction" />
       </div>
 
 
-
-      <div class="col-12 justify-center row">
-        <div class="col-12">
+      <div v-if="selectedDex" class="col-12 justify-center row">
+        <div class="col-9">
           <q-input v-model="addressToAddOrDelete" label="Enter an address to add or delete" />
         </div>
-        <div class="col-12 row q-gutter-x-md">
+        <div class="col-9 row">
           <q-btn label="add" @click="addAddress" /> <q-btn label="delete" @click="deleteAddress" />
         </div>
 
@@ -58,8 +63,15 @@
 <script>
 import {defineComponent, inject, ref} from 'vue';
 import {ethers} from "boot/ethers";
-import { openURL } from 'quasar'
-import {ARRAY_OF_BLOCKCHAINS, MAJOR_TOKEN_ADDR, pPairV2ABI, pRouterV2ABI} from "src/constants";
+import {openURL} from 'quasar'
+import {
+  ARRAY_OF_BLOCKCHAINS,
+  BLOCKCHAIN_TO_DEX,
+  CHAIN_INFO_OBJ,
+  MAJOR_TOKEN_ADDR,
+  pPairV2ABI,
+  pRouterV2ABI
+} from "src/constants";
 
 const ERC20ABI = [
   'function balanceOf(address owner) view returns (uint256 balance)',
@@ -155,6 +167,7 @@ export default defineComponent( {
     data() {
       return {
         selectedBlockChain: null,
+        selectedDex: null,
         arrayOfTxs: [],
         minAmtInEthers: 5,
         searchHistoric: true,
@@ -178,23 +191,42 @@ export default defineComponent( {
       arrayOfBlockChains() {
         return [...ARRAY_OF_BLOCKCHAINS]
       },
+      arrayOfAvailableDex() {
+        if (!this.selectedBlockChain) {return null}
+        return BLOCKCHAIN_TO_DEX[this.selectedBlockChain.value] ? BLOCKCHAIN_TO_DEX[this.selectedBlockChain.value] : []
+      },
       addressToWatchArray() {
         return Object.keys(this.addressesToWatch)
       },
-      tokenAndVolumeSorted() {
-        // smallest to greatest
-        // return [...this.tokenAndVolume].sort(function (a, b) {
-        //   return a.total - b.total;
-        // });
-        if (this.currentBlockNumber === 0) {}
-        return [...this.tokenAndVolume].sort(function (a, b) {
-          return b.net - a.net  ;
-        }).slice(0, 100);
+      selectedJsonEndpoint() {
+        if (!this.selectedBlockChain) {return ''}
+        return CHAIN_INFO_OBJ[this.selectedBlockChain.value].rpcUrls[0]
+      },
+      selectedRouterAddress() {
+        if (!this.selectedDex) { return ''}
+        return this.selectedDex.routerAddress
+      },
+      getComputedLocalProvider() {
+        if (!this.selectedJsonEndpoint) {return null}
+        const localProvider =  new ethers.providers.JsonRpcProvider(this.selectedJsonEndpoint);
+        // needs to do like this to avoid some errors
+        return  () => {
+          return localProvider
+        }
+
+      },
+      getComputedRouterInterface() {
+        if (!this.selectedDex) { return null}
+        const routerInterface = new ethers.utils.Interface(this.selectedDex.routerABI)
+        return () => {
+          return routerInterface
+        }
       },
       validFunctionsObject() {
         return {
           'addLiquidity': 1,
-          'addLiquidityETH': 2
+          'addLiquidityETH': 2,
+          'addLiquidityAVAX': 3
         }
       }
     },
@@ -217,13 +249,13 @@ export default defineComponent( {
 
       async listenAndFilterTransaction() {
         // const provider =  new this.$ethers.providers.JsonRpcProvider('https://bsc-dataseed.binance.org/');
-        const provider = this.getLocalProvider()
+        const provider = this.getComputedLocalProvider()
         provider.on("block", async (blockNumber) => {
           // console.log('block number', blockNumber)
           this.currentBlockNumber = blockNumber
           const blockWithTx = await provider.getBlockWithTransactions(blockNumber)
 
-          this.getTxRouterAddress(blockWithTx.transactions)
+          this.getTxRouterAddress2(blockWithTx.transactions)
         });
         this.listeningDate = new Date()
       },
@@ -233,6 +265,68 @@ export default defineComponent( {
         // this.played = true
         let alarmAudio = await new Audio('Alarm-Fast-High-Pitch-A1-www.fesliyanstudios.com.mp3')
         alarmAudio.play()
+      },
+
+      async getTxRouterAddress2(arrayOfTx) {
+
+        for (const tx of arrayOfTx) {
+          if (tx.to.toLowerCase() === this.selectedRouterAddress.toLowerCase()) {
+            console.log(tx.to, this.selectedRouterAddress, this.selectedDex.label)
+            const anInterface = this.getComputedRouterInterface()
+            // parses transaaction
+            const decodedData = anInterface.parseTransaction(tx)
+            // console.log('decoded data is',  decodedData.name)
+            const funcName = decodedData.name
+            if (!this.validFunctionsObject[funcName] ) { continue }
+            console.log(tx)
+            console.log(`${funcName} func`, decodedData)
+            console.log(decodedData.args)
+            let quoteTokenAmt, aTokenAmt, rate;
+            if (this.validFunctionsObject[funcName] === 1) {
+              let tokenA = decodedData.args.tokenA
+              let tokenB = decodedData.args.tokenB
+              console.log(decodedData.args.amountAMin, decodedData.args.amountAMin.toString(), decodedData.args.amountBMin.toString())
+              if (MAJOR_TOKEN_ADDR[decodedData.args.tokenA.toLowerCase()]) {
+                quoteTokenAmt = decodedData.args.amountAMin
+                aTokenAmt = decodedData.args.amountBMin
+              }else if (MAJOR_TOKEN_ADDR[decodedData.args.tokenB.toLowerCase()]) {
+                quoteTokenAmt = decodedData.args.amountBMin
+                aTokenAmt =decodedData.args.amountAMin
+              }else {
+                continue
+              }
+              // multiply by 100 before dividing bigNumber doesn't support decimals
+              rate = quoteTokenAmt.mul(100).div(aTokenAmt)
+              console.log('rate is', rate, this.$helper.weiBigNumberToFloatEther(rate), rate.toString())
+
+              if (this.addressesToWatch[tokenA.toLowerCase()] && this.addressesToWatch[tokenA.toLowerCase()] === this.notFoundStr ) {
+                this.addressesToWatch[tokenA.toLowerCase()] = `Found on ${new Date()} | rate is ${rate.toNumber() / 100}`
+                this.playAudio()
+
+              }else if (this.addressesToWatch[tokenB.toLowerCase()] && this.addressesToWatch[tokenB.toLowerCase()] === this.notFoundStr) {
+                this.addressesToWatch[tokenB.toLowerCase()] = `Found on ${new Date()} | rate is ${rate.toNumber() / 100}`
+                this.playAudio()
+              }
+            } else {
+              quoteTokenAmt = decodedData.args.amountETHMin
+              aTokenAmt = decodedData.args.amountTokenMin
+              let token = decodedData.args.token
+
+              // multiply by 100 before dividing bigNumber doesn't support decimals
+              rate = quoteTokenAmt.mul(100).div(aTokenAmt)
+              console.log('rate is', rate, this.$helper.weiBigNumberToFloatEther(rate), rate.toString())
+
+              if (this.addressesToWatch[token.toLowerCase()] && this.addressesToWatch[token.toLowerCase()] === this.notFoundStr ) {
+                this.addressesToWatch[token.toLowerCase()] = `Found on ${new Date()} | rate is ${rate.toNumber() / 100}`
+                this.playAudio()
+
+              }
+
+            }
+
+
+          }
+        }
       },
 
 
