@@ -1,10 +1,16 @@
 <template>
-  <q-page class="flex flex-center">
-    <div class="row content-center justify-center q-mb-xl full-width">
+  <q-page class="">
+    <div class="row justify-center q-mb-xl full-width">
       <div class="col-6">
         <q-select v-model="showView" :options="showViewOptions" label="Select View" class="full-width"/>
       </div>
     </div>
+
+    <div class="q-my-lg full-width" v-if="showView === 'Watch For Blockchain Transactions'">
+      <TransactionWatcher />
+    </div>
+
+
     <div class="q-my-lg" v-if="showView === 'watch pair creation'">
       <WatchForPairCreation />
     </div>
@@ -13,7 +19,7 @@
       <PairVolumeAnalysis />
     </div>
 
-    <div class="q-my-xl" v-if="showView === 'watch pair add liquidity'">
+    <div class="q-my-xl" v-if="showView === 'Watch AddLiquidity Transactions'">
       <AddLiquidityWatcher />
     </div>
 
@@ -41,6 +47,7 @@ import { openURL } from 'quasar'
 import WatchForPairCreation from "components/Blockchain/WatchForPairCreation";
 import PairVolumeAnalysis from "components/Blockchain/PairVolumeAnalysis";
 import AddLiquidityWatcher from "components/Blockchain/AddLiquidityWatcher";
+import TransactionWatcher from "components/Blockchain/TransactionWatcher";
 
 const ERC20ABI = [
   'function balanceOf(address owner) view returns (uint256 balance)',
@@ -51,7 +58,8 @@ const ERC20ABI = [
 
 export default defineComponent( {
     name: "BlockChainTools",
-  components: {AddLiquidityWatcher, PairVolumeAnalysis, WatchForPairCreation},
+  // eslint-disable-next-line
+  components: {TransactionWatcher, AddLiquidityWatcher, PairVolumeAnalysis, WatchForPairCreation},
   setup() {
       const getProvider = inject('$getProvider')
       const getSigner = inject('$getSigner')
@@ -84,7 +92,8 @@ export default defineComponent( {
         ],
         provider: null,
         showView: null,
-        showViewOptions: ['watch pair creation', 'watch pair volume', 'watch pair add liquidity']
+        // showViewOptions: ['Watch For Blockchain Transactions']
+        showViewOptions: ['watch pair creation', 'watch pair volume', 'Watch AddLiquidity Transactions', 'Watch For Blockchain Transactions']
       }
   },
   methods: {

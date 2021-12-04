@@ -1,19 +1,24 @@
 <template>
   <div class="row">
     <div class="full-width justify-center col-12 row q-mt-md">
+      <div class="row content-center justify-center q-mb-xl full-width">
+        <div class="col-6">
+          <q-select v-model="activityType" :options="activityTypeArray" label="What Are You Looking To Watch In A Transaction?" class="full-width"/>
+        </div>
+      </div>
+
+      <div v-if="activityType === 1">
+        <!--  Div to store watch function form    -->
+        <div class="col-12">
+          <q-input v-model="addressToAddOrDelete" label="Copy And Paste The ABI" />
+        </div>
+
+      </div>
+
+
       <div class="col-12 justify-center row">
         <q-btn label="listen for AddLiquidityTransactions" outline @click="listenAndFilterTransaction" />
       </div>
-      <div class="col-9 row">
-        <div class="col-12">
-          <q-select v-model="selectedBlockChain" :options="arrayOfBlockChains" label="Select Blockchain To Use" class="full-width"/>
-        </div>
-        <div class="col-12">
-          <q-select v-model="selectedBlockChain" :options="arrayOfBlockChains" label="Select DEX" class="full-width"/>
-        </div>
-      </div>
-
-
 
       <div class="col-12 justify-center row">
         <div class="col-12">
@@ -59,7 +64,7 @@
 import {defineComponent, inject, ref} from 'vue';
 import {ethers} from "boot/ethers";
 import { openURL } from 'quasar'
-import {ARRAY_OF_BLOCKCHAINS, MAJOR_TOKEN_ADDR, pPairV2ABI, pRouterV2ABI} from "src/constants";
+import {MAJOR_TOKEN_ADDR, pPairV2ABI, pRouterV2ABI} from "src/constants";
 
 const ERC20ABI = [
   'function balanceOf(address owner) view returns (uint256 balance)',
@@ -91,7 +96,7 @@ const PairABI = [
 // todo: currently for bsc and PCakeSwap, make it chain agnostic
 // https://docs.ethers.io/v5/getting-started/#getting-started--events
 export default defineComponent( {
-    name: "AddLiquidityWatcher",
+    name: "TransactionWatcher",
     setup() {
       const getProvider = inject('$getProvider')
       const getSigner = inject('$getSigner')
@@ -154,7 +159,7 @@ export default defineComponent( {
 
     data() {
       return {
-        selectedBlockChain: null,
+        activityType: null,
         arrayOfTxs: [],
         minAmtInEthers: 5,
         searchHistoric: true,
@@ -174,9 +179,17 @@ export default defineComponent( {
       }
     },
     computed: {
-
-      arrayOfBlockChains() {
-        return [...ARRAY_OF_BLOCKCHAINS]
+      activityTypeArray() {
+        return [
+          {
+            label: 'Watch For A Contract Function In Transaction (ie AddLiquidity function)',
+            value: 1
+          },
+          {
+            label: 'Watch For An Address In A Transaction',
+            value: 2
+          }
+        ]
       },
       addressToWatchArray() {
         return Object.keys(this.addressesToWatch)
