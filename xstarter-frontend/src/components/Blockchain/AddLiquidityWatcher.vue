@@ -8,7 +8,7 @@
             :options="arrayOfBlockChains"
             label="Select Blockchain To Use"
             class="full-width"
-            @update:model-value="selectedDex = null"
+            @update:model-value="resetAfterBlockChainChange"
           />
         </div>
         <div v-if="selectedBlockChain" class="col-12">
@@ -234,6 +234,11 @@ export default defineComponent( {
       openLink(url) {
         openURL(url)
       },
+      resetAfterBlockChainChange() {
+        const provider = this.getComputedLocalProvider()
+        provider.removeAllListeners()
+        this.selectedDex = null
+      },
       addAddress() {
         if (!this.addressToAddOrDelete) { return }
         if (!this.addressesToWatch[this.addressToAddOrDelete]) {
@@ -270,7 +275,7 @@ export default defineComponent( {
       async getTxRouterAddress2(arrayOfTx) {
 
         for (const tx of arrayOfTx) {
-          if (tx.to.toLowerCase() === this.selectedRouterAddress.toLowerCase()) {
+          if (tx.to && tx.to.toLowerCase() === this.selectedRouterAddress.toLowerCase()) {
             console.log(tx.to, this.selectedRouterAddress, this.selectedDex.label)
             const anInterface = this.getComputedRouterInterface()
             // parses transaaction
@@ -296,28 +301,30 @@ export default defineComponent( {
                 continue
               }
               // multiply by 100 before dividing bigNumber doesn't support decimals
-              rate = quoteTokenAmt.mul(100).div(aTokenAmt)
-              console.log('rate is', rate, this.$helper.weiBigNumberToFloatEther(rate), rate.toString())
+              // rate = quoteTokenAmt.mul(10000).div(aTokenAmt)
+              rate = this.$helper.weiBigNumberToFloatEther(quoteTokenAmt) / this.$helper.weiBigNumberToFloatEther(aTokenAmt)
+              console.log('rate is', rate)
 
               if (this.addressesToWatch[tokenA.toLowerCase()] && this.addressesToWatch[tokenA.toLowerCase()] === this.notFoundStr ) {
-                this.addressesToWatch[tokenA.toLowerCase()] = `Found on ${new Date()} | rate is ${rate.toNumber() / 100}`
+                this.addressesToWatch[tokenA.toLowerCase()] = `Found on ${new Date()} | rate is ${rate}`
                 this.playAudio()
 
               }else if (this.addressesToWatch[tokenB.toLowerCase()] && this.addressesToWatch[tokenB.toLowerCase()] === this.notFoundStr) {
-                this.addressesToWatch[tokenB.toLowerCase()] = `Found on ${new Date()} | rate is ${rate.toNumber() / 100}`
+                this.addressesToWatch[tokenB.toLowerCase()] = `Found on ${new Date()} | rate is ${rate}`
                 this.playAudio()
               }
             } else {
-              quoteTokenAmt = decodedData.args.amountETHMin
+              quoteTokenAmt = decodedData.args.amountETHMin || decodedData.args.amountAVAXMin
               aTokenAmt = decodedData.args.amountTokenMin
               let token = decodedData.args.token
 
               // multiply by 100 before dividing bigNumber doesn't support decimals
-              rate = quoteTokenAmt.mul(100).div(aTokenAmt)
-              console.log('rate is', rate, this.$helper.weiBigNumberToFloatEther(rate), rate.toString())
+              // rate = quoteTokenAmt.mul(10000).div(aTokenAmt)
+              rate = this.$helper.weiBigNumberToFloatEther(quoteTokenAmt) / this.$helper.weiBigNumberToFloatEther(aTokenAmt)
+              console.log('rate is', rate)
 
               if (this.addressesToWatch[token.toLowerCase()] && this.addressesToWatch[token.toLowerCase()] === this.notFoundStr ) {
-                this.addressesToWatch[token.toLowerCase()] = `Found on ${new Date()} | rate is ${rate.toNumber() / 100}`
+                this.addressesToWatch[token.toLowerCase()] = `Found on ${new Date()} | rate is ${rate}`
                 this.playAudio()
 
               }

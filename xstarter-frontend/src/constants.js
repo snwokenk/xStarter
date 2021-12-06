@@ -65,6 +65,7 @@ export const CHAIN_INFO_OBJ = {
     },
     rpcUrls: ['https://api.mycryptoapi.com/eth/'],
     blockExplorerUrls: ['https://etherscan.io'],
+    blockExplorerName: 'ETHERSCAN',
     iconUrls: [''], // Currently ignored.
   },
   5: {
@@ -89,6 +90,7 @@ export const CHAIN_INFO_OBJ = {
     },
     rpcUrls: ['https://bsc-dataseed.binance.org/'],
     blockExplorerUrls: ['https://bscscan.com'],
+    blockExplorerName: 'BSCSCAN',
     iconUrls: [''], // Currently ignored.
   },
   100: {
@@ -101,6 +103,7 @@ export const CHAIN_INFO_OBJ = {
     },
     rpcUrls: ['https://rpc.xdaichain.com/', 'https://xdai.poanetwork.dev/', 'https://dai.poa.network/'],
     blockExplorerUrls: ['https://blockscout.com/xdai/mainnet/'],
+    blockExplorerName: 'BLOCKSCOUT',
     iconUrls: [''], // Currently ignored.
   },
   137: {
@@ -113,6 +116,7 @@ export const CHAIN_INFO_OBJ = {
     },
     rpcUrls: ['https://polygon-rpc.com/'],
     blockExplorerUrls: ['https://polygonscan.com/'],
+    blockExplorerName: 'POLYGONSCAN',
     iconUrls: ['']
 
   },
@@ -126,6 +130,7 @@ export const CHAIN_INFO_OBJ = {
     },
     rpcUrls: ['https://api.avax.network/ext/bc/C/rpc'],
     blockExplorerUrls: ['https://snowtrace.io/'],
+    blockExplorerName: 'SNOWTRACE',
     iconUrls: ['']
 
   },
