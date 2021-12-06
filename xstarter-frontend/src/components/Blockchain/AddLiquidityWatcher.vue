@@ -18,6 +18,9 @@
       <div v-if="selectedDex" class="col-12 justify-center row q-mt-xl">
         <q-btn label="listen for AddLiquidity Transactions" outline @click="listenAndFilterTransaction" />
       </div>
+      <div v-if="selectedDex" class="col-12 justify-center row q-mt-xl">
+        <q-btn label="listen for AddLiquidity Transactions Using Websocket" outline @click="listenAndFilterTransactionWSS" />
+      </div>
 
 
       <div v-if="selectedDex" class="col-12 justify-center row">
@@ -34,7 +37,9 @@
 <!--        <q-btn class="col-6" label="listen and find pair by symbol" outline @click="listenAndFilterPairCreatedBySymbol" />-->
 <!--      </div>-->
     </div>
-    <div class="col-12" v-if="listeningDate"> Started Listening {{ listeningDate  }}</div>
+    <div class="col-12 text-center" v-if="listeningDate"> Started Listening {{ listeningDate  }}</div>
+    <div class="col-12 text-center" v-if="listeningDate">Current Block Number Is: {{ currentBlockNumber }}</div>
+    <div class="col-12 text-center" v-if="listeningDate">Current Block Number From WSS Is: {{ currentBlockNumberFromWSS }}</div>
     <div v-if="addressToWatchArray.length" class="q-gutter-y-lg col-12">
       <div class="text-center" v-for="addr in addressToWatchArray" :key="addr">
         Token Address : {{ addr }} <br />
@@ -178,6 +183,7 @@ export default defineComponent( {
         tokenWithIndex: {}, // maps index of token and volume
         tokenAndVolume: [],
         currentBlockNumber: 0,
+        currentBlockNumberFromWSS: 0,
         provider: null,
         listeningDate: null,
         addressToAddOrDelete: '',
@@ -202,6 +208,10 @@ export default defineComponent( {
         if (!this.selectedBlockChain) {return ''}
         return CHAIN_INFO_OBJ[this.selectedBlockChain.value].rpcUrls[0]
       },
+      selectedWebsocketEndpoint() {
+        if (!this.selectedBlockChain) {return ''}
+        return  CHAIN_INFO_OBJ[this.selectedBlockChain.value].wssUrls ?  CHAIN_INFO_OBJ[this.selectedBlockChain.value].wssUrls[0]: ''
+      },
       selectedRouterAddress() {
         if (!this.selectedDex) { return ''}
         return this.selectedDex.routerAddress
@@ -211,6 +221,18 @@ export default defineComponent( {
         const localProvider =  new ethers.providers.JsonRpcProvider(this.selectedJsonEndpoint);
         // needs to do like this to avoid some errors
         return  () => {
+
+
+          return localProvider
+        }
+
+      },
+      getComputedLocalWSSProvider() {
+        if (!this.selectedWebsocketEndpoint) {return null}
+        const localProvider =  new ethers.providers.WebSocketProvider(this.selectedWebsocketEndpoint);
+        // needs to do like this to avoid some errors
+        return  () => {
+
           return localProvider
         }
 
@@ -258,6 +280,18 @@ export default defineComponent( {
         provider.on("block", async (blockNumber) => {
           // console.log('block number', blockNumber)
           this.currentBlockNumber = blockNumber
+          const blockWithTx = await provider.getBlockWithTransactions(blockNumber)
+
+          this.getTxRouterAddress2(blockWithTx.transactions)
+        });
+        this.listeningDate = new Date()
+      },
+      async listenAndFilterTransactionWSS() {
+        // const provider =  new this.$ethers.providers.JsonRpcProvider('https://bsc-dataseed.binance.org/');
+        const provider = this.getComputedLocalWSSProvider()
+        provider.on("block", async (blockNumber) => {
+          // console.log('block number', blockNumber)
+          this.currentBlockNumberFromWSS = blockNumber
           const blockWithTx = await provider.getBlockWithTransactions(blockNumber)
 
           this.getTxRouterAddress2(blockWithTx.transactions)

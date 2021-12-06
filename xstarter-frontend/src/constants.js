@@ -89,6 +89,7 @@ export const CHAIN_INFO_OBJ = {
       decimals: 18,
     },
     rpcUrls: ['https://bsc-dataseed.binance.org/'],
+    wssUrls: ['wss://bsc-ws-node.nariox.org:443'],
     blockExplorerUrls: ['https://bscscan.com'],
     blockExplorerName: 'BSCSCAN',
     iconUrls: [''], // Currently ignored.
