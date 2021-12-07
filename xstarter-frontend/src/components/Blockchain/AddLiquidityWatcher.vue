@@ -216,13 +216,16 @@ export default defineComponent( {
         if (!this.selectedDex) { return ''}
         return this.selectedDex.routerAddress
       },
+      selectedBlockChainBlockTime() {
+        const bt = CHAIN_INFO_OBJ[this.selectedBlockChain.value].avgBlockTime
+        return bt && bt < 5000  ?  CHAIN_INFO_OBJ[this.selectedBlockChain.value].avgBlockTime: 5000
+      },
       getComputedLocalProvider() {
         if (!this.selectedJsonEndpoint) {return null}
         const localProvider =  new ethers.providers.JsonRpcProvider(this.selectedJsonEndpoint);
+        localProvider.pollingInterval = this.selectedBlockChainBlockTime / 2
         // needs to do like this to avoid some errors
         return  () => {
-
-
           return localProvider
         }
 
@@ -279,10 +282,12 @@ export default defineComponent( {
         const provider = this.getComputedLocalProvider()
         provider.on("block", async (blockNumber) => {
           // console.log('block number', blockNumber)
-          this.currentBlockNumber = blockNumber
-          const blockWithTx = await provider.getBlockWithTransactions(blockNumber)
-
-          this.getTxRouterAddress2(blockWithTx.transactions)
+          if (this.currentBlockNumber !== blockNumber) {
+            console.log('current | new', this.currentBlockNumber, blockNumber)
+            this.currentBlockNumber = blockNumber
+            const blockWithTx = await provider.getBlockWithTransactions(blockNumber)
+            this.getTxRouterAddress2(blockWithTx.transactions)
+          }
         });
         this.listeningDate = new Date()
       },
@@ -291,10 +296,13 @@ export default defineComponent( {
         const provider = this.getComputedLocalWSSProvider()
         provider.on("block", async (blockNumber) => {
           // console.log('block number', blockNumber)
-          this.currentBlockNumberFromWSS = blockNumber
-          const blockWithTx = await provider.getBlockWithTransactions(blockNumber)
+          if (this.currentBlockNumberFromWSS !== blockNumber) {
+            console.log('current | new in wss', this.currentBlockNumberFromWSS, blockNumber)
+            this.currentBlockNumberFromWSS = blockNumber
+            const blockWithTx = await provider.getBlockWithTransactions(blockNumber)
+            this.getTxRouterAddress2(blockWithTx.transactions)
+          }
 
-          this.getTxRouterAddress2(blockWithTx.transactions)
         });
         this.listeningDate = new Date()
       },

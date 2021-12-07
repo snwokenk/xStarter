@@ -58,6 +58,7 @@ export const CHAIN_INFO_OBJ = {
   1: {
     chainId: '0x1', // A 0x-prefixed hexadecimal string
     chainName: 'ETH',
+    avgBlockTime: 15000,
     nativeCurrency: {
       name: 'ETH',
       symbol: 'ETH', // 2-6 characters long
@@ -71,6 +72,7 @@ export const CHAIN_INFO_OBJ = {
   5: {
     chainId: '0x5', // A 0x-prefixed hexadecimal string
     chainName: 'ETH',
+    avgBlockTime: 15000,
     nativeCurrency: {
       name: 'ETH',
       symbol: 'ETH', // 2-6 characters long
@@ -83,6 +85,7 @@ export const CHAIN_INFO_OBJ = {
   56: {
     chainId: '0x38', // A 0x-prefixed hexadecimal string
     chainName: 'Binance Smart Chain Mainnet',
+    avgBlockTime: 3000,
     nativeCurrency: {
       name: 'BNB',
       symbol: 'BNB', // 2-6 characters long
@@ -97,6 +100,7 @@ export const CHAIN_INFO_OBJ = {
   100: {
     chainId: '0x64', // A 0x-prefixed hexadecimal string
     chainName: 'xDai',
+    avgBlockTime: 5000,
     nativeCurrency: {
       name: 'xDai',
       symbol: 'xDai', // 2-6 characters long
@@ -110,6 +114,7 @@ export const CHAIN_INFO_OBJ = {
   137: {
     chainId: '0x89',
     chainName: 'Polygon',
+    avgBlockTime: 2250,
     nativeCurrency: {
       name: 'MATIC',
       symbol: 'MATIC',
@@ -124,6 +129,7 @@ export const CHAIN_INFO_OBJ = {
   43114: {
     chainId: '0xA86A',
     chainName: 'Avalanche Network',
+    avgBlockTime: 1500,
     nativeCurrency: {
       name: 'AVAX',
       symbol: 'AVAX',
