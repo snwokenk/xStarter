@@ -16,7 +16,16 @@
     </div>
 
     <div v-if="form.selectedDex" class="q-px-xl">
-      <q-select v-model="form.selectedFunctions" multiple :options="availableFunctions" label="Select Function(s) To Listen For" class="full-width"/>
+      <q-select v-model="form.selectedFunctions" multiple :options="availableFunctions" label="Select Function(s) To Create Triggers" class="full-width"/>
+    </div>
+    <div v-if="form.selectedFunctions.length" class="q-px-xl row">
+      <div v-for="obj in form.selectedFunctions" class="col-12 row" :key="obj.label">
+        <FunctionConditionals :function-input-obj="obj" />
+<!--        <div v-for="obj2 in obj.value.inputs" class="col-12 row" :key="obj2.name">-->
+<!--          <FunctionConditionals  :function-input-obj="obj2"/>-->
+<!--        </div>-->
+
+      </div>
     </div>
 
 <!--    <div class="q-px-xl">-->
@@ -99,10 +108,12 @@
 <script>
 import {defineComponent} from "vue";
 import {ARRAY_OF_BLOCKCHAINS, BLOCKCHAIN_TO_DEX} from "src/constants";
+import FunctionConditionals from "components/BlockchainTrading/FunctionConditionals";
 
 export default defineComponent(  {
   name: "TriggerForm",
-  data() {
+    components: {FunctionConditionals},
+    data() {
     return {
       form: {
         blockchain: null,
@@ -143,6 +154,7 @@ export default defineComponent(  {
   watch: {
     'form.triggerType': function () {
       this.form.selectedDex = null
+      this.form.selectedFunctions = []
     },
     'form.selectedDex': function (val, oldVal) {
       if (!val || !val.routerABI) { return }
