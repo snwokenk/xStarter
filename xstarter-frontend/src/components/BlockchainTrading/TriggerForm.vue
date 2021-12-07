@@ -20,10 +20,9 @@
     </div>
     <div v-if="form.selectedFunctions.length" class="q-px-xl row">
       <div v-for="obj in form.selectedFunctions" class="col-12 row" :key="obj.label">
-        <FunctionConditionals :function-input-obj="obj" />
-<!--        <div v-for="obj2 in obj.value.inputs" class="col-12 row" :key="obj2.name">-->
-<!--          <FunctionConditionals  :function-input-obj="obj2"/>-->
-<!--        </div>-->
+<!--        <FunctionConditionals :function-input-obj="obj" />-->
+        <FunctionConditionals2 :function-input-obj="obj" />
+
 
       </div>
     </div>
@@ -108,11 +107,12 @@
 <script>
 import {defineComponent} from "vue";
 import {ARRAY_OF_BLOCKCHAINS, BLOCKCHAIN_TO_DEX} from "src/constants";
-import FunctionConditionals from "components/BlockchainTrading/FunctionConditionals";
+// import FunctionConditionals from "components/BlockchainTrading/FunctionConditionals";
+import FunctionConditionals2 from "components/BlockchainTrading/FunctionConditionals2";
 
 export default defineComponent(  {
   name: "TriggerForm",
-    components: {FunctionConditionals},
+    components: {FunctionConditionals2},
     data() {
     return {
       form: {
