@@ -13,7 +13,10 @@
     </div>
 
     <div class="row full-width justify-center q-my-xl">
-    <TriggerForm v-if="showTriggerForm"/>
+    <TriggerForm v-if="showTriggerForm" @saveTrigger="onSaveTrigger"/>
+    </div>
+    <div v-if="triggers" class="row full-width justify-center q-my-xl">
+      <ActionBox @startListening="onStartListening" />
     </div>
   </q-page>
 
@@ -22,6 +25,7 @@
 <script>
 import {defineComponent} from "vue";
 import TriggerForm from "components/BlockchainTrading/TriggerForm";
+import ActionBox from "components/BlockchainTrading/ActionBox";
 /*** this page will allow users to
  * 1, Start listening for transactions on a blockchain
  * 2, watch the blockchain for a type of transaction, and filter by address, native token amount
@@ -31,18 +35,26 @@ import TriggerForm from "components/BlockchainTrading/TriggerForm";
 
 export default defineComponent( {
   name: "BlockchainTrading",
-  components: {TriggerForm},
+  components: {ActionBox, TriggerForm},
   setup() {
     return {}
   },
   data() {
     return {
-      showTriggerForm: false
+      showTriggerForm: false,
+      triggers: null
     }
   },
   methods: {
     toggleForm() {
       this.showTriggerForm = !this.showTriggerForm
+    },
+    onSaveTrigger(value) {
+      this.triggers = value
+    },
+
+    onStartListening(actionValues) {
+      console.log('should start listening', actionValues, this.triggers)
     }
   }
 

@@ -1,7 +1,7 @@
 <template>
   <div class="row q-gutter-y-md">
     <div class="col-12 text-center text-bold text-h5">
-      Triggers For Function {{ functionInputObj.label }}
+      Create Trigger For Function {{ functionInputObj.label }}
     </div>
     <q-separator c />
     <div class="col-12">
@@ -37,31 +37,9 @@
       </div>
     </div>
 
-<!--    <div class="col-12 row q-gutter-x-md">-->
-<!--      <div class="col-12 col-lg-3">-->
-<!--        <q-select v-model="baseCond" :options="baseCondArray" label="Select AND/OR" class="full-width"/>-->
-<!--      </div>-->
-<!--      <div class="col-12 col-lg-3">-->
-<!--        <q-btn label="add" @click="() => addTo(baseCond)"/>-->
-<!--      </div>-->
-<!--    </div>-->
-<!--    <div v-for="obj in inputs" class="col-12 row q-mt-lg q-gutter-x-xs" :key="obj.name">-->
-<!--      <div class="col-12 col-lg-3 row justify-center content-center">-->
-<!--        <div>-->
-<!--          {{ obj.name}}-->
-<!--        </div>-->
-<!--      </div>-->
-<!--      <div class="col-12 col-lg-3">-->
-<!--        <q-select v-model="form[obj.name].conditional" :options="addrCondArray" label="Select Conditional" class="full-width"/>-->
-<!--      </div>-->
-<!--      <div class="col-12 col-lg-3">-->
-<!--        <q-input  v-model="form[obj.name].value" :placeholder="obj.type" />-->
-<!--      </div>-->
-<!--      <div class="col-12 col-lg-2">-->
-<!--        <q-btn label="add" @click="() => addTo(form[obj.name])" />-->
-<!--      </div>-->
-<!--    </div>-->
-
+    <div class="col-12 q-mt-sm">
+      <q-btn label="Save Function Triggers" @click="saveAllTriggers" outline />
+    </div>
   </div>
 
 </template>
@@ -199,10 +177,22 @@ export default defineComponent( {
     }
   },
   methods: {
+    saveAllTriggers() {
+      this.$emit('saveTrigger', { funcName: this.functionInputObj.label, triggers: this.triggerArray })
+      this.resetForm()
+    },
     addBase() {
       if (!this.baseCond) { return }
       this.triggerArray.push(this.baseCond)
       this.baseCond = null
+    },
+    resetForm() {
+      this.inputObj = null
+      this.inputConditional = null
+      this.inputText = ''
+      this.inputText2 = ''
+      this.baseCond = ''
+      this.triggerArray = []
     },
     addTo(){
       if (!this.inputObj) { return }
