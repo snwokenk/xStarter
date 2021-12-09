@@ -28,7 +28,9 @@ module.exports = configure(function (ctx) {
       'abiGenerator',
       'ipfs_utils',
       'gtm-plugin',
-      'indexDBFactory'
+      'indexDBFactory',
+      'triggerConditionals'
+
     ],
 
     // https://v2.quasar.dev/quasar-cli/quasar-conf-js#Property%3A-css

@@ -109,18 +109,22 @@ export default defineComponent( {
                   const decodedData = contractInterface[0].parseTransaction(tx)
                   const funcName = decodedData.name
                   if (funcName in contractInterface[1]) {
-                    console.log(key, ' funcName is ', funcName, ' tx ', tx )
+                    console.log(key, ' funcName is ', funcName, ' tx ', decodedData)
+                    const tmpTriggers = contractInterface[1][funcName]
+                    console.log(tmpTriggers)
+                    console.log(this.$triggerConditional.checkTxBoolean(decodedData, tmpTriggers))
+
                   }
                 }
 
               }
 
-            })()
+            })().then()
           }
         }
         this.blockChainProviders[key].getProvider().on("block", async (blockNumber) => {
           if (this.blockChainProviders[key].blockNumber !== blockNumber) {
-            console.log('current | new', this.this.blockChainProviders[key].blockNumber, blockNumber)
+            console.log('current | new', this.blockChainProviders[key].blockNumber, blockNumber)
             this.blockChainProviders[key].blockNumber = blockNumber
             const blockWithTx = await (this.blockChainProviders[key].getProvider()).getBlockWithTransactions(blockNumber)
             watchForTrigger(blockWithTx.transactions)
