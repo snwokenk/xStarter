@@ -85,18 +85,33 @@ export default defineComponent(  {
     saveFunctionTrigger(value) {
       console.log('value is', value)
       this.functionTriggersObj[value.funcName] = value.triggers
-      if (!this.blockchainToFunctionTriggers[this.form.blockchain]) {
+      const  selectedContract = this.form.selectedDex || this.form.selectedContract
+      const contractAddress = selectedContract.routerAddress || selectedContract.contractAddress
+      const contractABI = selectedContract.routerABI || selectedContract.contractABI
+      if (!this.blockchainToFunctionTriggers[this.form.blockchain.label]) {
         this.blockchainToFunctionTriggers[this.form.blockchain.label] = {
           details: this.form.blockchain,
-          selectedContract: this.form.selectedDex || this.form.selectedContract
+
+        }
+        this.blockchainToFunctionTriggers[this.form.blockchain.label][contractAddress] = {
+          contractABI
+        }
+
+      }else if (!this.blockchainToFunctionTriggers[this.form.blockchain.label][contractAddress]) {
+        this.blockchainToFunctionTriggers[this.form.blockchain.label][contractAddress] = {
+          contractABI
         }
       }
 
-      this.blockchainToFunctionTriggers[this.form.blockchain.label][value.funcName] = this.functionTriggersObj[value.funcName]
+      this.blockchainToFunctionTriggers[this.form.blockchain.label][contractAddress][value.funcName] = this.functionTriggersObj[value.funcName]
       this.$emit('saveTrigger', this.blockchainToFunctionTriggers)
     }
   },
   watch: {
+    'form.blockchain': function () {
+      this.form.triggerType = null
+      // this.form.selectedFunctions = []
+    },
     'form.triggerType': function () {
       this.form.selectedDex = null
       this.form.selectedFunctions = []

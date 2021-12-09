@@ -45,10 +45,13 @@ export default defineComponent( {
     return {
       showTriggerForm: false,
       blockChainTriggers: null,
+      // stores provider of each blockchain as a function, so to get provider for bina
+      // you do this.blockChainProviders[label of blockchain].getProvider() // this done because vue3 uses proxies
       blockChainProviders: {
 
       },
-      blockChainListeners: {
+      // stores anon functions which filter the triggers
+      blockChainTriggerFunctions: {
 
       }
     }
@@ -82,21 +85,51 @@ export default defineComponent( {
     },
     listenForBlockTransactions() {
       for (const key of Object.keys(this.blockChainProviders)) {
-        console.log('listening now', this.blockChainProviders[key].isListening)
         if (this.blockChainProviders[key].isListening) { continue }
         this.blockChainProviders[key].isListening = true
+
+        // create anon function which gets a list of all contract address and watches them with triggers
+        const watchForTrigger = async (arrayOfTx) => {
+          const contractInterfaces = []
+          for (const contractAddress of Object.keys(this.blockChainTriggers[key])) {
+            if (contractAddress === 'details') { continue }
+            const functNTrig = {...this.blockChainTriggers[key][contractAddress]}
+            delete functNTrig.contractABI
+            contractInterfaces.push([new ethers.utils.Interface(this.blockChainTriggers[key][contractAddress].contractABI), functNTrig, contractAddress ])
+
+          }
+          console.log('contract interfaces', contractInterfaces, key)
+          for (const contractInterface of contractInterfaces) {
+            // do this so it's not waiting
+            (async () => {
+              // ointerface is first element, second element
+              for (const tx of arrayOfTx) {
+                // todo: once tx is found with function check triggers
+                if (tx.to && tx.to.toLowerCase() === contractInterface[2].toLowerCase()) {
+                  const decodedData = contractInterface[0].parseTransaction(tx)
+                  const funcName = decodedData.name
+                  if (funcName in contractInterface[1]) {
+                    console.log(key, ' funcName is ', funcName, ' tx ', tx )
+                  }
+                }
+
+              }
+
+            })()
+          }
+        }
         this.blockChainProviders[key].getProvider().on("block", async (blockNumber) => {
-          // console.log('block number', blockNumber)
           if (this.blockChainProviders[key].blockNumber !== blockNumber) {
             console.log('current | new', this.currentBlockNumber, blockNumber)
             this.blockChainProviders[key].blockNumber = blockNumber
             const blockWithTx = await (this.blockChainProviders[key].getProvider()).getBlockWithTransactions(blockNumber)
-            console.log(key, blockWithTx)
+            watchForTrigger(blockWithTx.transactions)
             // this.getTxRouterAddress2(blockWithTx.transactions)
           }
         })
       }
     },
+// {"Binance Smart Chain":{"details":{"label":"Binance Smart Chain","value":56},"0x10ED43C718714eb63d5aA57B78B54704E256024E":{"addLiquidityETH":[{"name":"token","conditional":{"label":"equals to","value":"===","otherValue":"=="},"value":"0xc326622FcA914CA15fD44DD070232cE3cd358Dde","value2":""}]}}}
 
     onStartListening(actionValues) {
 
