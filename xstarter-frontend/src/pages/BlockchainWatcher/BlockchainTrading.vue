@@ -15,7 +15,7 @@
     <div class="row full-width justify-center q-my-xl">
     <TriggerForm v-if="showTriggerForm" @saveTrigger="onSaveTrigger"/>
     </div>
-    <div v-if="triggers" class="row full-width justify-center q-my-xl">
+    <div v-if="blockChainTriggers" class="row full-width justify-center q-my-xl">
       <ActionBox @startListening="onStartListening" />
     </div>
   </q-page>
@@ -26,6 +26,8 @@
 import {defineComponent} from "vue";
 import TriggerForm from "components/BlockchainTrading/TriggerForm";
 import ActionBox from "components/BlockchainTrading/ActionBox";
+import {CHAIN_INFO_OBJ} from "src/constants";
+import {ethers} from "boot/ethers";
 /*** this page will allow users to
  * 1, Start listening for transactions on a blockchain
  * 2, watch the blockchain for a type of transaction, and filter by address, native token amount
@@ -42,7 +44,13 @@ export default defineComponent( {
   data() {
     return {
       showTriggerForm: false,
-      triggers: null
+      blockChainTriggers: null,
+      blockChainProviders: {
+
+      },
+      blockChainListeners: {
+
+      }
     }
   },
   methods: {
@@ -50,11 +58,51 @@ export default defineComponent( {
       this.showTriggerForm = !this.showTriggerForm
     },
     onSaveTrigger(value) {
-      this.triggers = value
+      this.blockChainTriggers = value
+    },
+    populateBlockChainListeners() {
+      if (!this.blockChainTriggers) {return }
+      for (const key of Object.keys(this.blockChainTriggers)) {
+        if (this.blockChainProviders[key]) { continue }
+        const blockchainDetails = CHAIN_INFO_OBJ[this.blockChainTriggers[key].details.value]
+        const rpcUrl = blockchainDetails.rpcUrls[0]
+        const localProvider =  new ethers.providers.JsonRpcProvider(rpcUrl);
+
+        const bt = blockchainDetails.avgBlockTime
+        const blockChainTime = bt && bt < 5000  ?  blockchainDetails.avgBlockTime: 5000
+        localProvider.pollingInterval = blockChainTime / 2
+        this.blockChainProviders[key] = {
+          getProvider: () => {
+          return localProvider
+        },
+          isListening: false,
+          blockNumber: 0
+        }
+      }
+    },
+    listenForBlockTransactions() {
+      for (const key of Object.keys(this.blockChainProviders)) {
+        console.log('listening now', this.blockChainProviders[key].isListening)
+        if (this.blockChainProviders[key].isListening) { continue }
+        this.blockChainProviders[key].isListening = true
+        this.blockChainProviders[key].getProvider().on("block", async (blockNumber) => {
+          // console.log('block number', blockNumber)
+          if (this.blockChainProviders[key].blockNumber !== blockNumber) {
+            console.log('current | new', this.currentBlockNumber, blockNumber)
+            this.blockChainProviders[key].blockNumber = blockNumber
+            const blockWithTx = await (this.blockChainProviders[key].getProvider()).getBlockWithTransactions(blockNumber)
+            console.log(key, blockWithTx)
+            // this.getTxRouterAddress2(blockWithTx.transactions)
+          }
+        })
+      }
     },
 
     onStartListening(actionValues) {
-      console.log('should start listening', actionValues, this.triggers)
+
+      console.log('should start listening', actionValues, this.blockChainTriggers)
+      this.populateBlockChainListeners()
+      this.listenForBlockTransactions()
     }
   }
 

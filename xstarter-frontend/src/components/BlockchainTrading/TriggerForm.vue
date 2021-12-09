@@ -21,7 +21,7 @@
     <div v-if="form.selectedFunctions.length" class="q-px-xl row">
       <div v-for="obj in form.selectedFunctions" class="col-12 row" :key="obj.label">
 <!--        <FunctionConditionals :function-input-obj="obj" />-->
-        <FunctionConditionals2  :function-input-obj="obj" @saveTrigger="saveFunctionTrigger"/>
+        <FunctionConditionals2 :disable="Object.keys(functionTriggersObj).length" :function-input-obj="obj" @saveTrigger="saveFunctionTrigger"/>
       </div>
     </div>
   </q-form>
@@ -42,9 +42,13 @@ export default defineComponent(  {
         blockchain: null,
         triggerType: null,
         selectedDex: null,
+        selectedContract: null,
         selectedFunctions: []
       },
       functionTriggersObj: {
+
+      },
+      blockchainToFunctionTriggers: {
 
       },
       availableFunctions: []
@@ -81,7 +85,15 @@ export default defineComponent(  {
     saveFunctionTrigger(value) {
       console.log('value is', value)
       this.functionTriggersObj[value.funcName] = value.triggers
-      this.$emit('saveTrigger', this.functionTriggersObj)
+      if (!this.blockchainToFunctionTriggers[this.form.blockchain]) {
+        this.blockchainToFunctionTriggers[this.form.blockchain.label] = {
+          details: this.form.blockchain,
+          selectedContract: this.form.selectedDex || this.form.selectedContract
+        }
+      }
+
+      this.blockchainToFunctionTriggers[this.form.blockchain.label][value.funcName] = this.functionTriggersObj[value.funcName]
+      this.$emit('saveTrigger', this.blockchainToFunctionTriggers)
     }
   },
   watch: {
