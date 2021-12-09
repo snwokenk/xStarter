@@ -120,7 +120,7 @@ export default defineComponent( {
         }
         this.blockChainProviders[key].getProvider().on("block", async (blockNumber) => {
           if (this.blockChainProviders[key].blockNumber !== blockNumber) {
-            console.log('current | new', this.currentBlockNumber, blockNumber)
+            console.log('current | new', this.this.blockChainProviders[key].blockNumber, blockNumber)
             this.blockChainProviders[key].blockNumber = blockNumber
             const blockWithTx = await (this.blockChainProviders[key].getProvider()).getBlockWithTransactions(blockNumber)
             watchForTrigger(blockWithTx.transactions)
