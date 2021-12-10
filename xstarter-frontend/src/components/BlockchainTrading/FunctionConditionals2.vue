@@ -105,12 +105,18 @@ export default defineComponent( {
         {
           label: 'equals to',
           value: '===',
-          otherValue: '=='
+          otherValue: '==',
+          checkConditional: (mainVal, val2) => {
+            return mainVal === val2
+          }
         },
         {
           label: 'not equals to',
           value: '!==',
-          otherValue: '!='
+          otherValue: '!=',
+          checkConditional: (mainVal, val2) => {
+            return mainVal !== val2
+          }
         }
       ]
     },
@@ -118,24 +124,39 @@ export default defineComponent( {
       return [
         {
           label: 'greater than',
-          value: '>'
+          value: '>',
+          checkConditional: (mainVal, val2) => {
+            return mainVal > val2
+          }
         },
         {
           label: 'greater than or equals to',
-          value: '>='
+          value: '>=',
+          checkConditional: (mainVal, val2) => {
+            return mainVal >= val2
+          }
         },
         {
           label: 'less than',
-          value: '<'
+          value: '<',
+          checkConditional: (mainVal, val2) => {
+            return mainVal < val2
+          }
         },
         {
           label: 'less than or equals to',
-          value: '<='
+          value: '<=',
+          checkConditional: (mainVal, val2) => {
+            return mainVal <= val2
+          }
         },
         {
           label: 'between',
           value: '<>',
-          numberOfInputs: 2
+          numberOfInputs: 2,
+          checkConditional: (mainVal, val2, val3) => {
+            return mainVal > val2 && mainVal < val3
+          }
         },
         ...this.nonNumberCondArray
       ]
@@ -195,10 +216,11 @@ export default defineComponent( {
       this.triggerArray = []
     },
     addTo(){
-      if (!this.inputObj) { return }
+      if (!this.inputObj || !this.inputConditional || !this.inputText) { return }
       this.triggerArray.push(
         {
           name: this.inputObj.label,
+          type: this.inputObj.type,
           conditional: this.inputConditional,
           value: this.inputText,
           value2: this.inputText2

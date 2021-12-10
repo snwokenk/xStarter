@@ -270,6 +270,7 @@ export const xStarter_ILO_IPFS_CID = 'QmUEMTSMYwqXZZNGm4T6UVec9igJssgeKQpajJiCrT
 export const MAJOR_TOKEN_ADDR = {
   '0xe9e7cea3dedca5984780bafc599bd69add087d56': 'BUSD',
   '0x55d398326f99059ff775485246999027b3197955': 'BSC-USD',
+  '0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c': 'BTCB',
   '0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c': 'WBNB'
 
 }

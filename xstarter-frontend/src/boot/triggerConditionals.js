@@ -13,18 +13,28 @@ class TriggerConditional {
   }
   static checkTxBoolean(decodedData, conditionalArray) {
     const arrayOfBool = []
+    let txBoolean = false
     for (let i = 0; i < conditionalArray.length; i++) {
-      if (!conditionalArray[i].isBase) {
-        arrayOfBool.push(decodedData.args[conditionalArray[i].name] === conditionalArray[i].val)
-      }else if (conditionalArray[i].isBase) {
-        // if the previous bool was false and the next baseCond is an AND then this should return false
-        // cuz False && True === false
-        if (!arrayOfBool[i-1] && conditionalArray[i].value === '&&') {
-          return false
-        }else {}
+      const inputVal = conditionalArray[i].type === 'address' ?  decodedData.args[conditionalArray[i].name].toLowerCase() : decodedData.args[conditionalArray[i].name]
+      const condVal = conditionalArray[i].type === 'address' ? conditionalArray[i].value.toLowerCase() : conditionalArray[i].value
+      if (i !== 0) {
+        // if next in conditional is AND and txBoolean is false then return false
+        if (conditionalArray[i].isBase ) {
+          // if next in conditional is AND and txBoolean is false then return false
+          // since AND requires all to be
+          if (conditionalArray[i].value === '&&' && !txBoolean) {
+            return  false
+          }
+        }else {
+          // each array contains a conditional object which has a function that
+          txBoolean = conditionalArray[i].conditional.checkConditional(inputVal, condVal, conditionalArray[i].value2)
+        }
+
+      }else {
+        txBoolean = conditionalArray[i].conditional.checkConditional(inputVal, condVal, conditionalArray[i].value2)
       }
     }
-    return true
+    return txBoolean
   }
   checkTxBoolean(decodedData, conditionalArray) {
     return TriggerConditional.checkTxBoolean(decodedData, conditionalArray)
