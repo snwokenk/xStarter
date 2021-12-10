@@ -274,3 +274,14 @@ export const MAJOR_TOKEN_ADDR = {
   '0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c': 'WBNB'
 
 }
+export const  MAJOR_TOKEN_ADDR_ARRAY = [
+  {
+    label: 'BNB',
+    value: '0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c',
+    isNativeToken: true
+  },
+  {
+    label: 'BUSD',
+    value: '0xe9e7cea3dedca5984780bafc599bd69add087d56'
+  },
+]

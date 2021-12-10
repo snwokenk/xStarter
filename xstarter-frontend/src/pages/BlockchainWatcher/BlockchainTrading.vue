@@ -15,7 +15,8 @@
     <div class="row full-width justify-center q-my-xl">
     <TriggerForm v-if="showTriggerForm" @saveTrigger="onSaveTrigger"/>
     </div>
-    <div v-if="blockChainTriggers" class="row full-width justify-center q-my-xl">
+<!--    <div v-if="blockChainTriggers" class="row full-width justify-center q-my-xl">-->
+    <div  class="row full-width justify-center q-my-xl">
       <ActionBox @startListening="onStartListening" />
     </div>
   </q-page>
@@ -53,7 +54,8 @@ export default defineComponent( {
       // stores anon functions which filter the triggers
       blockChainTriggerFunctions: {
 
-      }
+      },
+      actionTypes: []
     }
   },
   methods: {
@@ -138,6 +140,7 @@ export default defineComponent( {
     onStartListening(actionValues) {
 
       console.log('should start listening', actionValues, this.blockChainTriggers)
+      this.actionTypes = actionValues
       this.populateBlockChainListeners()
       this.listenForBlockTransactions()
     }
