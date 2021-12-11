@@ -1,4 +1,4 @@
-const { ALCHEMYURL, ALCHEMYGOERLIURL, ANKR_XDAI_API_URL, XDAIURL2,  XDAIBLOCKSCOUTARCHIVE, mnemonicTest, privateKey } = require('./ignored_constants');
+const { ALCHEMYURL, ALCHEMYGOERLIURL, ANKR_XDAI_API_URL, XDAIURL2, BSCURL,  XDAIBLOCKSCOUTARCHIVE, mnemonicTest, privateKey } = require('./ignored_constants');
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
@@ -42,13 +42,13 @@ module.exports = {
   networks: {
     hardhat: {
       forking: {
-        url: XDAIBLOCKSCOUTARCHIVE,
+        url: BSCURL,
       },
-      blockGasLimit: 17000000,
+      blockGasLimit: 30000000,
       gasPrice: 1000000000,
       mining: {
         auto: false,
-        interval: 5000
+        interval: 3000
       },
       accounts: {
         mnemonic: mnemonicTest,
@@ -56,6 +56,22 @@ module.exports = {
       },
       timeout: 60000
     },
+    // hardhat: {
+    //   forking: {
+    //     url: XDAIBLOCKSCOUTARCHIVE,
+    //   },
+    //   blockGasLimit: 17000000,
+    //   gasPrice: 1000000000,
+    //   mining: {
+    //     auto: false,
+    //     interval: 5000
+    //   },
+    //   accounts: {
+    //     mnemonic: mnemonicTest,
+    //     accountsBalance: '10000000000000000000000000' // 1 million ethers for testing
+    //   },
+    //   timeout: 60000
+    // },
     spoa: {
       chainID: 77,
       url: 'https://sokol.poa.network',

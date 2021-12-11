@@ -27,20 +27,26 @@
         <div v-if="!orderForm.wallet && orderForm.jsonRPC" class="col-12 q-my-sm">
           <q-input v-model="priK" label="Enter Private Key Of A Wallet Address (Not mnenomic, this is stored only for this session)" />
         </div>
-        <div v-if="arrayOfAvailableDex" class="col-12 q-my-sm">
+        <div v-if="arrayOfAvailableDex && orderForm.getWallet" class="col-12 q-my-sm">
           <q-select v-model="orderForm.selectedDex" :options="arrayOfAvailableDex" label="Select DEX" class="full-width"/>
         </div>
         <div v-if="orderForm.selectedDex" class="col-12 q-my-sm">
           <q-select v-model="orderForm.selectedInputToken" :options="inputTokenOptions" label="Select Token You'll be Using To Buy" class="full-width" />
         </div>
-        <div v-if="orderForm.selectedInputToken" class="col-12 q-my-sm">
-          <q-input v-model="orderForm.amountOfInputCurrency" :label="`Amount of ${orderForm.selectedInputToken.label}` " />
-        </div>
+        <!--        <div v-if="orderForm.selectedDex" class="col-12 q-my-sm">-->
+        <!--          <q-checkbox v-model="actionTypes" val="notifySound" label="Notify Me With  An Alarm" />-->
+        <!--        </div>-->
 
         <div v-if="orderForm.selectedInputToken" class="col-12 q-my-sm">
+          <q-input v-model="amountOfInputCurrency" :label="`Amount of ${orderForm.selectedInputToken.label}` " />
+        </div>
+
+        <div v-if="orderForm.jsonRPC" class="col-12 q-my-sm">
           <q-input v-model="orderForm.outputTokenAddr" label="Address Of token wanted " />
         </div>
-
+        <div v-if="orderForm.useBUSD" class="col-12 q-my-sm">
+          <q-checkbox v-model="orderForm.useBUSD" label="Check if this pair's liquidity is mainly BUSD" />
+        </div>
       </div>
 
 
@@ -63,11 +69,14 @@ export default {
       actionTypes: [],
       priK: '',
       walletBalance: '',
+      amountOfInputCurrency: 0,
       orderForm: {
         jsonRPC:'',
         blockchain: null,
         selectedDex: null,
-        getWallet: false,
+        getWallet: null,
+        getDex: null,
+        getLocalProvider: null,
         amountOfInputCurrency: 0,  // amount of currency you're trying to swap ie 1 bnb, 100 busb,
         selectedInputToken: {
           label: 'BNB',
@@ -75,6 +84,8 @@ export default {
           isNativeToken: true
         },
         outputTokenAddr: '',
+        // this is the base currency of the pair ie some crypto might have a higher BUSD/outputTokenAddr liquidity than BNB
+        useBUSD: false,
         maxPriceInUSD: 0,
 
       }
@@ -84,6 +95,7 @@ export default {
     inputTokenOptions() {
       return [...MAJOR_TOKEN_ADDR_ARRAY]
     },
+
     arrayOfAvailableDex() {
       if (this.orderForm.blockchain) {
         return BLOCKCHAIN_TO_DEX[this.orderForm.blockchain.value]
@@ -98,6 +110,12 @@ export default {
     async getWalletBalance() {
       if (!this.orderForm.getWallet) { return}
       this.walletBalance = await this.orderForm.getWallet().getBalance()
+    },
+    async getQuote() {
+      if (!this.orderForm.getDex) { return null }
+      const bnbPath = [this.inputTokenOptions.find(obj => obj.isNativeToken), this.orderForm.outputTokenAddr]
+      this.orderForm.getDex().getAmountsOut(this.orderForm.amountOfInputCurrency, )
+
     }
   },
   watch:{
@@ -105,14 +123,35 @@ export default {
       if (!val || !this.orderForm.jsonRPC || this.orderForm.getWallet) { return }
       // const blockchainDetails = CHAIN_INFO_OBJ[this.orderForm.blockchain.value]
       const localProvider =  new ethers.providers.JsonRpcProvider(this.orderForm.jsonRPC);
+      this.orderForm.getLocalProvider = () => {
+        return localProvider
+      }
       // const bt = blockchainDetails.avgBlockTime
       // const blockChainTime = bt && bt < 5000  ?  blockchainDetails.avgBlockTime: 5000
       // localProvider.pollingInterval = blockChainTime / 2
-      const wallet = new this.$ethers.Wallet(val, localProvider)
+      const wallet = new this.$ethers.Wallet(val, this.orderForm.getLocalProvider())
       this.orderForm.getWallet = () => {
         return wallet
       }
       this.getWalletBalance()
+    },
+    'orderForm.selectedDex': function (val, oldVal) {
+      if (!val || !this.orderForm.getWallet || !this.orderForm.getLocalProvider) {return }
+
+      const dex = new this.$ethers.Contract(val.routerAddress, val.routerABI, this.orderForm.getLocalProvider())
+      this.orderForm.getDex = () => {
+        return dex
+      }
+    },
+    amountOfInputCurrency: function (val, oldVal) {
+      this.orderForm.amountOfInputCurrency = this.$ethers.utils.parseEther(val.toString())
+    },
+    'orderForm.outputTokenAddr': function (val, oldVal) {
+      if (!this.orderForm.amountOfInputCurrency) { return }
+    },
+    'orderForm.amountOfInputCurrency': function (val, oldVal) {
+      if (!this.orderForm.outputTokenAddr) { return }
+
     }
   }
 }
