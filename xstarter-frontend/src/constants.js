@@ -188,6 +188,8 @@ export const BLOCKCHAIN_TO_DEX = {
       WETH: '0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c',
       routerABI: pRouterV2ABI,
       factoryABI: pFactoryV2ABI
+      // "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c","0x10ED43C718714eb63d5aA57B78B54704E256024E", "0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73"
+      // "1000000000000000000","0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c","0xe9e7cea3dedca5984780bafc599bd69add087d56","0x0d0621ad4ec89da1cf0f371d6205229f04bcb378"
     }
   ],
   // Polygon

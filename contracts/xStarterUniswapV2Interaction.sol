@@ -265,7 +265,7 @@ contract xStarterUniswapV2Interaction is Ownable  {
             amounts = IRouter02(router).getAmountsOut(inTokenAmount, paths);
             quoteForIntoken = amounts[1];
         }else {
-            quoteForIntoken = 0;
+            quoteForIntoken = uint256(0);
         }
 
         // get quote for otherToken
@@ -278,15 +278,15 @@ contract xStarterUniswapV2Interaction is Ownable  {
             quoteForOtherToken = 0;
         }
 
-        // intoken (direct purchase is the best)
+        // intoken (direct purchase is the best) 
         if(quoteForIntoken >= quoteForOtherToken) {
-            route = new address[](1);
+            route = new address[](2);
             route[0] = inToken;
             route[1] = outToken;
             quote = quoteForIntoken;
         }else {
             // purchasing outToken by first purchasing the 3rd party token is best
-            route = new address[](2);
+            route = new address[](3);
             route[0] = inToken;
             route[1] = otherToken;
             route[2] = outToken;
