@@ -49,6 +49,10 @@
         </div>
       </div>
 
+      <div class="col-12 q-my-xl">
+
+      </div>
+
 
       <div class="col-12 q-mt-sm">
         <q-btn :disable="!actionTypes.length" label="Start Listening For Triggers" @click="this.$emit('startListening', actionTypes)" outline />
@@ -94,6 +98,11 @@ export default {
         useBUSD: false,
         maxPriceInUSD: 0,
 
+      },
+      preQuote: {
+        route:  null,
+        quote: 0,
+        USDEquivalent: 0
       }
     }
   },
@@ -159,8 +168,11 @@ export default {
       const xStarterInteract = new this.$ethers.Contract(xStarterInteractionAddr, xStarterInteractionABI, this.orderForm.getWallet())
       // todo: We assume that the native token is being used, and a representation of USD (ie BUSD on binance, USDT on ETHERS) is used as otherToken
       // todo: make it automatically sort if BUSD (or rep) is chosen as input
-      const response = await xStarterInteract.getBestQuote(this.orderForm.amountOfInputCurrency, this.orderForm.selectedInputToken.value, "0xe9e7cea3dedca5984780bafc599bd69add087d56", "0x0d0621ad4ec89da1cf0f371d6205229f04bcb378")
+      const response = await xStarterInteract.getBestQuoteUsingWETH(this.orderForm.amountOfInputCurrency, "0x0d0621ad4ec89da1cf0f371d6205229f04bcb378")
       console.log('response is', response)
+      this.preQuote.quote = response.quote
+      this.preQuote.route = response.route
+      this.preQuote.USDEquivalent = response.USDEquivAmount
 
     },
     'orderForm.amountOfInputCurrency': function (val, oldVal) {

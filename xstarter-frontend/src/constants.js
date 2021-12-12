@@ -9,13 +9,18 @@ export const LAUNCHPAD_ADDRESS = {
   100: '0xC8C501d934Ca36f044971c0453A71296e46EB6e3'
 }
 LAUNCHPAD_ADDRESS.default = LAUNCHPAD_ADDRESS[DEFAULT_CHAIN]
-export const xStarterInteractionAddr = '0xDBfd3f3Ad774474F817a3063f4387E10F55EaC62'
+export const xStarterInteractionAddr = '0xC0441b629f40526CAD6B3B23A568d488C7D6F508'
 export const xStarterInteractionABI = `[
 \t{
 \t\t"inputs": [
 \t\t\t{
 \t\t\t\t"internalType": "address",
 \t\t\t\t"name": "_WETH",
+\t\t\t\t"type": "address"
+\t\t\t},
+\t\t\t{
+\t\t\t\t"internalType": "address",
+\t\t\t\t"name": "_USD",
 \t\t\t\t"type": "address"
 \t\t\t},
 \t\t\t{
@@ -50,6 +55,19 @@ export const xStarterInteractionABI = `[
 \t\t],
 \t\t"name": "OwnershipTransferred",
 \t\t"type": "event"
+\t},
+\t{
+\t\t"inputs": [],
+\t\t"name": "USD",
+\t\t"outputs": [
+\t\t\t{
+\t\t\t\t"internalType": "address",
+\t\t\t\t"name": "",
+\t\t\t\t"type": "address"
+\t\t\t}
+\t\t],
+\t\t"stateMutability": "view",
+\t\t"type": "function"
 \t},
 \t{
 \t\t"inputs": [],
@@ -110,6 +128,40 @@ export const xStarterInteractionABI = `[
 \t\t\t{
 \t\t\t\t"internalType": "uint256",
 \t\t\t\t"name": "quote",
+\t\t\t\t"type": "uint256"
+\t\t\t}
+\t\t],
+\t\t"stateMutability": "view",
+\t\t"type": "function"
+\t},
+\t{
+\t\t"inputs": [
+\t\t\t{
+\t\t\t\t"internalType": "uint256",
+\t\t\t\t"name": "WETHAmount",
+\t\t\t\t"type": "uint256"
+\t\t\t},
+\t\t\t{
+\t\t\t\t"internalType": "address",
+\t\t\t\t"name": "outToken",
+\t\t\t\t"type": "address"
+\t\t\t}
+\t\t],
+\t\t"name": "getBestQuoteUsingWETH",
+\t\t"outputs": [
+\t\t\t{
+\t\t\t\t"internalType": "address[]",
+\t\t\t\t"name": "route",
+\t\t\t\t"type": "address[]"
+\t\t\t},
+\t\t\t{
+\t\t\t\t"internalType": "uint256",
+\t\t\t\t"name": "quote",
+\t\t\t\t"type": "uint256"
+\t\t\t},
+\t\t\t{
+\t\t\t\t"internalType": "uint256",
+\t\t\t\t"name": "USDEquivAmount",
 \t\t\t\t"type": "uint256"
 \t\t\t}
 \t\t],
