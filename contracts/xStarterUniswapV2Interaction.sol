@@ -228,11 +228,14 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract xStarterUniswapV2Interaction is Ownable  {
     // change these constants when deploying to other chains
     address public WETH;
+    address public USD;
     address public router;
     address public factory;
 
-    constructor(address _WETH, address _router, address _factory) {
+    constructor(address _WETH, address _USD, address _router, address _factory) {
+        // ensure that USD pair meant to represent USD has a pair with WETH and is liquid, for example on BSC the representation should be BUSD
         WETH = _WETH;
+        USD = _USD;
         router = _router;
         factory = _factory;
     }
@@ -291,6 +294,67 @@ contract xStarterUniswapV2Interaction is Ownable  {
             route[1] = otherToken;
             route[2] = outToken;
             quote = quoteForOtherToken;
+        }
+    }
+
+    // use this to get quote for crypto when using native token (BNB, ETH, AVAX, MATIC) etc
+    // this checks to see if a direct purchase or a purchase using a USD equivalent is better
+    // this also returns the USD equivalent of the WETHAmount, allowing for a easy calculations of desired token amount in $
+    function getBestQuoteUsingWETH(uint256 WETHAmount, address outToken) public view returns(address[] memory route, uint256 quote, uint256 USDEquivAmount) {
+        
+        address WETHPair = IFactory(factory).getPair(WETH, outToken);
+        address USDPair = IFactory(factory).getPair(USD, outToken);
+        require(WETHPair != address(0) || USDPair != address(0), "No Pairs" );
+        
+        // first get rate of WETH/WBNB/WAVAX etc to USD Token (BUSD, USDT) depending on chain
+        address[] memory paths = new address[](2);
+        paths[0] = WETH;
+        paths[1] = USD;
+        uint[] memory amounts;
+        //amounts[1] is WETH/USD rate, check to see if desired token has a USD pair before making function call
+        if(USDPair != address(0)) {
+            amounts = IRouter02(router).getAmountsOut(WETHAmount, paths);
+            USDEquivAmount = amounts[1];
+        }else {
+            USDEquivAmount = 0;
+        }
+
+
+        // get amount of desired token for WETH amount
+        paths[1] = outToken;
+        uint amountForWETH;
+
+        // if desired token has a WETH pair
+        if(WETHPair != address(0)) {
+            amounts = IRouter02(router).getAmountsOut(WETHAmount, paths);
+            amountForWETH = amounts[1];
+        }else {
+            amountForWETH = uint256(0);
+        }
+
+        // get amount of desired token for USD amount equivalent
+        paths[0] = USD;
+        uint amountForUSD;
+        if(USDPair != address(0)) {
+            amounts = IRouter02(router).getAmountsOut(USDEquivAmount, paths);
+            amountForUSD = amounts[1];
+        }else {
+            amountForUSD = 0;
+        }
+
+        // intoken (direct purchase is the best) 
+        if(amountForWETH >= amountForUSD) {
+            route = new address[](2);
+            route[0] = WETH;
+            route[1] = outToken;
+            quote = amountForWETH;
+        }else {
+            // purchasing outToken by first purchasing the 3rd party token is best
+            route = new address[](3);
+            route[0] = WETH;
+            route[1] = USD;
+            route[2] = outToken;
+            quote = amountForUSD;
         }
     }
 }

@@ -42,7 +42,7 @@
         </div>
 
         <div v-if="orderForm.jsonRPC" class="col-12 q-my-sm">
-          <q-input v-model="orderForm.outputTokenAddr" label="Address Of token wanted " />
+          <q-input v-model="orderForm.outputTokenAddr" label="Address Of token wanted" />
         </div>
         <div v-if="orderForm.useBUSD" class="col-12 q-my-sm">
           <q-checkbox v-model="orderForm.useBUSD" label="Check if this pair's liquidity is mainly BUSD" />
@@ -59,7 +59,13 @@
 </template>
 
 <script>
-import {ARRAY_OF_BLOCKCHAINS, BLOCKCHAIN_TO_DEX, CHAIN_INFO_OBJ, MAJOR_TOKEN_ADDR_ARRAY} from "src/constants";
+import {
+  ARRAY_OF_BLOCKCHAINS,
+  BLOCKCHAIN_TO_DEX,
+  CHAIN_INFO_OBJ,
+  MAJOR_TOKEN_ADDR_ARRAY,
+  xStarterInteractionABI, xStarterInteractionAddr
+} from "src/constants";
 import {ethers} from "boot/ethers";
 
 export default {
@@ -144,13 +150,22 @@ export default {
       }
     },
     amountOfInputCurrency: function (val, oldVal) {
+      console.log('val is', val, typeof val)
+      if (!val) { return }
       this.orderForm.amountOfInputCurrency = this.$ethers.utils.parseEther(val.toString())
     },
-    'orderForm.outputTokenAddr': function (val, oldVal) {
-      if (!this.orderForm.amountOfInputCurrency) { return }
+    'orderForm.outputTokenAddr': async function (val, oldVal) {
+      if (!this.orderForm.amountOfInputCurrency || !val) { return }
+      const xStarterInteract = new this.$ethers.Contract(xStarterInteractionAddr, xStarterInteractionABI, this.orderForm.getWallet())
+      // todo: We assume that the native token is being used, and a representation of USD (ie BUSD on binance, USDT on ETHERS) is used as otherToken
+      // todo: make it automatically sort if BUSD (or rep) is chosen as input
+      const response = await xStarterInteract.getBestQuote(this.orderForm.amountOfInputCurrency, this.orderForm.selectedInputToken.value, "0xe9e7cea3dedca5984780bafc599bd69add087d56", "0x0d0621ad4ec89da1cf0f371d6205229f04bcb378")
+      console.log('response is', response)
+
     },
     'orderForm.amountOfInputCurrency': function (val, oldVal) {
       if (!this.orderForm.outputTokenAddr) { return }
+
 
     }
   }
