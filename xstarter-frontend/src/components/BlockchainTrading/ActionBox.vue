@@ -49,12 +49,12 @@
         </div>
       </div>
 
-      <div v-if="preQuote.route" class="col-12 row q-my-xl">
+      <div v-if="preQuote.route && preQuote.quote" class="col-12 row q-my-xl">
         <div class="col-12">
           Swapping: {{ amountOfInputCurrency }} {{ orderForm.selectedInputToken.label}}
         </div>
         <div class="col-12">
-          USD Equivalent: {{ parseFloat($ethers.utils.formatUnits(preQuote.USDEquivalent, 18)).toFixed() }}
+          USD Equivalent: {{ parseFloat($ethers.utils.formatUnits(preQuote.USDEquivalent, 18)).toFixed(4) }}
         </div>
 
         <div class="col-12">
@@ -64,6 +64,12 @@
         <div class="col-12">
           {{ parseFloat($ethers.utils.formatUnits(preQuote.quote, 18)).toFixed(4) }} {{ preQuote.desiredTokenSymbol }} ({{ preQuote.desiredTokenName }})
         </div>
+        <div class="col-12">
+          price In BNB :  {{ priceInBNB }} <br />
+          price In USD: {{ priceInUSD }}
+        </div>
+
+
 
       </div>
 
@@ -125,6 +131,22 @@ export default {
     }
   },
   computed: {
+    priceInBNB() {
+      if (!this.preQuote.quote || !this.orderForm.amountOfInputCurrency) { return 0}
+
+      const bnbAmt = parseFloat(this.$ethers.utils.formatUnits(this.orderForm.amountOfInputCurrency, 18))
+      const tokenAmt = parseFloat(this.$ethers.utils.formatUnits(this.preQuote.quote, 18))
+
+      return (bnbAmt/tokenAmt).toFixed(18)
+    },
+    priceInUSD() {
+      if (!this.preQuote.quote || !this.orderForm.amountOfInputCurrency) { return 0}
+
+      const usdAmt =  parseFloat(this.$ethers.utils.formatUnits(this.preQuote.USDEquivalent, 18))
+      const tokenAmt = parseFloat(this.$ethers.utils.formatUnits(this.preQuote.quote, 18))
+
+      return (usdAmt/tokenAmt).toFixed(18)
+    },
     inputTokenOptions() {
       return [...MAJOR_TOKEN_ADDR_ARRAY]
     },
