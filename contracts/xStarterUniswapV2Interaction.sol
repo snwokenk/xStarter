@@ -236,10 +236,14 @@ struct TokenInfo {
 import "@openzeppelin/contracts/access/Ownable.sol";
 contract xStarterUniswapV2Interaction is Ownable  {
     // change these constants when deploying to other chains
-    address public WETH;
-    address public USD;
+
     address public router;
     address public factory;
+    address public WETH;
+    address public USD;
+        // if using other blockchain might be different. ETH's USDT uses 6 decimals, BUSD uses 18. initially deploying fo BUSD
+    // todo: create a way to dynamically 
+    uint8 public USDDecimal = 18;
 
     constructor(address _WETH, address _USD, address _router, address _factory) {
         // ensure that USD pair meant to represent USD has a pair with WETH and is liquid, for example on BSC the representation should be BUSD
@@ -378,6 +382,19 @@ contract xStarterUniswapV2Interaction is Ownable  {
         if(addressToFindBalance != address(0)) {
             outTokenInfo.addrBalance = IERC20(outToken).balanceOf(addressToFindBalance);
         }
+    }
+
+    // minOutTokens could be considered used as slippage or as a price point
+    // for example, imagine a token is about to be added to a DEX at a rate of $0.10 
+    function swapETHForTokensUsingDataFromBlockchain(address outToken, uint minOutTokens) public payable returns(address[] memory route, uint256 quote, uint minQuote, uint[] memory amounts) {
+        uint256 USDEquivAmount;
+        (route, quote, USDEquivAmount) = getBestQuoteUsingWETH(msg.value, outToken);
+        minQuote = (quote * 9950) / 10000; // 0.5% slippage
+        require(minQuote >= minOutTokens, "Tokens to receive less than minimum");
+        amounts = IRouter02(router).swapExactETHForTokens{value:msg.value}(minQuote, route, msg.sender, block.timestamp + 7);
+        // actualAmount = amounts[amounts.length - 1];
+
+
     }
 
 }
