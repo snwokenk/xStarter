@@ -9,7 +9,7 @@ export const LAUNCHPAD_ADDRESS = {
   100: '0xC8C501d934Ca36f044971c0453A71296e46EB6e3'
 }
 LAUNCHPAD_ADDRESS.default = LAUNCHPAD_ADDRESS[DEFAULT_CHAIN]
-export const xStarterInteractionAddr = '0xC0441b629f40526CAD6B3B23A568d488C7D6F508'
+export const xStarterInteractionAddr = '0xa589f93a0222dCeD140c000D321351A406E407d2'
 export const xStarterInteractionABI = `[
 \t{
 \t\t"inputs": [
@@ -128,6 +128,72 @@ export const xStarterInteractionABI = `[
 \t\t\t{
 \t\t\t\t"internalType": "uint256",
 \t\t\t\t"name": "quote",
+\t\t\t\t"type": "uint256"
+\t\t\t}
+\t\t],
+\t\t"stateMutability": "view",
+\t\t"type": "function"
+\t},
+\t{
+\t\t"inputs": [
+\t\t\t{
+\t\t\t\t"internalType": "uint256",
+\t\t\t\t"name": "WETHAmount",
+\t\t\t\t"type": "uint256"
+\t\t\t},
+\t\t\t{
+\t\t\t\t"internalType": "address",
+\t\t\t\t"name": "outToken",
+\t\t\t\t"type": "address"
+\t\t\t},
+\t\t\t{
+\t\t\t\t"internalType": "address",
+\t\t\t\t"name": "addressToFindBalance",
+\t\t\t\t"type": "address"
+\t\t\t}
+\t\t],
+\t\t"name": "getBestQuoteAndSymbolUsingWETH",
+\t\t"outputs": [
+\t\t\t{
+\t\t\t\t"internalType": "address[]",
+\t\t\t\t"name": "route",
+\t\t\t\t"type": "address[]"
+\t\t\t},
+\t\t\t{
+\t\t\t\t"components": [
+\t\t\t\t\t{
+\t\t\t\t\t\t"internalType": "string",
+\t\t\t\t\t\t"name": "name",
+\t\t\t\t\t\t"type": "string"
+\t\t\t\t\t},
+\t\t\t\t\t{
+\t\t\t\t\t\t"internalType": "string",
+\t\t\t\t\t\t"name": "symbol",
+\t\t\t\t\t\t"type": "string"
+\t\t\t\t\t},
+\t\t\t\t\t{
+\t\t\t\t\t\t"internalType": "uint8",
+\t\t\t\t\t\t"name": "decimals",
+\t\t\t\t\t\t"type": "uint8"
+\t\t\t\t\t},
+\t\t\t\t\t{
+\t\t\t\t\t\t"internalType": "uint256",
+\t\t\t\t\t\t"name": "addrBalance",
+\t\t\t\t\t\t"type": "uint256"
+\t\t\t\t\t}
+\t\t\t\t],
+\t\t\t\t"internalType": "struct TokenInfo",
+\t\t\t\t"name": "outTokenInfo",
+\t\t\t\t"type": "tuple"
+\t\t\t},
+\t\t\t{
+\t\t\t\t"internalType": "uint256",
+\t\t\t\t"name": "quote",
+\t\t\t\t"type": "uint256"
+\t\t\t},
+\t\t\t{
+\t\t\t\t"internalType": "uint256",
+\t\t\t\t"name": "USDEquivAmount",
 \t\t\t\t"type": "uint256"
 \t\t\t}
 \t\t],

@@ -224,6 +224,15 @@ interface IFactory {
     function INIT_CODE_PAIR_HASH() external view returns (bytes32);
 }
 
+
+struct TokenInfo {
+    string name;
+    string symbol;
+    uint8 decimals;
+    uint addrBalance;
+    
+}
+
 import "@openzeppelin/contracts/access/Ownable.sol";
 contract xStarterUniswapV2Interaction is Ownable  {
     // change these constants when deploying to other chains
@@ -356,5 +365,19 @@ contract xStarterUniswapV2Interaction is Ownable  {
             route[2] = outToken;
             quote = amountForUSD;
         }
+    
+    
+    
     }
+
+    function getBestQuoteAndSymbolUsingWETH(uint256 WETHAmount, address outToken, address addressToFindBalance) public view returns(address[] memory route, TokenInfo memory outTokenInfo, uint256 quote, uint256 USDEquivAmount) {
+        (route, quote, USDEquivAmount) = getBestQuoteUsingWETH(WETHAmount, outToken);
+        outTokenInfo.name = IERC20(outToken).name();
+        outTokenInfo.symbol = IERC20(outToken).symbol();
+        outTokenInfo.decimals = IERC20(outToken).decimals();
+        if(addressToFindBalance != address(0)) {
+            outTokenInfo.addrBalance = IERC20(outToken).balanceOf(addressToFindBalance);
+        }
+    }
+
 }

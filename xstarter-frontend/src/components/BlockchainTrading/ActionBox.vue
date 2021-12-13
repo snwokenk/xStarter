@@ -38,7 +38,7 @@
         <!--        </div>-->
 
         <div v-if="orderForm.selectedInputToken" class="col-12 q-my-sm">
-          <q-input v-model="amountOfInputCurrency" :label="`Amount of ${orderForm.selectedInputToken.label}` " />
+          <q-input v-model="amountOfInputCurrency" :label="`Amount of ${orderForm.selectedInputToken.label} ${preQuote.USDEquivalent ? $ethers.utils.formatUnits(preQuote.USDEquivalent, 18) : ''}` " />
         </div>
 
         <div v-if="orderForm.jsonRPC" class="col-12 q-my-sm">
@@ -49,7 +49,21 @@
         </div>
       </div>
 
-      <div class="col-12 q-my-xl">
+      <div v-if="preQuote.route" class="col-12 row q-my-xl">
+        <div class="col-12">
+          Swapping: {{ amountOfInputCurrency }} {{ orderForm.selectedInputToken.label}}
+        </div>
+        <div class="col-12">
+          USD Equivalent: {{ parseFloat($ethers.utils.formatUnits(preQuote.USDEquivalent, 18)).toFixed() }}
+        </div>
+
+        <div class="col-12">
+          FOR
+        </div>
+
+        <div class="col-12">
+          {{ parseFloat($ethers.utils.formatUnits(preQuote.quote, 18)).toFixed(4) }} {{ preQuote.desiredTokenSymbol }} ({{ preQuote.desiredTokenName }})
+        </div>
 
       </div>
 
@@ -102,7 +116,11 @@ export default {
       preQuote: {
         route:  null,
         quote: 0,
-        USDEquivalent: 0
+        USDEquivalent: 0,
+        desiredTokenSymbol: '',
+        desiredTokenName: '',
+        desiredTokenDecimals: 0,
+        currentBal: 0
       }
     }
   },
@@ -131,6 +149,22 @@ export default {
       const bnbPath = [this.inputTokenOptions.find(obj => obj.isNativeToken), this.orderForm.outputTokenAddr]
       this.orderForm.getDex().getAmountsOut(this.orderForm.amountOfInputCurrency, )
 
+    },
+
+    async getQuoteWithSymbol() {
+      if (!this.orderForm.amountOfInputCurrency || !this.orderForm.outputTokenAddr) { return }
+      const xStarterInteract = new this.$ethers.Contract(xStarterInteractionAddr, xStarterInteractionABI, this.orderForm.getWallet())
+      // todo: We assume that the native token is being used, and a representation of USD (ie BUSD on binance, USDT on ETHERS) is used as otherToken
+      // todo: make it automatically sort if BUSD (or rep) is chosen as input
+      const response = await xStarterInteract.getBestQuoteAndSymbolUsingWETH(this.orderForm.amountOfInputCurrency, "0x0d0621ad4ec89da1cf0f371d6205229f04bcb378", this.orderForm.getWallet().address)
+      // console.log('response is', response)
+      this.preQuote.quote = response.quote
+      this.preQuote.route = response.route
+      this.preQuote.USDEquivalent = response.USDEquivAmount
+      this.preQuote.desiredTokenSymbol = response.outTokenInfo.symbol
+      this.preQuote.desiredTokenName = response.outTokenInfo.name
+      this.preQuote.desiredTokenDecimals = response.outTokenInfo.decimals
+      this.preQuote.currentBal = response.outTokenInfo.addrBalance
     }
   },
   watch:{
@@ -162,18 +196,10 @@ export default {
       console.log('val is', val, typeof val)
       if (!val) { return }
       this.orderForm.amountOfInputCurrency = this.$ethers.utils.parseEther(val.toString())
+      this.getQuoteWithSymbol()
     },
     'orderForm.outputTokenAddr': async function (val, oldVal) {
-      if (!this.orderForm.amountOfInputCurrency || !val) { return }
-      const xStarterInteract = new this.$ethers.Contract(xStarterInteractionAddr, xStarterInteractionABI, this.orderForm.getWallet())
-      // todo: We assume that the native token is being used, and a representation of USD (ie BUSD on binance, USDT on ETHERS) is used as otherToken
-      // todo: make it automatically sort if BUSD (or rep) is chosen as input
-      const response = await xStarterInteract.getBestQuoteUsingWETH(this.orderForm.amountOfInputCurrency, "0x0d0621ad4ec89da1cf0f371d6205229f04bcb378")
-      console.log('response is', response)
-      this.preQuote.quote = response.quote
-      this.preQuote.route = response.route
-      this.preQuote.USDEquivalent = response.USDEquivAmount
-
+      await this.getQuoteWithSymbol()
     },
     'orderForm.amountOfInputCurrency': function (val, oldVal) {
       if (!this.orderForm.outputTokenAddr) { return }
