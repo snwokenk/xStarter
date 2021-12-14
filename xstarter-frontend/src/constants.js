@@ -9,7 +9,7 @@ export const LAUNCHPAD_ADDRESS = {
   100: '0xC8C501d934Ca36f044971c0453A71296e46EB6e3'
 }
 LAUNCHPAD_ADDRESS.default = LAUNCHPAD_ADDRESS[DEFAULT_CHAIN]
-export const xStarterInteractionAddr = '0x7ACF4B85496a164421bB19F63E615128595FEa62'
+export const xStarterInteractionAddr = '0x97B72ebA3Ad0B3Fe48257e633b8f7860d44f9390'
 export const xStarterInteractionABI = `[
 \t{
 \t\t"inputs": [
@@ -64,6 +64,19 @@ export const xStarterInteractionABI = `[
 \t\t\t\t"internalType": "address",
 \t\t\t\t"name": "",
 \t\t\t\t"type": "address"
+\t\t\t}
+\t\t],
+\t\t"stateMutability": "view",
+\t\t"type": "function"
+\t},
+\t{
+\t\t"inputs": [],
+\t\t"name": "USDDecimal",
+\t\t"outputs": [
+\t\t\t{
+\t\t\t\t"internalType": "uint8",
+\t\t\t\t"name": "",
+\t\t\t\t"type": "uint8"
 \t\t\t}
 \t\t],
 \t\t"stateMutability": "view",
@@ -203,6 +216,35 @@ export const xStarterInteractionABI = `[
 \t{
 \t\t"inputs": [
 \t\t\t{
+\t\t\t\t"internalType": "address",
+\t\t\t\t"name": "inToken",
+\t\t\t\t"type": "address"
+\t\t\t},
+\t\t\t{
+\t\t\t\t"internalType": "uint256",
+\t\t\t\t"name": "tokenAmount",
+\t\t\t\t"type": "uint256"
+\t\t\t}
+\t\t],
+\t\t"name": "getBestQuoteUsingTokenToWETH",
+\t\t"outputs": [
+\t\t\t{
+\t\t\t\t"internalType": "address[]",
+\t\t\t\t"name": "route",
+\t\t\t\t"type": "address[]"
+\t\t\t},
+\t\t\t{
+\t\t\t\t"internalType": "uint256",
+\t\t\t\t"name": "quote",
+\t\t\t\t"type": "uint256"
+\t\t\t}
+\t\t],
+\t\t"stateMutability": "view",
+\t\t"type": "function"
+\t},
+\t{
+\t\t"inputs": [
+\t\t\t{
 \t\t\t\t"internalType": "uint256",
 \t\t\t\t"name": "WETHAmount",
 \t\t\t\t"type": "uint256"
@@ -265,6 +307,79 @@ export const xStarterInteractionABI = `[
 \t\t\t}
 \t\t],
 \t\t"stateMutability": "view",
+\t\t"type": "function"
+\t},
+\t{
+\t\t"inputs": [
+\t\t\t{
+\t\t\t\t"internalType": "address",
+\t\t\t\t"name": "outToken",
+\t\t\t\t"type": "address"
+\t\t\t},
+\t\t\t{
+\t\t\t\t"internalType": "uint256",
+\t\t\t\t"name": "minOutTokens",
+\t\t\t\t"type": "uint256"
+\t\t\t}
+\t\t],
+\t\t"name": "swapETHForTokensUsingDataFromBlockchain",
+\t\t"outputs": [
+\t\t\t{
+\t\t\t\t"internalType": "address[]",
+\t\t\t\t"name": "route",
+\t\t\t\t"type": "address[]"
+\t\t\t},
+\t\t\t{
+\t\t\t\t"internalType": "uint256",
+\t\t\t\t"name": "quote",
+\t\t\t\t"type": "uint256"
+\t\t\t},
+\t\t\t{
+\t\t\t\t"internalType": "uint256",
+\t\t\t\t"name": "minQuote",
+\t\t\t\t"type": "uint256"
+\t\t\t}
+\t\t],
+\t\t"stateMutability": "payable",
+\t\t"type": "function"
+\t},
+\t{
+\t\t"inputs": [
+\t\t\t{
+\t\t\t\t"internalType": "address",
+\t\t\t\t"name": "tokenAddr",
+\t\t\t\t"type": "address"
+\t\t\t},
+\t\t\t{
+\t\t\t\t"internalType": "uint8",
+\t\t\t\t"name": "percentage",
+\t\t\t\t"type": "uint8"
+\t\t\t},
+\t\t\t{
+\t\t\t\t"internalType": "uint256",
+\t\t\t\t"name": "minETHAmt",
+\t\t\t\t"type": "uint256"
+\t\t\t}
+\t\t],
+\t\t"name": "swapPercentOfApprovedBalance",
+\t\t"outputs": [
+\t\t\t{
+\t\t\t\t"internalType": "address[]",
+\t\t\t\t"name": "route",
+\t\t\t\t"type": "address[]"
+\t\t\t},
+\t\t\t{
+\t\t\t\t"internalType": "uint256",
+\t\t\t\t"name": "quote",
+\t\t\t\t"type": "uint256"
+\t\t\t},
+\t\t\t{
+\t\t\t\t"internalType": "uint256",
+\t\t\t\t"name": "minQuote",
+\t\t\t\t"type": "uint256"
+\t\t\t}
+\t\t],
+\t\t"stateMutability": "nonpayable",
 \t\t"type": "function"
 \t},
 \t{

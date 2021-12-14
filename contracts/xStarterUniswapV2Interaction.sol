@@ -338,7 +338,7 @@ contract xStarterUniswapV2Interaction is Ownable  {
         uint amountForWETH;
 
         // if desired token has a WETH pair
-        if(WETHPair != address(0)) {
+        if(WETHPair != address(0) && IPair(WETHPair).totalSupply() > 0) {
             amounts = IRouter02(router).getAmountsOut(WETHAmount, paths);
             amountForWETH = amounts[1];
         }else {
@@ -348,7 +348,7 @@ contract xStarterUniswapV2Interaction is Ownable  {
         // get amount of desired token for USD amount equivalent
         paths[0] = USD;
         uint amountForUSD;
-        if(USDPair != address(0)) {
+        if(USDPair != address(0) && IPair(USDPair).totalSupply() > 0) {
             amounts = IRouter02(router).getAmountsOut(USDEquivAmount, paths);
             amountForUSD = amounts[1];
         }else {

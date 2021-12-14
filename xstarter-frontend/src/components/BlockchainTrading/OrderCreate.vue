@@ -72,7 +72,7 @@
           <q-input v-model="orderForm.maxPriceInUSD" label="Max price in USD Per Token(leave at 0 to ignore)" />
         </div>
         <div class="col-12 q-mt-sm">
-          <q-btn :disable="!actionTypes.length" label="Try to Execute Once" @click="this.$emit('startListening', actionTypes)" outline />
+          <q-btn label="Try to Execute Once" @click="executeDexOrder" outline />
         </div>
         <div class="col-12 q-mt-sm">
           <q-btn :disable="!actionTypes.length" label="Try Until Sucessfull" @click="this.$emit('startListening', actionTypes)" outline />
@@ -181,11 +181,28 @@ export default {
 
     },
 
+    async executeDexOrder() {
+      if (!this.orderForm.outputTokenAddr) { return }
+      const overrides = {
+        value: this.orderForm.amountOfInputCurrency,
+        gasPrice: this.$ethers.utils.parseUnits('10', 'gwei')
+      }
+      const xStarterInteract = new this.$ethers.Contract(xStarterInteractionAddr, xStarterInteractionABI, this.orderForm.getWallet())
+      const response = await xStarterInteract.swapETHForTokensUsingDataFromBlockchain(
+        this.orderForm.outputTokenAddr,
+        this.orderForm.minimumTokensWeiBasedOnPrice,
+        overrides // overrides must be last
+
+      )
+      console.log("response is", response)
+
+    },
     async getQuoteWithSymbol() {
       if (!this.orderForm.amountOfInputCurrency || !this.orderForm.outputTokenAddr) { return }
       const xStarterInteract = new this.$ethers.Contract(xStarterInteractionAddr, xStarterInteractionABI, this.orderForm.getWallet())
       // todo: We assume that the native token is being used, and a representation of USD (ie BUSD on binance, USDT on ETHERS) is used as otherToken
       // todo: make it automatically sort if BUSD (or rep) is chosen as input
+      console.log('eth amount', this.orderForm.amountOfInputCurrency, this.orderForm.amountOfInputCurrency.toString())
       const response = await xStarterInteract.getBestQuoteAndSymbolUsingWETH(this.orderForm.amountOfInputCurrency, this.orderForm.outputTokenAddr, this.orderForm.getWallet().address)
       // console.log('response is', response)
       this.preQuote.quote = response.quote
