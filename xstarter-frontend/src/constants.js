@@ -9,7 +9,7 @@ export const LAUNCHPAD_ADDRESS = {
   100: '0xC8C501d934Ca36f044971c0453A71296e46EB6e3'
 }
 LAUNCHPAD_ADDRESS.default = LAUNCHPAD_ADDRESS[DEFAULT_CHAIN]
-export const xStarterInteractionAddr = '0xa589f93a0222dCeD140c000D321351A406E407d2'
+export const xStarterInteractionAddr = '0x7ACF4B85496a164421bB19F63E615128595FEa62'
 export const xStarterInteractionABI = `[
 \t{
 \t\t"inputs": [

@@ -4,15 +4,12 @@
     style="min-height: 200px;"
   >
     <div class="text-center text-bold">
-      What Action(s) Should Happen On A Trigger
+      Create Order <br />
+      ***This uses an xStarter deployed contract to route your traders***
+      *** It does a precheck and reduces the possibility of tx being reverted while your gas is spent.
+      *** also allows you to add a large slippage without been sniped
     </div>
     <div class="row q-px-xl">
-      <div class="col-6 col-lg-4">
-        <q-checkbox v-model="actionTypes" val="notifySound" label="Notify Me With  An Alarm" />
-      </div>
-      <div class="col-6 col-lg-4">
-        <q-checkbox v-model="actionTypes" val="swapToken" label="Swap Token And Set Max Price" />
-      </div>
       <div class="row col-12 q-pa-sm">
         <div v-if="orderForm.getWallet" class="col-12">
           {{ orderForm.getWallet ? orderForm.getWallet().address: '' }} - {{ walletBalance ? $helper.weiBigNumberToFloatEther(walletBalance).toString() : '' }}
@@ -71,15 +68,19 @@
       </div>
 
       <div class="row" v-if="preQuote.route">
-        <div class="col-12 q-my-sm">
-          <q-input v-model="orderForm.outputTokenAddr" label="Max price in USD Per Token" />
+        <div class="col-lg-9 col-12  q-my-sm">
+          <q-input v-model="orderForm.maxPriceInUSD" label="Max price in USD Per Token(leave at 0 to ignore)" />
+        </div>
+        <div class="col-12 q-mt-sm">
+          <q-btn :disable="!actionTypes.length" label="Try to Execute Once" @click="this.$emit('startListening', actionTypes)" outline />
+        </div>
+        <div class="col-12 q-mt-sm">
+          <q-btn :disable="!actionTypes.length" label="Try Until Sucessfull" @click="this.$emit('startListening', actionTypes)" outline />
         </div>
       </div>
 
 
-      <div class="col-12 q-mt-sm">
-        <q-btn :disable="!actionTypes.length" label="Start Listening For Triggers" @click="this.$emit('startListening', actionTypes)" outline />
-      </div>
+
 
     </div>
   </div>
@@ -96,7 +97,7 @@ import {
 import {ethers} from "boot/ethers";
 
 export default {
-  name: "ActionBox",
+  name: "OrderCreate",
   data() {
     return {
       actionTypes: [],
@@ -119,7 +120,11 @@ export default {
         outputTokenAddr: '',
         // this is the base currency of the pair ie some crypto might have a higher BUSD/outputTokenAddr liquidity than BNB
         useBUSD: false,
+        // this is actual order details
         maxPriceInUSD: 0,
+        minimumTokensBasedOnPrice: 0,
+        minimumTokensWeiBasedOnPrice: ethers.BigNumber.from(0),
+        retryAmount: 0
 
       },
       preQuote: {
@@ -190,6 +195,14 @@ export default {
       this.preQuote.desiredTokenName = response.outTokenInfo.name
       this.preQuote.desiredTokenDecimals = response.outTokenInfo.decimals
       this.preQuote.currentBal = response.outTokenInfo.addrBalance
+
+      this.calculateMinTokens()
+    },
+    calculateMinTokens() {
+      if (!this.orderForm.maxPriceInUSD || !parseFloat(this.orderForm.maxPriceInUSD) || !this.preQuote.USDEquivalent) { return }
+
+      this.orderForm.minimumTokensBasedOnPrice = parseFloat(this.$ethers.utils.formatUnits(this.preQuote.USDEquivalent, 18)) / parseFloat(this.orderForm.maxPriceInUSD)
+      this.orderForm.minimumTokensWeiBasedOnPrice = this.$ethers.utils.parseUnits(this.orderForm.minimumTokensBasedOnPrice.toString(), this.preQuote.desiredTokenDecimals)
     }
   },
   watch:{
@@ -228,7 +241,10 @@ export default {
     },
     'orderForm.amountOfInputCurrency': function (val, oldVal) {
       if (!this.orderForm.outputTokenAddr) { return }
+    },
 
+    'orderForm.maxPriceInUSD': function (val, oldVal) {
+      this.calculateMinTokens()
 
     }
   }

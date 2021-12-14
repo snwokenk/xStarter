@@ -14,6 +14,7 @@ const routes = [
       { path: 'nft/gallery/:chainId/:contractAddress', name: 'nft_gallery', component: () => import('pages/NFTGallery.vue') },
       { path: 'tools', name: 'tools', component: () => import('pages/BlockchainWatcher/BlockChainTools.vue') },
       { path: 'blockchain', name: 'blockchain', component: () => import('pages/BlockchainWatcher/BlockchainTrading.vue')},
+      { path: 'order-manage', name: 'order_manage', component: () => import('pages/BlockchainWatcher/DexConditionalAndPeriodic.vue')},
       { path: 'trading_tools', name: 'trading_tools', component: () => import('pages/BlockchainWatcher/TradingTools.vue') }
     ]
   },

@@ -51,7 +51,7 @@
 
       <div v-if="preQuote.route && preQuote.quote" class="col-12 row q-my-xl">
         <div class="col-12">
-          Swapping: {{ amountOfInputCurrency }} {{ orderForm.selectedInputToken.label}}
+          {{ amountOfInputCurrency }} {{ orderForm.selectedInputToken.label}}
         </div>
         <div class="col-12">
           USD Equivalent: {{ parseFloat($ethers.utils.formatUnits(preQuote.USDEquivalent, 18)).toFixed(4) }}
@@ -68,9 +68,12 @@
           price In BNB :  {{ priceInBNB }} <br />
           price In USD: {{ priceInUSD }}
         </div>
+      </div>
 
-
-
+      <div class="row" v-if="preQuote.route">
+        <div class="col-12 q-my-sm">
+          <q-input v-model="orderForm.outputTokenAddr" label="Max price in USD Per Token" />
+        </div>
       </div>
 
 
@@ -178,7 +181,7 @@ export default {
       const xStarterInteract = new this.$ethers.Contract(xStarterInteractionAddr, xStarterInteractionABI, this.orderForm.getWallet())
       // todo: We assume that the native token is being used, and a representation of USD (ie BUSD on binance, USDT on ETHERS) is used as otherToken
       // todo: make it automatically sort if BUSD (or rep) is chosen as input
-      const response = await xStarterInteract.getBestQuoteAndSymbolUsingWETH(this.orderForm.amountOfInputCurrency, "0x0d0621ad4ec89da1cf0f371d6205229f04bcb378", this.orderForm.getWallet().address)
+      const response = await xStarterInteract.getBestQuoteAndSymbolUsingWETH(this.orderForm.amountOfInputCurrency, this.orderForm.outputTokenAddr, this.orderForm.getWallet().address)
       // console.log('response is', response)
       this.preQuote.quote = response.quote
       this.preQuote.route = response.route
