@@ -1,4 +1,4 @@
-const { ALCHEMYURL, ALCHEMYGOERLIURL, ANKR_XDAI_API_URL, XDAIURL2, BSCURL,  XDAIBLOCKSCOUTARCHIVE, mnemonicTest, privateKey } = require('./ignored_constants');
+const { ALCHEMYURL, ALCHEMYGOERLIURL, MoralisBSCArchive,  XDAIURL, ANKR_XDAI_API_URL, XDAIURL2, BSCURL, NodeRealBSCURL,  XDAIBLOCKSCOUTARCHIVE, mnemonicTest, privateKey } = require('./ignored_constants');
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
@@ -42,7 +42,7 @@ module.exports = {
   networks: {
     hardhat: {
       forking: {
-        url: BSCURL,
+        url: MoralisBSCArchive
       },
       blockGasLimit: 30000000,
       gasPrice: 1000000000,

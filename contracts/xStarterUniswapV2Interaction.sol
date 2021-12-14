@@ -342,7 +342,7 @@ contract xStarterUniswapV2Interaction is Ownable  {
             amounts = IRouter02(router).getAmountsOut(WETHAmount, paths);
             amountForWETH = amounts[1];
         }else {
-            amountForWETH = uint256(0);
+            amountForWETH = 0;
         }
 
         // get amount of desired token for USD amount equivalent
@@ -373,6 +373,59 @@ contract xStarterUniswapV2Interaction is Ownable  {
     
     
     }
+    function getBestQuoteUsingTokenToWETH(address inToken, uint256 tokenAmount) public view returns(address[] memory route, uint256 quote) {
+        
+        address WETHPair = IFactory(factory).getPair(WETH, inToken);
+        address USDPair = IFactory(factory).getPair(USD, inToken);
+        require(WETHPair != address(0) || USDPair != address(0), "No Pairs" );
+
+        
+        // first get rate of Token to WETH/WBNB/WAVAX route
+        address[] memory paths = new address[](2);
+        paths[0] = inToken;
+        paths[1] = WETH;
+        uint[] memory amounts;
+        uint tokenToETHAmt;
+        //amounts[1] is WETH/USD rate, check to see if desired token has a USD pair before making function call
+        if(WETHPair != address(0)) {
+            amounts = IRouter02(router).getAmountsOut(tokenAmount, paths);
+            tokenToETHAmt = amounts[1];
+        }else {
+            tokenToETHAmt = 0;
+        }
+
+        // then get rate of Token to USD pair to WBNB
+        paths = new address[](3);
+        paths[0] = inToken;
+        paths[1] = USD;
+        paths[2] = WETH;
+        uint tokenToUSDToETHAmt;
+        // if desired token has a WETH pair
+        if(USDPair != address(0)) {
+            amounts = IRouter02(router).getAmountsOut(tokenAmount, paths);
+            tokenToUSDToETHAmt = amounts[2];
+        }else {
+            tokenToUSDToETHAmt = 0;
+        }
+
+        // intoken (direct purchase is the best) 
+        if(tokenToETHAmt >= tokenToUSDToETHAmt) {
+            route = new address[](2);
+            route[0] = inToken;
+            route[1] = WETH;
+            quote = tokenToETHAmt;
+        }else {
+            // purchasing outToken by first purchasing the 3rd party token is best
+            route = new address[](3);
+            route[0] = inToken;
+            route[1] = USD;
+            route[2] = WETH;
+            quote = tokenToUSDToETHAmt;
+        }
+    
+    
+    
+    }
 
     function getBestQuoteAndSymbolUsingWETH(uint256 WETHAmount, address outToken, address addressToFindBalance) public view returns(address[] memory route, TokenInfo memory outTokenInfo, uint256 quote, uint256 USDEquivAmount) {
         (route, quote, USDEquivAmount) = getBestQuoteUsingWETH(WETHAmount, outToken);
@@ -386,13 +439,41 @@ contract xStarterUniswapV2Interaction is Ownable  {
 
     // minOutTokens could be considered used as slippage or as a price point
     // for example, imagine a token is about to be added to a DEX at a rate of $0.10 
-    function swapETHForTokensUsingDataFromBlockchain(address outToken, uint minOutTokens) public payable returns(address[] memory route, uint256 quote, uint minQuote, uint[] memory amounts) {
-        uint256 USDEquivAmount;
-        (route, quote, USDEquivAmount) = getBestQuoteUsingWETH(msg.value, outToken);
+    function swapETHForTokensUsingDataFromBlockchain(address outToken, uint minOutTokens) public payable returns(address[] memory route, uint256 quote, uint minQuote) {
+        // uint256 USDEquivAmount;
+        (route, quote, ) = getBestQuoteUsingWETH(msg.value, outToken);
         minQuote = (quote * 9950) / 10000; // 0.5% slippage
         require(minQuote >= minOutTokens, "Tokens to receive less than minimum");
-        amounts = IRouter02(router).swapExactETHForTokens{value:msg.value}(minQuote, route, msg.sender, block.timestamp + 7);
+        IRouter02(router).swapExactETHForTokensSupportingFeeOnTransferTokens{value:msg.value}(minQuote, route, msg.sender, block.timestamp + 7);
         // actualAmount = amounts[amounts.length - 1];
+
+
+    }
+
+    // before calling this make sure to approve tokens on this address (not the dex)
+    // this will sell the percentage of all approved tokens, so if you have 500 approved tokens and percentage is 50, it will swap  250 tokens
+    function swapPercentOfApprovedBalance(address tokenAddr, uint8 percentage, uint minETHAmt) public returns (address[] memory route, uint256 quote, uint minQuote) {
+        require(percentage >= 1 && percentage <= 100, "percentage must be between 1 and 100 inclusively");
+
+        // verify approval greater than zero
+        uint approvalAmt = IERC20(tokenAddr).allowance(msg.sender, address(this));
+        uint sellingAmt = (approvalAmt * percentage)/ 100;
+        require(sellingAmt > 0, "not enough to sell, check approved amounts");
+        uint senderBalance = IERC20(tokenAddr).balanceOf(msg.sender);
+        require(senderBalance >= sellingAmt, "Not enough tokens to swap");
+
+        // check current rate
+        (route, quote) = getBestQuoteUsingTokenToWETH(tokenAddr, sellingAmt);
+        minQuote = (quote * 9800) / 10000; // 0.5% slippage
+        require(minQuote >= minETHAmt, "ETH to receive less than minimum");
+
+        // send token to address
+        IERC20(tokenAddr).transferFrom(msg.sender, address(this), sellingAmt);
+        // approve router
+        IERC20(tokenAddr).approve(router, sellingAmt);
+        IRouter02(router).swapExactTokensForETHSupportingFeeOnTransferTokens(sellingAmt, minQuote, route, msg.sender, block.timestamp + 7);
+
+
 
 
     }
