@@ -75,7 +75,7 @@
           <q-btn label="Try to Execute Once" @click="executeDexOrder" outline />
         </div>
         <div class="col-12 q-mt-sm">
-          <q-btn :disable="!actionTypes.length" label="Try Until Sucessfull" @click="this.$emit('startListening', actionTypes)" outline />
+          <q-btn  label="Try Until Sucessfull" @click="executeBuyTillSuccessFul" outline />
         </div>
       </div>
 
@@ -182,7 +182,7 @@ export default {
     },
 
     async executeDexOrder() {
-      if (!this.orderForm.outputTokenAddr) { return }
+      if (!this.orderForm.outputTokenAddr) { return null }
       const overrides = {
         value: this.orderForm.amountOfInputCurrency,
         gasPrice: this.$ethers.utils.parseUnits('10', 'gwei')
@@ -195,6 +195,22 @@ export default {
 
       )
       console.log("response is", response)
+      return response
+
+    },
+
+    async executeBuyTillSuccessFul() {
+      // // first try to execute order
+      // const response = await this.executeDexOrder()
+      // // if response is not null then order was executed
+      // if (response) { return response }
+      const orderInst = new this.$order_manaage.BuyOrderCreate(this.orderForm, this.preQuote, this.$ethers, CHAIN_INFO_OBJ[this.orderForm.blockchain.value].avgBlockTime)
+      orderInst.executeUntilSuccess()
+      this.$emit('saveOrder', {name: 'sellOrders', orderInst})
+
+
+
+
 
     },
     async getQuoteWithSymbol() {

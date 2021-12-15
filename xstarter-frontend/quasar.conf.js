@@ -29,7 +29,8 @@ module.exports = configure(function (ctx) {
       'ipfs_utils',
       'gtm-plugin',
       'indexDBFactory',
-      'triggerConditionals'
+      'triggerConditionals',
+      'order-manage'
 
     ],
 

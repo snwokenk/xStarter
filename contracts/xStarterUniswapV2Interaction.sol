@@ -387,7 +387,7 @@ contract xStarterUniswapV2Interaction is Ownable  {
         uint[] memory amounts;
         uint tokenToETHAmt;
         //amounts[1] is WETH/USD rate, check to see if desired token has a USD pair before making function call
-        if(WETHPair != address(0)) {
+        if(WETHPair != address(0) && IPair(WETHPair).totalSupply() > 0) {
             amounts = IRouter02(router).getAmountsOut(tokenAmount, paths);
             tokenToETHAmt = amounts[1];
         }else {
@@ -401,7 +401,7 @@ contract xStarterUniswapV2Interaction is Ownable  {
         paths[2] = WETH;
         uint tokenToUSDToETHAmt;
         // if desired token has a WETH pair
-        if(USDPair != address(0)) {
+        if(USDPair != address(0) && IPair(USDPair).totalSupply() > 0) {
             amounts = IRouter02(router).getAmountsOut(tokenAmount, paths);
             tokenToUSDToETHAmt = amounts[2];
         }else {
@@ -465,6 +465,33 @@ contract xStarterUniswapV2Interaction is Ownable  {
         // check current rate
         (route, quote) = getBestQuoteUsingTokenToWETH(tokenAddr, sellingAmt);
         minQuote = (quote * 9800) / 10000; // 0.5% slippage
+        require(minQuote >= minETHAmt, "ETH to receive less than minimum");
+
+        // send token to address
+        IERC20(tokenAddr).transferFrom(msg.sender, address(this), sellingAmt);
+        // approve router
+        IERC20(tokenAddr).approve(router, sellingAmt);
+        IRouter02(router).swapExactTokensForETHSupportingFeeOnTransferTokens(sellingAmt, minQuote, route, msg.sender, block.timestamp + 7);
+
+    }
+
+    // before calling this make sure to approve tokens on this address (not the dex)
+    // this will sell the percentage of all approved tokens, so if you have 500 approved tokens and percentage is 50, it will swap  250 tokens
+    function swapPercentOfApprovedBalanceWithSlippage(address tokenAddr, uint8 percentage, uint minETHAmt, uint slippage) public returns (address[] memory route, uint256 quote, uint minQuote) {
+        require(percentage >= 1 && percentage <= 100, "percentage must be between 1 and 100 inclusively");
+        require(slippage >= 1 && slippage < 100, "percentage must be between 1 and 100 inclusively");
+
+        // verify approval greater than zero
+        uint approvalAmt = IERC20(tokenAddr).allowance(msg.sender, address(this));
+        uint sellingAmt = (approvalAmt * percentage)/ 100;
+        require(sellingAmt > 0, "not enough to sell, check approved amounts");
+        uint senderBalance = IERC20(tokenAddr).balanceOf(msg.sender);
+        require(senderBalance >= sellingAmt, "Not enough tokens to swap");
+
+        // check current rate
+        uint slippageAdj = 10000 - (slippage * 100);
+        (route, quote) = getBestQuoteUsingTokenToWETH(tokenAddr, sellingAmt);
+        minQuote = (quote * slippageAdj) / 10000; // 0.5% slippage
         require(minQuote >= minETHAmt, "ETH to receive less than minimum");
 
         // send token to address
