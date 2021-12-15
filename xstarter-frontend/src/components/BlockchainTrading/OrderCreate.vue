@@ -87,6 +87,7 @@
 </template>
 
 <script>
+// todo: create sell order, currently only buy order
 import {
   ARRAY_OF_BLOCKCHAINS,
   BLOCKCHAIN_TO_DEX,
@@ -206,7 +207,7 @@ export default {
       // if (response) { return response }
       const orderInst = new this.$order_manaage.BuyOrderCreate(this.orderForm, this.preQuote, this.$ethers, CHAIN_INFO_OBJ[this.orderForm.blockchain.value].avgBlockTime)
       orderInst.executeUntilSuccess()
-      this.$emit('saveOrder', {name: 'sellOrders', orderInst})
+      this.$emit('saveOrder', {name: 'buyOrders', orderInst})
 
 
 

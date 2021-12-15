@@ -1,6 +1,7 @@
 import { boot } from 'quasar/wrappers'
 import {xStarterInteractionABI, xStarterInteractionAddr} from "src/constants";
 
+// todo: on polling orders, have a way to notify
 class BaseOrderCreate {
   constructor(orderForm, preQuote, ethers, intervalsInSeconds) {
     this.orderForm = orderForm
@@ -8,13 +9,32 @@ class BaseOrderCreate {
     this.$ethers = ethers
     this.intervalsInSeconds = intervalsInSeconds
     this.timeoutObj = null
+    this.orderType = ''
+    this.isSuccess = false
+    this.isCancelled = false
   }
 
+  get orderInfo() {
+    return {
+      tokenAddress: this.orderForm.outputTokenAddr,
+      chain: this.orderForm.blockchain.label,
+      chainId: this.orderForm.blockchain.value,
+      dex: this.orderForm.selectedDex.label,
+      walletAddress: this.orderForm.getWallet().address,
+      orderType: this.orderType,
+      WETH_Amount: this.$ethers.utils.formatEther(this.orderForm.amountOfInputCurrency),
+      tokenAmount: this.orderForm.minimumTokensWeiBasedOnPrice.toString()
+
+    }
+  }
   updateOrderForm(orderForm) {
     this.orderForm = orderForm
   }
   updatePreQuote(preQuote) {
     this.preQuote = preQuote
+  }
+  cancel() {
+    this.isCancelled = true
   }
 
 }
@@ -22,9 +42,10 @@ class BaseOrderCreate {
 class BuyOrderCreate extends BaseOrderCreate {
   constructor(orderForm, preQuote, ethers, intervalsInSeconds) {
     super(orderForm, preQuote, ethers, intervalsInSeconds);
+    this.orderType = 'buy'
   }
   async executeOrder() {
-    console.log('this is', this, typeof this);
+    if (this.isCancelled || this.isSuccess ) { return }
     if (!this.orderForm.outputTokenAddr) { return null }
     const overrides = {
       value: this.orderForm.amountOfInputCurrency,
@@ -40,6 +61,7 @@ class BuyOrderCreate extends BaseOrderCreate {
 
       )
       console.log("response is", response)
+      this.isSuccess = true
       return response
     }catch (e) {
       console.log('error occurred', e)
@@ -64,6 +86,7 @@ class BuyOrderCreate extends BaseOrderCreate {
 class SellOrderCreate extends BaseOrderCreate {
   constructor(orderForm, preQuote, ethers, intervalsInSeconds) {
     super(orderForm, preQuote, ethers, intervalsInSeconds);
+    this.orderType = 'sell'
   }
   executeOrder() {
     // super.executeOrder();
