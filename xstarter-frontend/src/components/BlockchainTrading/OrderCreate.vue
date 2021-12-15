@@ -87,6 +87,12 @@
 </template>
 
 <script>
+const ERC20ABI = [
+  'function balanceOf(address owner) view returns (uint256 balance)',
+  'function totalSupply() view returns (uint)',
+  'function name() view  returns (string)',
+  'function symbol() view returns (string)'
+]
 // todo: create sell order, currently only buy order
 import {
   ARRAY_OF_BLOCKCHAINS,
@@ -220,17 +226,34 @@ export default {
       // todo: We assume that the native token is being used, and a representation of USD (ie BUSD on binance, USDT on ETHERS) is used as otherToken
       // todo: make it automatically sort if BUSD (or rep) is chosen as input
       console.log('eth amount', this.orderForm.amountOfInputCurrency, this.orderForm.amountOfInputCurrency.toString())
-      const response = await xStarterInteract.getBestQuoteAndSymbolUsingWETH(this.orderForm.amountOfInputCurrency, this.orderForm.outputTokenAddr, this.orderForm.getWallet().address)
-      // console.log('response is', response)
-      this.preQuote.quote = response.quote
-      this.preQuote.route = response.route
-      this.preQuote.USDEquivalent = response.USDEquivAmount
-      this.preQuote.desiredTokenSymbol = response.outTokenInfo.symbol
-      this.preQuote.desiredTokenName = response.outTokenInfo.name
-      this.preQuote.desiredTokenDecimals = response.outTokenInfo.decimals
-      this.preQuote.currentBal = response.outTokenInfo.addrBalance
+      try {
+        const response = await xStarterInteract.getBestQuoteAndSymbolUsingWETH(this.orderForm.amountOfInputCurrency, this.orderForm.outputTokenAddr, this.orderForm.getWallet().address)
+        console.log('response in try is', response)
+        this.preQuote.quote = response.quote
+        this.preQuote.route = response.route
+        this.preQuote.USDEquivalent = response.USDEquivAmount
+        this.preQuote.desiredTokenSymbol = response.outTokenInfo.symbol
+        this.preQuote.desiredTokenName = response.outTokenInfo.name
+        this.preQuote.desiredTokenDecimals = response.outTokenInfo.decimals
+        this.preQuote.currentBal = response.outTokenInfo.addrBalance
 
-      this.calculateMinTokens()
+        this.calculateMinTokens()
+      } catch (e) {
+        //todo add a view function that is called when no pairs are available
+        console.log('error', e, typeof e)
+        //todo add a view function that is called when no pairs are available
+        const response = await xStarterInteract.getTokenInfoAndUSDEquivalent(this.orderForm.amountOfInputCurrency, this.orderForm.outputTokenAddr, this.orderForm.getWallet().address)
+        console.log('response in is', response)
+        this.preQuote.quote = 0
+        this.preQuote.route = null
+        this.preQuote.USDEquivalent = response.USDEquivAmount
+        this.preQuote.desiredTokenSymbol = response.outTokenInfo.symbol
+        this.preQuote.desiredTokenName = response.outTokenInfo.name
+        this.preQuote.desiredTokenDecimals = response.outTokenInfo.decimals
+        this.preQuote.currentBal = response.outTokenInfo.addrBalance
+        this.calculateMinTokens()
+      }
+
     },
     calculateMinTokens() {
       if (!this.orderForm.maxPriceInUSD || !parseFloat(this.orderForm.maxPriceInUSD) || !this.preQuote.USDEquivalent) { return }

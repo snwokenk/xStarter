@@ -252,6 +252,24 @@ contract xStarterUniswapV2Interaction is Ownable  {
         router = _router;
         factory = _factory;
     }
+    function getUSDAmountOfWETH(uint WETHAmount) public view returns(uint256 USDEquivAmount) {
+        address[] memory paths = new address[](2);
+        paths[0] = WETH;
+        paths[1] = USD;
+        uint[] memory amounts = IRouter02(router).getAmountsOut(WETHAmount, paths);
+        USDEquivAmount = amounts[1];
+        
+    }
+
+    function getTokenInfoAndUSDEquivalent(uint256 WETHAmount, address outToken, address addressToFindBalance) public view returns(TokenInfo memory outTokenInfo, uint256 USDEquivAmount) {
+        USDEquivAmount = getUSDAmountOfWETH(WETHAmount);
+        outTokenInfo.name = IERC20(outToken).name();
+        outTokenInfo.symbol = IERC20(outToken).symbol();
+        outTokenInfo.decimals = IERC20(outToken).decimals();
+        if(addressToFindBalance != address(0)) {
+            outTokenInfo.addrBalance = IERC20(outToken).balanceOf(addressToFindBalance);
+        }
+    }
     function getBestQuote(uint256 inTokenAmount, address inToken, address otherToken, address outToken) public view returns(address[] memory route, uint256 quote) {
         
         address inTokenPair = IFactory(factory).getPair(inToken, outToken);
@@ -324,13 +342,15 @@ contract xStarterUniswapV2Interaction is Ownable  {
         paths[0] = WETH;
         paths[1] = USD;
         uint[] memory amounts;
+        amounts = IRouter02(router).getAmountsOut(WETHAmount, paths);
+        USDEquivAmount = amounts[1];
         //amounts[1] is WETH/USD rate, check to see if desired token has a USD pair before making function call
-        if(USDPair != address(0)) {
-            amounts = IRouter02(router).getAmountsOut(WETHAmount, paths);
-            USDEquivAmount = amounts[1];
-        }else {
-            USDEquivAmount = 0;
-        }
+        // if(USDPair != address(0)) {
+        //     amounts = IRouter02(router).getAmountsOut(WETHAmount, paths);
+        //     USDEquivAmount = amounts[1];
+        // }else {
+        //     USDEquivAmount = 0;
+        // }
 
 
         // get amount of desired token for WETH amount

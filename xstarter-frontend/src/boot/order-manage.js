@@ -12,6 +12,7 @@ class BaseOrderCreate {
     this.orderType = ''
     this.isSuccess = false
     this.isCancelled = false
+    this.preQuoteUpdated = ''
   }
 
   get orderInfo() {
@@ -23,7 +24,8 @@ class BaseOrderCreate {
       walletAddress: this.orderForm.getWallet().address,
       orderType: this.orderType,
       WETH_Amount: this.$ethers.utils.formatEther(this.orderForm.amountOfInputCurrency),
-      tokenAmount: this.orderForm.minimumTokensWeiBasedOnPrice.toString()
+      tokenAmount: this.orderForm.minimumTokensWeiBasedOnPrice.toString(),
+      preQuoteUpdated: this.preQuoteUpdated
 
     }
   }
@@ -36,6 +38,43 @@ class BaseOrderCreate {
   cancel() {
     this.isCancelled = true
   }
+  calculateMinTokens() {
+    if (!this.orderForm.maxPriceInUSD || !parseFloat(this.orderForm.maxPriceInUSD) || !this.preQuote.USDEquivalent) { return }
+
+    this.orderForm.minimumTokensBasedOnPrice = parseFloat(this.$ethers.utils.formatUnits(this.preQuote.USDEquivalent, 18)) / parseFloat(this.orderForm.maxPriceInUSD)
+    this.orderForm.minimumTokensWeiBasedOnPrice = this.$ethers.utils.parseUnits(this.orderForm.minimumTokensBasedOnPrice.toString(), this.preQuote.desiredTokenDecimals)
+  }
+
+  async getPreQuote() {
+    const xStarterInteract = new this.$ethers.Contract(xStarterInteractionAddr, xStarterInteractionABI, this.orderForm.getWallet())
+    try {
+      const response = await xStarterInteract.getBestQuoteAndSymbolUsingWETH(this.orderForm.amountOfInputCurrency, this.orderForm.outputTokenAddr, this.orderForm.getWallet().address)
+      // console.log('response is', response)
+      this.preQuote.quote = response.quote
+      this.preQuote.route = response.route
+      this.preQuote.USDEquivalent = response.USDEquivAmount
+      this.preQuote.desiredTokenSymbol = response.outTokenInfo.symbol
+      this.preQuote.desiredTokenName = response.outTokenInfo.name
+      this.preQuote.desiredTokenDecimals = response.outTokenInfo.decimals
+      this.preQuote.currentBal = response.outTokenInfo.addrBalance
+
+      this.calculateMinTokens()
+    } catch (e) {
+      console.log(e, typeof e)
+      //todo add a view function that is called when no pairs are available
+      const response = await xStarterInteract.getTokenInfoAndUSDEquivalent(this.orderForm.amountOfInputCurrency, this.orderForm.outputTokenAddr, this.orderForm.getWallet().address)
+      // console.log('response is', response)
+      this.preQuote.quote = 0
+      this.preQuote.route = null
+      this.preQuote.USDEquivalent = response.USDEquivAmount
+      this.preQuote.desiredTokenSymbol = response.outTokenInfo.symbol
+      this.preQuote.desiredTokenName = response.outTokenInfo.name
+      this.preQuote.desiredTokenDecimals = response.outTokenInfo.decimals
+      this.preQuote.currentBal = response.outTokenInfo.addrBalance
+    }
+
+    this.preQuoteUpdated = Date()
+  }
 
 }
 
@@ -47,6 +86,7 @@ class BuyOrderCreate extends BaseOrderCreate {
   async executeOrder() {
     if (this.isCancelled || this.isSuccess ) { return }
     if (!this.orderForm.outputTokenAddr) { return null }
+    await this.getPreQuote()
     const overrides = {
       value: this.orderForm.amountOfInputCurrency,
       gasPrice: this.$ethers.utils.parseUnits('10', 'gwei')
