@@ -14,6 +14,9 @@
         <div v-if="selectedBlockChain" class="col-12">
           <q-select v-model="selectedDex" :options="arrayOfAvailableDex" label="Select DEX" class="full-width"/>
         </div>
+        <div v-if="selectedDex" class="col-12">
+          <q-input v-model="userProvidedJsonRPC" label="Optional: use own JSON-RPC link" class="full-width"/>
+        </div>
       </div>
       <div v-if="selectedDex" class="col-12 justify-center row q-mt-xl">
         <q-btn label="listen for AddLiquidity Transactions" outline @click="listenAndFilterTransaction" />
@@ -173,6 +176,7 @@ export default defineComponent( {
       return {
         selectedBlockChain: null,
         selectedDex: null,
+        userProvidedJsonRPC: '',
         arrayOfTxs: [],
         minAmtInEthers: 5,
         searchHistoric: true,
@@ -205,8 +209,8 @@ export default defineComponent( {
         return Object.keys(this.addressesToWatch)
       },
       selectedJsonEndpoint() {
-        if (!this.selectedBlockChain) {return ''}
-        return CHAIN_INFO_OBJ[this.selectedBlockChain.value].rpcUrls[0]
+        if (!this.selectedBlockChain && !this.userProvidedJsonRPC) {return ''}
+        return this.userProvidedJsonRPC || CHAIN_INFO_OBJ[this.selectedBlockChain.value].rpcUrls[0]
       },
       selectedWebsocketEndpoint() {
         if (!this.selectedBlockChain) {return ''}
