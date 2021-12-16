@@ -74,7 +74,7 @@
           <q-btn label="Try to Execute Once" @click="executeDexOrder" outline />
         </div>
         <div class="col-12 q-mt-sm">
-          <q-btn  label="Try Until Sucessfull" @click="executeBuyTillSuccessFul" outline />
+          <q-btn  label="Try Until Sucessfull" @click="executeSellTillSuccessFul" outline />
         </div>
       </div>
 
@@ -193,9 +193,18 @@ export default {
         gasPrice: this.$ethers.utils.parseUnits('10', 'gwei')
       }
       await this.getAllowance()
+
       if (!this.preQuote.currentAllowance || this.preQuote.currentAllowance < this.preQuote.currentBal) {
         await this.approveAmounts()
+        if (!this.preQuote.currentAllowance) {
+          console.log('allowance still at zero, probably wallet address has 0 tokens')
+          return
+        }
+      // if allowance is not zero, then must have token balance
+        await this.getMinNativeTokensBasedOnDesiredPrice()
+
       }
+      await this.getMinNativeTokensBasedOnDesiredPrice
       const xStarterInteract = new this.$ethers.Contract(xStarterInteractionAddr, xStarterInteractionABI, this.orderForm.getWallet())
       const response = await xStarterInteract.swapPercentOfApprovedBalance(
         this.orderForm.outputTokenAddr,
@@ -209,7 +218,7 @@ export default {
 
     },
 
-    async executeBuyTillSuccessFul() {
+    async executeSellTillSuccessFul() {
       // // first try to execute order
       // const response = await this.executeDexOrder()
       // // if response is not null then order was executed
@@ -226,6 +235,10 @@ export default {
 
     async approveAmounts() {
       const tokenInst = new this.$ethers.Contract(this.orderForm.outputTokenAddr, ERC20ABI, this.orderForm.getWallet())
+      if (!this.preQuote.currentBal) {
+        await this.getTokenBalance()
+      }
+      if (!this.preQuote.currentBal) { return }
       const response = await tokenInst.approve(xStarterInteractionAddr, this.$ethers.utils.parseEther(this.preQuote.currentBal.toString()))
       console.log('in approve response is', response)
       await this.getAllowance()
