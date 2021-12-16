@@ -3,8 +3,11 @@
     <div v-if="!showOrderForm"   class="row full-width justify-center q-my-xl">
       <q-btn label="Create Another Order" outline @click="showOrderForm = true" />
     </div>
-    <div v-else class="row full-width justify-center q-my-xl">
-      <OrderCreate @saveOrder="addToOrder"/>
+    <div v-else-if="showOrderForm && formType === 'buy'" class="row full-width justify-center q-my-xl">
+      <OrderCreateNativeToToken @saveOrder="addToOrder"/>
+    </div>
+    <div v-else-if="showOrderForm && formType === 'sell'" class="row full-width justify-center q-my-xl">
+      <OrderCreateTokenToNative @saveOrder="addToOrder"/>
     </div>
 
 
@@ -23,17 +26,19 @@
 
 <script>
 // todo: add a way of editing and canceling existing polling order,
-import OrderCreate from "components/BlockchainTrading/OrderCreate";
+import OrderCreateNativeToToken from "components/BlockchainTrading/OrderCreateNativeToToken";
+import OrderCreateTokenToNative from "components/BlockchainTrading/OrderCreateTokenToNative";
 /***
  * using xStarter contract
  * creates conditional orders. These orders can keep being tried till it goes through
  * ***/
 export default {
   name: "DexConditionalAndPeriodic",
-  components: {OrderCreate},
+  components: {OrderCreateTokenToNative, OrderCreateNativeToToken},
   data() {
     return {
       showOrderForm: true,
+      formType: 'sell',
       open_orders: {
         sellOrders: [],
         buyOrders: []

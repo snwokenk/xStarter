@@ -4,7 +4,7 @@
     style="min-height: 200px;"
   >
     <div class="text-center text-bold">
-      Create Order <br />
+      Create Order buy tokens using native token (ETH, BNB, MATIC etc) <br /><br />
       ***This uses an xStarter deployed contract to route your traders***
       *** It does a precheck and reduces the possibility of tx being reverted while your gas is spent.
       *** also allows you to add a large slippage without been sniped
@@ -40,9 +40,6 @@
 
         <div v-if="orderForm.jsonRPC" class="col-12 q-my-sm">
           <q-input v-model="orderForm.outputTokenAddr" label="Address Of token wanted" />
-        </div>
-        <div v-if="orderForm.useBUSD" class="col-12 q-my-sm">
-          <q-checkbox v-model="orderForm.useBUSD" label="Check if this pair's liquidity is mainly BUSD" />
         </div>
       </div>
 
@@ -104,7 +101,7 @@ import {
 import {ethers} from "boot/ethers";
 
 export default {
-  name: "OrderCreate",
+  name: "OrderCreateNativeToToken",
   data() {
     return {
       actionTypes: [],
@@ -125,8 +122,6 @@ export default {
           isNativeToken: true
         },
         outputTokenAddr: '',
-        // this is the base currency of the pair ie some crypto might have a higher BUSD/outputTokenAddr liquidity than BNB
-        useBUSD: false,
         // this is actual order details
         maxPriceInUSD: 0,
         minimumTokensBasedOnPrice: 0,

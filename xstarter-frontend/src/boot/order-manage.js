@@ -23,6 +23,7 @@ class BaseOrderCreate {
       dex: this.orderForm.selectedDex.label,
       walletAddress: this.orderForm.getWallet().address,
       orderType: this.orderType,
+      maxPriceInUsd: this.orderForm.maxPriceInUSD,
       WETH_Amount: this.$ethers.utils.formatEther(this.orderForm.amountOfInputCurrency),
       tokenAmount: this.orderForm.minimumTokensWeiBasedOnPrice.toString(),
       preQuoteUpdated: this.preQuoteUpdated
