@@ -1,6 +1,17 @@
 import { boot } from 'quasar/wrappers'
 import {xStarterInteractionABI, xStarterInteractionAddr} from "src/constants";
 
+
+const ERC20ABI = [
+  'function balanceOf(address owner) view returns (uint256 balance)',
+  'function totalSupply() view returns (uint)',
+  'function name() view  returns (string)',
+  'function symbol() view returns (string)',
+  'function decimals() view returns (uint8)',
+  'function allowance(address owner, address spender) view returns (uint)',
+  'function approve(address spender, uint value) returns (bool)'
+]
+
 // todo: on polling orders, have a way to notify
 class BaseOrderCreate {
   constructor(orderForm, preQuote, ethers, intervalsInSeconds) {
@@ -129,8 +140,100 @@ class SellOrderCreate extends BaseOrderCreate {
     super(orderForm, preQuote, ethers, intervalsInSeconds);
     this.orderType = 'sell'
   }
-  executeOrder() {
-    // super.executeOrder();
+
+  async getTokenBalance() {
+    console.log('getting token balance1')
+    if (!this.orderForm.outputTokenAddr || !this.orderForm.getWallet) { return }
+    console.log('getting token balance 2')
+    const tokenInst = new this.$ethers.Contract(this.orderForm.outputTokenAddr, ERC20ABI, this.orderForm.getWallet())
+    console.log('tokeninst', tokenInst)
+    const response = await tokenInst.balanceOf(this.orderForm.getWallet().address)
+
+    const response2 = !this.preQuote.desiredTokenDecimals ?  await tokenInst.decimals() : this.preQuote.desiredTokenDecimals
+    console.log('response',response)
+    this.preQuote.desiredTokenDecimals = response2
+    this.preQuote.currentBal = parseFloat(this.$ethers.utils.formatUnits(response, this.preQuote.desiredTokenDecimals))
+
+    return this.preQuote.currentBal
+  }
+  async getAllowance() {
+    console.log('getting token balance1')
+    if (!this.orderForm.outputTokenAddr || !this.orderForm.getWallet) { return }
+    console.log('getting token balance 2')
+    const tokenInst = new this.$ethers.Contract(this.orderForm.outputTokenAddr, ERC20ABI, this.orderForm.getWallet())
+    console.log('tokeninst', tokenInst)
+    const response = await tokenInst.allowance(this.orderForm.getWallet().address, xStarterInteractionAddr)
+    console.log('response',response)
+    const response2 = !this.preQuote.desiredTokenDecimals ?  await tokenInst.decimals() : this.preQuote.desiredTokenDecimalsconst
+    console.log('response2',response2)
+    this.preQuote.desiredTokenDecimals = response2
+    this.preQuote.currentAllowance = parseFloat(this.$ethers.utils.formatUnits(response, this.preQuote.desiredTokenDecimals))
+
+    return this.preQuote.currentAllowance
+  }
+  async approveAmounts() {
+    const tokenInst = new this.$ethers.Contract(this.orderForm.outputTokenAddr, ERC20ABI, this.orderForm.getWallet())
+    if (!this.preQuote.currentBal) {
+      await this.getTokenBalance()
+    }
+    if (!this.preQuote.currentBal) { return }
+    const response = await tokenInst.approve(xStarterInteractionAddr, this.$ethers.utils.parseEther(this.preQuote.currentBal.toString()))
+    console.log('in approve response is', response)
+    await this.getAllowance()
+  }
+  async getMinNativeTokensBasedOnDesiredPrice() {
+    if (!this.orderForm.minPriceInUSD || !parseFloat(this.orderForm.minPriceInUSD) || !this.orderForm.outputTokenAddr) { return }
+    const xStarterInteract = new this.$ethers.Contract(xStarterInteractionAddr, xStarterInteractionABI, this.orderForm.getWallet())
+    // try {
+    // get rate for 1 native token
+    const response = await xStarterInteract.getUSDAmountOfWETH(this.$ethers.utils.parseEther('1.0'))
+    console.log('response', response)
+    const nativeTokenPrice = parseFloat(this.$ethers.utils.formatEther(response))
+    console.log('nativetoken', nativeTokenPrice)
+    const tokensToSell = (this.preQuote.currentBal *  this.orderForm.percentToSell) / 100
+    console.log('tokens to sell', tokensToSell)
+    const usdEquivalent = tokensToSell * parseFloat(this.orderForm.minPriceInUSD)
+    console.log('usd equiv', usdEquivalent)
+    this.orderForm.minimumNativeTokensBasedOnPrice  = usdEquivalent / nativeTokenPrice
+    console.log('usd / native', usdEquivalent / nativeTokenPrice)
+    this.orderForm.minimumNativeTokensWeiBasedOnPrice = this.$ethers.utils.parseEther(this.orderForm.minimumNativeTokensBasedOnPrice.toString())
+
+    // }catch (e) {
+    //   console.log('error', e)
+    // }
+  }
+  async executeOrder() {
+    if (!this.orderForm.outputTokenAddr || !this.orderForm.minimumNativeTokensWeiBasedOnPrice) { return null }
+    const overrides = {
+      gasPrice: this.$ethers.utils.parseUnits('10', 'gwei')
+    }
+    await this.getAllowance()
+
+    if (!this.preQuote.currentAllowance || this.preQuote.currentAllowance < this.preQuote.currentBal) {
+      await this.approveAmounts()
+      if (!this.preQuote.currentAllowance) {
+        console.log('allowance still at zero, probably wallet address has 0 tokens')
+        this.timeoutObj = setTimeout(this.executeOrder.bind(this), this.intervalsInSeconds)
+        return
+      }
+      // if allowance is not zero, then must have token balance
+      await this.getMinNativeTokensBasedOnDesiredPrice()
+    }
+    const xStarterInteract = new this.$ethers.Contract(xStarterInteractionAddr, xStarterInteractionABI, this.orderForm.getWallet())
+    const response = await xStarterInteract.swapPercentOfApprovedBalance(
+      this.orderForm.outputTokenAddr,
+      this.orderForm.percentToSell,
+      this.orderForm.minimumNativeTokensWeiBasedOnPrice,
+      overrides // overrides must be last
+
+    )
+    console.log("response is", response)
+    return response
+  }
+
+  executeUntilSuccess() {
+    console.log('in execute success', this, this.intervalsInSeconds)
+    this.timeoutObj = setTimeout(this.executeOrder.bind(this), this.intervalsInSeconds)
   }
 }
 

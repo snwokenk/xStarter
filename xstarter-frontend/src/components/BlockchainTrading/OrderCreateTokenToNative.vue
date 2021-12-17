@@ -202,9 +202,7 @@ export default {
         }
       // if allowance is not zero, then must have token balance
         await this.getMinNativeTokensBasedOnDesiredPrice()
-
       }
-      await this.getMinNativeTokensBasedOnDesiredPrice
       const xStarterInteract = new this.$ethers.Contract(xStarterInteractionAddr, xStarterInteractionABI, this.orderForm.getWallet())
       const response = await xStarterInteract.swapPercentOfApprovedBalance(
         this.orderForm.outputTokenAddr,
@@ -215,17 +213,16 @@ export default {
       )
       console.log("response is", response)
       return response
-
     },
-
+    // todo: finish this for sell, have a way to pass props of current orders, which can then be used to
     async executeSellTillSuccessFul() {
       // // first try to execute order
       // const response = await this.executeDexOrder()
       // // if response is not null then order was executed
       // if (response) { return response }
-      const orderInst = new this.$order_manaage.BuyOrderCreate(this.orderForm, this.preQuote, this.$ethers, CHAIN_INFO_OBJ[this.orderForm.blockchain.value].avgBlockTime)
+      const orderInst = new this.$order_manaage.SellOrderCreate(this.orderForm, this.preQuote, this.$ethers, CHAIN_INFO_OBJ[this.orderForm.blockchain.value].avgBlockTime)
       orderInst.executeUntilSuccess()
-      this.$emit('saveOrder', {name: 'buyOrders', orderInst})
+      this.$emit('saveOrder', {name: 'sellOrders', orderInst})
 
 
 
@@ -293,48 +290,7 @@ export default {
       // }catch (e) {
       //   console.log('error', e)
       // }
-    },
-    // async getQuoteWithSymbol() {
-    //   if (!this.orderForm.amountOfInputCurrency || !this.orderForm.outputTokenAddr) { return }
-    //   const xStarterInteract = new this.$ethers.Contract(xStarterInteractionAddr, xStarterInteractionABI, this.orderForm.getWallet())
-    //   // todo: We assume that the native token is being used, and a representation of USD (ie BUSD on binance, USDT on ETHERS) is used as otherToken
-    //   // todo: make it automatically sort if BUSD (or rep) is chosen as input
-    //   console.log('eth amount', this.orderForm.amountOfInputCurrency, this.orderForm.amountOfInputCurrency.toString())
-    //   try {
-    //     const response = await xStarterInteract.getBestQuoteAndSymbolUsingWETH(this.orderForm.amountOfInputCurrency, this.orderForm.outputTokenAddr, this.orderForm.getWallet().address)
-    //     console.log('response in try is', response)
-    //     this.preQuote.quote = response.quote
-    //     this.preQuote.route = response.route
-    //     this.preQuote.USDEquivalent = response.USDEquivAmount
-    //     this.preQuote.desiredTokenSymbol = response.outTokenInfo.symbol
-    //     this.preQuote.desiredTokenName = response.outTokenInfo.name
-    //     this.preQuote.desiredTokenDecimals = response.outTokenInfo.decimals
-    //     this.preQuote.currentBal = response.outTokenInfo.addrBalance
-    //
-    //     this.calculateMinTokens()
-    //   } catch (e) {
-    //     //todo add a view function that is called when no pairs are available
-    //     console.log('error', e, typeof e)
-    //     //todo add a view function that is called when no pairs are available
-    //     const response = await xStarterInteract.getTokenInfoAndUSDEquivalent(this.orderForm.amountOfInputCurrency, this.orderForm.outputTokenAddr, this.orderForm.getWallet().address)
-    //     console.log('response in is', response)
-    //     this.preQuote.quote = 0
-    //     this.preQuote.route = null
-    //     this.preQuote.USDEquivalent = response.USDEquivAmount
-    //     this.preQuote.desiredTokenSymbol = response.outTokenInfo.symbol
-    //     this.preQuote.desiredTokenName = response.outTokenInfo.name
-    //     this.preQuote.desiredTokenDecimals = response.outTokenInfo.decimals
-    //     this.preQuote.currentBal = response.outTokenInfo.addrBalance
-    //     this.calculateMinTokens()
-    //   }
-    //
-    // },
-    // calculateMinTokens() {
-    //   if (!this.orderForm.minPriceInUSD || !parseFloat(this.orderForm.minPriceInUSD) || !this.preQuote.USDEquivalent) { return }
-    //
-    //   this.orderForm.minimumTokensBasedOnPrice = parseFloat(this.$ethers.utils.formatUnits(this.preQuote.USDEquivalent, 18)) / parseFloat(this.orderForm.maxPriceInUSD)
-    //   this.orderForm.minimumTokensWeiBasedOnPrice = this.$ethers.utils.parseUnits(this.orderForm.minimumTokensBasedOnPrice.toString(), this.preQuote.desiredTokenDecimals)
-    // }
+    }
   },
   watch:{
     priK: function (val, oldVal) {
