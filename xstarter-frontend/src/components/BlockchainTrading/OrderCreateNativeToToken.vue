@@ -68,6 +68,19 @@
         <div class="col-lg-9 col-12  q-my-sm">
           <q-input v-model="orderForm.maxPriceInUSD" label="Max price in USD Per Token(leave at 0 to ignore)" />
         </div>
+        <div class="col-lg-9 col-12  q-my-sm">
+          <q-input
+            v-model="slippage"
+            label="slippage defaults to 0.50% (from 0.10% to 99%) this determines the slippage to send to router, price/tokens must still be less than maxprice"
+            @update:model-value="setSlippage"
+          />
+        </div>
+        <div class="col-lg-9 col-12  q-my-sm">
+          <q-input
+            v-model="orderForm.gasPrice"
+            label="gas price in gwei (defaults to 5 gwei per 1 gas)"
+          />
+        </div>
         <div class="col-12 q-mt-sm">
           <q-btn label="Try to Execute Once" @click="executeDexOrder" outline />
         </div>
@@ -108,6 +121,7 @@ export default {
       priK: '',
       walletBalance: '',
       amountOfInputCurrency: 0,
+      slippage: 0.50,
       orderForm: {
         jsonRPC:'',
         blockchain: null,
@@ -126,7 +140,9 @@ export default {
         maxPriceInUSD: 0,
         minimumTokensBasedOnPrice: 0,
         minimumTokensWeiBasedOnPrice: ethers.BigNumber.from(0),
-        retryAmount: 0
+        retryAmount: 0,
+        slippage: ethers.BigNumber.from(50), // on a scale of 10000 so 50 === 0.5%
+        gasPrice: 5 // defaults to 5 gwei
 
       },
       preQuote: {
@@ -172,6 +188,10 @@ export default {
     },
   },
   methods: {
+    setSlippage(val) {
+      console.log('val is', val)
+      this.orderForm.slippage =  ethers.BigNumber.from(val * 100)
+    },
     async getWalletBalance() {
       if (!this.orderForm.getWallet) { return}
       this.walletBalance = await this.orderForm.getWallet().getBalance()
@@ -185,20 +205,41 @@ export default {
 
     async executeDexOrder() {
       if (!this.orderForm.outputTokenAddr) { return null }
-      const overrides = {
-        value: this.orderForm.amountOfInputCurrency,
-        gasPrice: this.$ethers.utils.parseUnits('10', 'gwei')
-      }
+
       const xStarterInteract = new this.$ethers.Contract(xStarterInteractionAddr, xStarterInteractionABI, this.orderForm.getWallet())
-      const response = await xStarterInteract.swapETHForTokensUsingDataFromBlockchain(
-        this.orderForm.outputTokenAddr,
-        this.orderForm.minimumTokensWeiBasedOnPrice,
-        overrides // overrides must be last
 
-      )
-      console.log("response is", response)
-      return response
+      let response;
+      try {
+        response = await xStarterInteract.checkSwapETHForTokensUsingDataFromBlockchain(
+          this.orderForm.outputTokenAddr,
+          this.orderForm.minimumTokensWeiBasedOnPrice,
+          this.orderForm.slippage,
+          this.orderForm.amountOfInputCurrency
 
+        )
+
+        console.log('checking swap response', response)
+      } catch (e) {
+        console.log('error is', e)
+        return
+      }
+      try {
+        const overrides = {
+          value: this.orderForm.amountOfInputCurrency,
+          gasPrice: this.$ethers.utils.parseUnits(this.orderForm.gasPrice.toString(), 'gwei')
+        }
+        response = await xStarterInteract.swapETHForTokensUsingDataFromBlockchain(
+          this.orderForm.outputTokenAddr,
+          this.orderForm.minimumTokensWeiBasedOnPrice,
+          this.orderForm.slippage,
+          overrides // overrides must be last
+
+        )
+        console.log("response is", response)
+        return response
+      }catch (e) {
+        console.log('error in swap', e)
+      }
     },
 
     async executeBuyTillSuccessFul() {

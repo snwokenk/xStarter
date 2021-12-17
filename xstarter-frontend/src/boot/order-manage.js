@@ -105,15 +105,36 @@ class BuyOrderCreate extends BaseOrderCreate {
     }
     const xStarterInteract = new this.$ethers.Contract(xStarterInteractionAddr, xStarterInteractionABI, this.orderForm.getWallet())
 
+    let response;
     try {
-      const response = await xStarterInteract.swapETHForTokensUsingDataFromBlockchain(
+      response = await xStarterInteract.checkSwapETHForTokensUsingDataFromBlockchain(
         this.orderForm.outputTokenAddr,
         this.orderForm.minimumTokensWeiBasedOnPrice,
+        this.orderForm.slippage,
+        this.orderForm.amountOfInputCurrency
+
+      )
+
+      console.log('checking swap response', response)
+    } catch (e) {
+      console.log('error is', e)
+      this.timeoutObj = setTimeout(this.executeOrder.bind(this), this.intervalsInSeconds)
+      return
+    }
+
+    try {
+      const overrides = {
+        value: this.orderForm.amountOfInputCurrency,
+        gasPrice: this.$ethers.utils.parseUnits(this.orderForm.gasPrice.toString(), 'gwei')
+      }
+      response = await xStarterInteract.swapETHForTokensUsingDataFromBlockchain(
+        this.orderForm.outputTokenAddr,
+        this.orderForm.minimumTokensWeiBasedOnPrice,
+        this.orderForm.slippage,
         overrides // overrides must be last
 
       )
       console.log("response is", response)
-      this.isSuccess = true
       return response
     }catch (e) {
       console.log('error occurred', e)
