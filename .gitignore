@@ -9,3 +9,4 @@ artifacts/
 xstarter-frontend/node_modules
 xstarter-frontend/src/artifacts
 xstarter-frontend/github_pages_dir
+xstarter-frontend/src/IgnoredConstants.js
