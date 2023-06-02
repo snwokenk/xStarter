@@ -91,7 +91,7 @@
 <script>
 import {defineComponent, inject} from "vue";
 import {ethers} from "boot/ethers";
-import ERC721Temp from "src/artifacts/contracts/xStarterNFTDeployTemplate.json";
+import ERC721Temp from 'src/artifacts/contracts/xStarterNFTDeployTemplate.sol/xStarterNFTDeployTemplate.json';
 import {copyToClipboard, openURL} from "quasar";
 
 export default defineComponent({

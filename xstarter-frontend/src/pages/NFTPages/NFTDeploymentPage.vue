@@ -76,7 +76,7 @@ import {defineComponent, inject} from "vue";
 import NetworkSwitcher from "components/NetworkSwitcher";
 import {ethers} from "boot/ethers";
 
-import ERC721Temp from 'src/artifacts/contracts/xStarterNFTDeployTemplate.json'
+import ERC721Temp from 'src/artifacts/contracts/xStarterNFTDeployTemplate.sol/xStarterNFTDeployTemplate.json'
 import {CHAIN_ID_TO_NAME} from "src/constants";
 import {copyToClipboard} from "quasar";
 
